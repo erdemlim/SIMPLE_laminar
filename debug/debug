@@ -1,0 +1,574 @@
+mpi processes per host = 1
+reading modules in from file '/home/merdemli/local/loci/lib/fvm_m.so'
+ boundaries identified as: BC_3 BC_2 BC_1
+geom_cells = ([538202,627602])
+ghost_cells = ([627606,807603])
+cells = ([538202,627602][627606,807603])
+boundary BC_3(BC_3) = ([180000,358801])
+boundary BC_2(BC_2) = ([358802,359698])
+boundary BC_1(BC_1) = ([359699,359997])
+boundary_faces = ([180000,359997])
+ci_faces = ([180000,359997])
+Unable to instantiate parametric rules for variable volumeTag(Main)
+Unable to instantiate parametric rules for variable plotSwitchNodes(p)
+Unable to instantiate parametric rules for variable plotSwitchNodes(pPrime)
+Unable to instantiate parametric rules for variable plotSwitchNodes(Velocity)
+Unable to instantiate parametric rules for variable LSGSConnectivity(uInt)
+Unable to instantiate parametric rules for variable LSGSConnectivity(vInt)
+Unable to instantiate parametric rules for variable LSGSConnectivity(wInt)
+Unable to instantiate parametric rules for variable LSGSConnectivity(pCor)
+precleaning rules that cannot be scheduled based on given facts:
+eliminating cr->SGSScalarSolve_backward(uInt)<-pmap->cl->SGSScalarSolve_forward(uInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating cr->SGSScalarSolve_backward(vInt)<-pmap->cl->SGSScalarSolve_forward(vInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating cr->SGSScalarSolve_backward(wInt)<-pmap->cl->SGSScalarSolve_forward(wInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating cr->limiters(p)<-pmap->cl->limiters(p),CONSTRAINT(cl->p,periodicFaces) due to periodicFaces
+eliminating cr->limiterv3d(Velocity)<-pmap->cl->limiterv3d(Velocity),pmap->ref->periodicTransform,CONSTRAINT(cl->Velocity,periodicFaces) due to periodicFaces
+eliminating OUTPUT<-BCName_BC_1,BCNodesSize_BC_1,cell2node(p),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_1,plotSwitchNodes(p)),CONDITIONAL(doPlotBC_BC_1) due to (BCNodes_BC_1,plotSwitchNodes(p))
+eliminating OUTPUT<-BCName_BC_1,BCNodesSize_BC_1,cell2node(pPrime),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_1,plotSwitchNodes(pPrime)),CONDITIONAL(doPlotBC_BC_1) due to (BCNodes_BC_1,plotSwitchNodes(pPrime))
+eliminating OUTPUT<-BCName_BC_1,BCNodesSize_BC_1,cell2node_v3d(Velocity),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_1,plotSwitchNodes(Velocity)),CONDITIONAL(doPlotBC_BC_1) due to (BCNodes_BC_1,plotSwitchNodes(Velocity))
+eliminating OUTPUT<-BCName_BC_2,BCNodesSize_BC_2,cell2node(p),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_2,plotSwitchNodes(p)),CONDITIONAL(doPlotBC_BC_2) due to (BCNodes_BC_2,plotSwitchNodes(p))
+eliminating OUTPUT<-BCName_BC_2,BCNodesSize_BC_2,cell2node(pPrime),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_2,plotSwitchNodes(pPrime)),CONDITIONAL(doPlotBC_BC_2) due to (BCNodes_BC_2,plotSwitchNodes(pPrime))
+eliminating OUTPUT<-BCName_BC_2,BCNodesSize_BC_2,cell2node_v3d(Velocity),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_2,plotSwitchNodes(Velocity)),CONDITIONAL(doPlotBC_BC_2) due to (BCNodes_BC_2,plotSwitchNodes(Velocity))
+eliminating OUTPUT<-BCName_BC_3,BCNodesSize_BC_3,cell2node(p),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_3,plotSwitchNodes(p)),CONDITIONAL(doPlotBC_BC_3) due to (BCNodes_BC_3,plotSwitchNodes(p))
+eliminating OUTPUT<-BCName_BC_3,BCNodesSize_BC_3,cell2node(pPrime),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_3,plotSwitchNodes(pPrime)),CONDITIONAL(doPlotBC_BC_3) due to (BCNodes_BC_3,plotSwitchNodes(pPrime))
+eliminating OUTPUT<-BCName_BC_3,BCNodesSize_BC_3,cell2node_v3d(Velocity),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_3,plotSwitchNodes(Velocity)),CONDITIONAL(doPlotBC_BC_3) due to (BCNodes_BC_3,plotSwitchNodes(Velocity))
+eliminating cr->gradv3d(Velocity)<-pmap->cl->gradv3d(Velocity),pmap->ref->periodicTransform,CONSTRAINT(cl->Velocity,periodicFaces) due to periodicFaces
+eliminating cr->grads(pPrime)<-pmap->cl->grads(pPrime),pmap->ref->periodicTransform,CONSTRAINT(cl->pPrime,periodicFaces) due to periodicFaces
+eliminating cr->SGSScalarSolve(wInt)<-pmap->cl->SGSScalarSolve(wInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating cr->SGSScalarSolve(vInt)<-pmap->cl->SGSScalarSolve(vInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating cr->SGSScalarSolve(uInt)<-pmap->cl->SGSScalarSolve(uInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating cr->grads(p)<-pmap->cl->grads(p),pmap->ref->periodicTransform,CONSTRAINT(cl->p,periodicFaces) due to periodicFaces
+eliminating OUTPUT<-selector(gradStencilBias,off) due to selector(gradStencilBias,off)
+eliminating OUTPUT<-selector(gradStencilBias,on) due to selector(gradStencilBias,on)
+eliminating OUTPUT<-selector(gradStencil,standard) due to selector(gradStencil,standard)
+eliminating OUTPUT<-selector(gradStencil,full) due to selector(gradStencil,full)
+eliminating OUTPUT<-selector(gradStencil,stable) due to selector(gradStencil,stable)
+eliminating OUTPUT<-selector(gradStencil,symm) due to selector(gradStencil,symm)
+eliminating OUTPUT<-selector(gradStencil,symmF) due to selector(gradStencil,symmF)
+eliminating OUTPUT<-selector(gradStencil,symmC) due to selector(gradStencil,symmC)
+eliminating OUTPUT<-selector(gradStencil,green) due to selector(gradStencil,green)
+eliminating OUTPUT<-selector(gradType,standard) due to selector(gradType,standard)
+eliminating OUTPUT<-selector(faceGradStencil,positive) due to selector(faceGradStencil,positive)
+eliminating OUTPUT<-selector(faceGradStencil,limited) due to selector(faceGradStencil,limited)
+eliminating OUTPUT<-selector(faceGradStencil,centered) due to selector(faceGradStencil,centered)
+eliminating OUTPUT<-selector(faceGradStencil,nishikawa) due to selector(faceGradStencil,nishikawa)
+eliminating ci->firstOrderCells<-ci->vol,CONSTRAINT(ci->vol,ref->firstOrder_BCoption) due to firstOrder_BCoption
+eliminating OUTPUT<-selector(centroid,exact) due to selector(centroid,exact)
+eliminating OUTPUT<-selector(centroid,wireframe) due to selector(centroid,wireframe)
+eliminating minPg<-Pambient due to Pambient
+eliminating cr->petscCellToRow<-pmap->cl->petscCellToRow due to pmap
+eliminating cl->petscNumDiagonalFromPeriodic<-cl,cl->petscLocalCell,pmap->cl,CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating OUTPUT<-selector(limiter,barth,B) due to selector(limiter,barth,B)
+eliminating OUTPUT<-selector(limiter,nishikawaf,NISf) due to selector(limiter,nishikawaf,NISf)
+eliminating OUTPUT<-selector(limiter,nishikawac,NISc) due to selector(limiter,nishikawac,NISc)
+eliminating OUTPUT<-selector(limiter,nodalbarth,NB) due to selector(limiter,nodalbarth,NB)
+eliminating OUTPUT<-selector(limiter,none) due to selector(limiter,none)
+eliminating OUTPUT<-selector(limiter,venkatakrishnan,V) due to selector(limiter,venkatakrishnan,V)
+eliminating OUTPUT<-selector(limiter,venkatakrishnan2,V2) due to selector(limiter,venkatakrishnan2,V2)
+eliminating OUTPUT<-selector(limiter,zero) due to selector(limiter,zero)
+eliminating OUTPUT<-selector(gradType,directionalDerivative,iterative1) due to selector(gradType,directionalDerivative,iterative1)
+eliminating OUTPUT<-selector(gradType,nishikawaUpwind,iterative2) due to selector(gradType,nishikawaUpwind,iterative2)
+eliminating DfGradPprimef<-CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating ci->a_C_p<-a_F_p_out,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating a_F_p_out<-area,ci->(sumFluxCfUR,vol),density,distanceVec,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating mdotfPrime<-area,ci->(pPrime,sumFluxCfUR,vol),density,distanceVec,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating mdotfStar<-Velocity_f,area,ci->(VelocityStar,grads(p),sumFluxCfUR,vol),density,grads_f(p),CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating shear2ndPart<-CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating fluxVf<-area,ci->(cellcenter,gradv3d(Velocity)),facecenter,mdotf,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating pPrime_f<-ci->Velocity,ci->cellcenter,ci->pPrime,density,facecenter,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating ci->sumFluxCfFlux<-fluxCf,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating fluxCf<-mdotf,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating fluxCfVisc<-CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating wVel_f<-Velocity_f,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating vVel_f<-Velocity_f,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating uVel_f<-Velocity_f,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating Velocity_f{n+1}<-area,ci->Velocity{n+1},ci->cellcenter,ci->gradv3d(Velocity){n},facecenter,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating p_f<-ref->pOut,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating pOut<-BC_options,CONSTRAINT(pOut_BCoption) due to pOut_BCoption
+eliminating EfMag<-Ef,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating Ef<-area,boundaryNormalDistanceMag,distanceVec,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating boundaryNormalDistanceMag<-area,distanceVec,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating distanceVec<-ci->cellcenter,facecenter,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating DfGradPprimef<-CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating mdotfPrime<-CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating mdotfStar<-Velocity_f,area,density,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating shear2ndPart<-CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating fluxVf<-Velocity_f,fluxFf_vel,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating pPrime_f<-ci->Velocity,ci->cellcenter,ci->pPrime,density,facecenter,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating ci->sumFluxCfFlux<-mdotf,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating fluxFf_vel<-EfMag,boundaryNormalDistanceMag,mdotf,mu,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating fluxCfVisc<-EfMag,boundaryNormalDistanceMag,mu,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating wVel_f<-Velocity_f,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating vVel_f<-Velocity_f,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating uVel_f<-Velocity_f,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating Velocity_f<-ref->Uin,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating Uin<-BC_options,CONSTRAINT(Uin_BCoption) due to Uin_BCoption
+eliminating EfMag<-Ef,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating p_f{n+1}<-ci->cellcenter,ci->grads(p){n},ci->p{n+1},facecenter,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating Ef<-area,boundaryNormalDistanceMag,distanceVec,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating boundaryNormalDistanceMag<-area,distanceVec,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating distanceVec<-ci->cellcenter,facecenter,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating OUTPUT<-(boundary_map,lower,upper)->face2edge->edge2node->cell2node_v3d(Velocity),(boundary_map,lower,upper)->face2node->cell2node_v3d(Velocity),cutInfo,cutplanes,modelName,ncycle,plot_postfix,CONSTRAINT((boundary_map,lower,upper)->face2node->pos,plotOutput_Velocity),CONDITIONAL(doPlotCut) due to plotOutput_Velocity
+eliminating OUTPUT<-cell2node_v3d(Velocity),modelName,plot_postfix,CONSTRAINT(plotOutput_Velocity,pos),CONDITIONAL(do_plot) due to plotOutput_Velocity
+eliminating OUTPUT<-(boundary_map,lower,upper)->face2edge->edge2node->cell2node(pPrime),(boundary_map,lower,upper)->face2node->cell2node(pPrime),cutInfo,cutplanes,modelName,ncycle,plot_postfix,CONSTRAINT((boundary_map,lower,upper)->face2node->pos,plotOutput_pPrime),CONDITIONAL(doPlotCut) due to plotOutput_pPrime
+eliminating OUTPUT<-cell2node(pPrime),modelName,plot_postfix,CONSTRAINT(plotOutput_pPrime,pos),CONDITIONAL(do_plot) due to plotOutput_pPrime
+eliminating OUTPUT<-(boundary_map,lower,upper)->face2edge->edge2node->cell2node(p),(boundary_map,lower,upper)->face2node->cell2node(p),cutInfo,cutplanes,modelName,ncycle,plot_postfix,CONSTRAINT((boundary_map,lower,upper)->face2node->pos,plotOutput_p),CONDITIONAL(doPlotCut) due to plotOutput_p
+eliminating OUTPUT<-cell2node(p),modelName,plot_postfix,CONSTRAINT(plotOutput_p,pos),CONDITIONAL(do_plot) due to plotOutput_p
+eliminating LSGSmatrixPeriodic<-cr->fileNumber(geom_cells),pmap->cl->fileNumber(geom_cells) due to pmap
+eliminating FSGSmatrixPeriodic<-cr->fileNumber(geom_cells),pmap->cl->fileNumber(geom_cells) due to pmap
+eliminating Velocity_f{n=0}<-Velocity_initial,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating p_f{n=0}<-p_initial,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating mdotf{n=0}<-mdotf_initial,CONSTRAINT(bottomWall_BC) due to bottomWall_BC
+eliminating mdotf{n=0}<-mdotf_initial,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating mdotf{n=0}<-mdotf_initial,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating mdotf{n=0}<-mdotf_initial,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating farfield::DfGradPprimef<-CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating farfield::mdotfPrime<-CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating mdotfStar<-Velocity_f,area,density,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating farfield::shear2ndPart<-CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating fluxVf<-Velocity_f,fluxFf_vel,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating pPrime_f<-ci->pPrime,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating ci->sumFluxCfFlux<-mdotf,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating fluxFf_vel<-EfMag,boundaryNormalDistanceMag,mdotf,mu,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating farfield::fluxCfVisc<-EfMag,boundaryNormalDistanceMag,mu,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating wVel_f<-Velocity_f,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating vVel_f<-Velocity_f,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating uVel_f<-Velocity_f,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating Velocity_f<-ref->Uin,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating EfMag<-Ef,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating p_f<-ref->pOut,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating Ef<-area,boundaryNormalDistanceMag,distanceVec,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating boundaryNormalDistanceMag<-area,distanceVec,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating distanceVec<-ci->cellcenter,facecenter,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating momRefFlux<-area,density,ref->Uin,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating momRefFlux<-area,density,ref->Uin,CONSTRAINT(velInlet_BC) due to velInlet_BC
+removing non-participating output rule OUTPUT{n,igs}<-$n{n,igs},epsilon{n,igs},uRes{n,igs},CONDITIONAL(printFreq3{n,igs})
+cleanout stencil::limiterv3d(Velocity){n}<-Kl{n},Velocity{n},boundary_map{n}->Velocity_f{n},boundary_map{n}->facecenter{n},cellStencil{n}->(Velocity{n},cellcenter{n}),cellcenter{n},firstOrderCells{n},gradv3d(Velocity){n},grid_vol{n},nisPow{n},vol{n},CONSTRAINT(geom_cells{n},limiter_select_nishikawac{n},standardv3dLimit{n})
+because of variables cellStencil{n}
+cleanout stencil::limiterv3d(Velocity){n}<-Kl{n},Velocity{n},boundary_map{n}->Velocity_f{n},boundary_map{n}->facecenter{n},cellStencil{n}->(Velocity{n},cellcenter{n}),cellcenter{n},firstOrderCells{n},gradv3d(Velocity){n},grid_vol{n},nisPow{n},vol{n},CONSTRAINT(geom_cells{n},limiter_select_nishikawac{n},minv3dLimit{n})
+because of variables cellStencil{n}
+cleanout stencil::limiterv3d(Velocity){n}<-Kl{n},Velocity{n},boundary_map{n}->Velocity_f{n},boundary_map{n}->facecenter{n},cellStencil{n}->(Velocity{n},cellcenter{n}),cellcenter{n},firstOrderCells{n},gradv3d(Velocity){n},grid_vol{n},vol{n},CONSTRAINT(geom_cells{n},limiter_select_venkatakrishnan2{n})
+because of variables cellStencil{n}
+cleanout gradv3dIC(Velocity){n}<-LSBWeights{n},LSWeights{n},Velocity{n},boundary_map{n}->Velocity_f{n},cellStencil{n}->Velocity{n},CONSTRAINT(Velocity{n},geom_cells{n},nStepGrad{n},useCellStencil{n})
+because of variables cellStencil{n}
+cleanout gradv3d(Velocity){n}<-LSBWeights{n},LSWeights{n},Velocity{n},boundary_map{n}->Velocity_f{n},cellStencil{n}->Velocity{n},CONSTRAINT(geom_cells{n},gradType_select_standard{n},useCellStencil{n})
+because of variables cellStencil{n}
+cleanout stencil::limiters(p){n}<-Kl{n},boundary_map{n}->facecenter{n},boundary_map{n}->p_f{n},cellStencil{n}->(cellcenter{n},p{n}),cellcenter{n},firstOrderCells{n},grads(p){n},grid_vol{n},nisPow{n},p{n},vol{n},CONSTRAINT(geom_cells{n},limiter_select_nishikawac{n})
+because of variables cellStencil{n}
+cleanout stencil::limiters(p){n}<-Kl{n},boundary_map{n}->facecenter{n},boundary_map{n}->p_f{n},cellStencil{n}->(cellcenter{n},p{n}),cellcenter{n},firstOrderCells{n},grads(p){n},grid_vol{n},p{n},vol{n},CONSTRAINT(geom_cells{n},limiter_select_venkatakrishnan2{n})
+because of variables cellStencil{n}
+cleanout gradsIC(pPrime){n,igs}<-LSBWeights{n,igs},LSWeights{n,igs},boundary_map{n,igs}->pPrime_f{n,igs},cellStencil{n,igs}->pPrime{n,igs},pPrime{n,igs},CONSTRAINT(geom_cells{n,igs},nStepGrad{n,igs},pPrime{n,igs},useCellStencil{n,igs})
+because of variables cellStencil{n,igs}
+cleanout grads(pPrime){n,igs}<-LSBWeights{n,igs},LSWeights{n,igs},boundary_map{n,igs}->pPrime_f{n,igs},cellStencil{n,igs}->pPrime{n,igs},pPrime{n,igs},CONSTRAINT(geom_cells{n,igs},gradType_select_standard{n,igs},useCellStencil{n,igs})
+because of variables cellStencil{n,igs}
+cleanout gradsIC(pPrime){n}<-LSBWeights{n},LSWeights{n},boundary_map{n}->pPrime_f{n},cellStencil{n}->pPrime{n},pPrime{n},CONSTRAINT(geom_cells{n},nStepGrad{n},pPrime{n},useCellStencil{n})
+because of variables cellStencil{n}
+cleanout grads(pPrime){n}<-LSBWeights{n},LSWeights{n},boundary_map{n}->pPrime_f{n},cellStencil{n}->pPrime{n},pPrime{n},CONSTRAINT(geom_cells{n},gradType_select_standard{n},useCellStencil{n})
+because of variables cellStencil{n}
+cleanout gradsIC(p){n}<-LSBWeights{n},LSWeights{n},boundary_map{n}->p_f{n},cellStencil{n}->p{n},p{n},CONSTRAINT(geom_cells{n},nStepGrad{n},p{n},useCellStencil{n})
+because of variables cellStencil{n}
+cleanout grads(p){n}<-LSBWeights{n},LSWeights{n},boundary_map{n}->p_f{n},cellStencil{n}->p{n},p{n},CONSTRAINT(geom_cells{n},gradType_select_standard{n},useCellStencil{n})
+because of variables cellStencil{n}
+cleanout LSBWeights,LSWeights<-(boundary_map,lower,upper)->facecenter,boundary_map->facecenter,cellStencil->cellcenter,cellcenter,CONSTRAINT(cellcenter,gradStencilBias_select_off)
+because of variables cellStencil
+cleanout LSBWeights,LSWeights<-(boundary_map,lower,upper)->facecenter,boundary_map->facecenter,cellStencil->(cellcenter,stencil_bias),cellcenter,lower->cl,stencil_bias,upper->cr,CONSTRAINT(cellcenter,gradStencilBias_select_on)
+because of variables (cellStencil,stencil_bias)
+cleanout priority:limiterv3d(Velocity){n}<-stencil::limiterv3d(Velocity){n}
+because of variables stencil::limiterv3d(Velocity){n}
+cleanout priority:limiters(p){n}<-stencil::limiters(p){n}
+because of variables stencil::limiters(p){n}
+cleanout promote:LSBWeights{n}<-LSBWeights
+because of variables LSBWeights
+cleanout promote:LSWeights{n}<-LSWeights
+because of variables LSWeights
+precleaning rules that cannot be scheduled based on given facts:
+eliminating cr->SGSScalarSolve_backward(uInt)<-pmap->cl->SGSScalarSolve_forward(uInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating cr->SGSScalarSolve_backward(vInt)<-pmap->cl->SGSScalarSolve_forward(vInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating cr->SGSScalarSolve_backward(wInt)<-pmap->cl->SGSScalarSolve_forward(wInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating cr->limiters(p)<-pmap->cl->limiters(p),CONSTRAINT(cl->p,periodicFaces) due to periodicFaces
+eliminating cr->limiterv3d(Velocity)<-pmap->cl->limiterv3d(Velocity),pmap->ref->periodicTransform,CONSTRAINT(cl->Velocity,periodicFaces) due to periodicFaces
+eliminating OUTPUT<-BCName_BC_1,BCNodesSize_BC_1,cell2node(p),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_1,plotSwitchNodes(p)),CONDITIONAL(doPlotBC_BC_1) due to (BCNodes_BC_1,plotSwitchNodes(p))
+eliminating OUTPUT<-BCName_BC_1,BCNodesSize_BC_1,cell2node(pPrime),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_1,plotSwitchNodes(pPrime)),CONDITIONAL(doPlotBC_BC_1) due to (BCNodes_BC_1,plotSwitchNodes(pPrime))
+eliminating OUTPUT<-BCName_BC_1,BCNodesSize_BC_1,cell2node_v3d(Velocity),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_1,plotSwitchNodes(Velocity)),CONDITIONAL(doPlotBC_BC_1) due to (BCNodes_BC_1,plotSwitchNodes(Velocity))
+eliminating OUTPUT<-BCName_BC_2,BCNodesSize_BC_2,cell2node(p),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_2,plotSwitchNodes(p)),CONDITIONAL(doPlotBC_BC_2) due to (BCNodes_BC_2,plotSwitchNodes(p))
+eliminating OUTPUT<-BCName_BC_2,BCNodesSize_BC_2,cell2node(pPrime),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_2,plotSwitchNodes(pPrime)),CONDITIONAL(doPlotBC_BC_2) due to (BCNodes_BC_2,plotSwitchNodes(pPrime))
+eliminating OUTPUT<-BCName_BC_2,BCNodesSize_BC_2,cell2node_v3d(Velocity),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_2,plotSwitchNodes(Velocity)),CONDITIONAL(doPlotBC_BC_2) due to (BCNodes_BC_2,plotSwitchNodes(Velocity))
+eliminating OUTPUT<-BCName_BC_3,BCNodesSize_BC_3,cell2node(p),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_3,plotSwitchNodes(p)),CONDITIONAL(doPlotBC_BC_3) due to (BCNodes_BC_3,plotSwitchNodes(p))
+eliminating OUTPUT<-BCName_BC_3,BCNodesSize_BC_3,cell2node(pPrime),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_3,plotSwitchNodes(pPrime)),CONDITIONAL(doPlotBC_BC_3) due to (BCNodes_BC_3,plotSwitchNodes(pPrime))
+eliminating OUTPUT<-BCName_BC_3,BCNodesSize_BC_3,cell2node_v3d(Velocity),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_3,plotSwitchNodes(Velocity)),CONDITIONAL(doPlotBC_BC_3) due to (BCNodes_BC_3,plotSwitchNodes(Velocity))
+eliminating cr->gradv3d(Velocity)<-pmap->cl->gradv3d(Velocity),pmap->ref->periodicTransform,CONSTRAINT(cl->Velocity,periodicFaces) due to periodicFaces
+eliminating cr->grads(pPrime)<-pmap->cl->grads(pPrime),pmap->ref->periodicTransform,CONSTRAINT(cl->pPrime,periodicFaces) due to periodicFaces
+eliminating cr->SGSScalarSolve(wInt)<-pmap->cl->SGSScalarSolve(wInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating cr->SGSScalarSolve(vInt)<-pmap->cl->SGSScalarSolve(vInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating cr->SGSScalarSolve(uInt)<-pmap->cl->SGSScalarSolve(uInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating cr->grads(p)<-pmap->cl->grads(p),pmap->ref->periodicTransform,CONSTRAINT(cl->p,periodicFaces) due to periodicFaces
+eliminating OUTPUT<-selector(gradStencilBias,off) due to selector(gradStencilBias,off)
+eliminating OUTPUT<-selector(gradStencilBias,on) due to selector(gradStencilBias,on)
+eliminating OUTPUT<-selector(gradStencil,standard) due to selector(gradStencil,standard)
+eliminating OUTPUT<-selector(gradStencil,full) due to selector(gradStencil,full)
+eliminating OUTPUT<-selector(gradStencil,stable) due to selector(gradStencil,stable)
+eliminating OUTPUT<-selector(gradStencil,symm) due to selector(gradStencil,symm)
+eliminating OUTPUT<-selector(gradStencil,symmF) due to selector(gradStencil,symmF)
+eliminating OUTPUT<-selector(gradStencil,symmC) due to selector(gradStencil,symmC)
+eliminating OUTPUT<-selector(gradStencil,green) due to selector(gradStencil,green)
+eliminating OUTPUT<-selector(gradType,standard) due to selector(gradType,standard)
+eliminating OUTPUT<-selector(faceGradStencil,positive) due to selector(faceGradStencil,positive)
+eliminating OUTPUT<-selector(faceGradStencil,limited) due to selector(faceGradStencil,limited)
+eliminating OUTPUT<-selector(faceGradStencil,centered) due to selector(faceGradStencil,centered)
+eliminating OUTPUT<-selector(faceGradStencil,nishikawa) due to selector(faceGradStencil,nishikawa)
+eliminating ci->firstOrderCells<-ci->vol,CONSTRAINT(ci->vol,ref->firstOrder_BCoption) due to firstOrder_BCoption
+eliminating OUTPUT<-selector(centroid,exact) due to selector(centroid,exact)
+eliminating OUTPUT<-selector(centroid,wireframe) due to selector(centroid,wireframe)
+eliminating minPg<-Pambient due to Pambient
+eliminating cr->petscCellToRow<-pmap->cl->petscCellToRow due to pmap
+eliminating cl->petscNumDiagonalFromPeriodic<-cl,cl->petscLocalCell,pmap->cl,CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating OUTPUT<-selector(limiter,barth,B) due to selector(limiter,barth,B)
+eliminating OUTPUT<-selector(limiter,nishikawaf,NISf) due to selector(limiter,nishikawaf,NISf)
+eliminating OUTPUT<-selector(limiter,nishikawac,NISc) due to selector(limiter,nishikawac,NISc)
+eliminating OUTPUT<-selector(limiter,nodalbarth,NB) due to selector(limiter,nodalbarth,NB)
+eliminating OUTPUT<-selector(limiter,none) due to selector(limiter,none)
+eliminating OUTPUT<-selector(limiter,venkatakrishnan,V) due to selector(limiter,venkatakrishnan,V)
+eliminating OUTPUT<-selector(limiter,venkatakrishnan2,V2) due to selector(limiter,venkatakrishnan2,V2)
+eliminating OUTPUT<-selector(limiter,zero) due to selector(limiter,zero)
+eliminating OUTPUT<-selector(gradType,directionalDerivative,iterative1) due to selector(gradType,directionalDerivative,iterative1)
+eliminating OUTPUT<-selector(gradType,nishikawaUpwind,iterative2) due to selector(gradType,nishikawaUpwind,iterative2)
+eliminating DfGradPprimef<-CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating ci->a_C_p<-a_F_p_out,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating a_F_p_out<-area,ci->(sumFluxCfUR,vol),density,distanceVec,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating mdotfPrime<-area,ci->(pPrime,sumFluxCfUR,vol),density,distanceVec,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating mdotfStar<-Velocity_f,area,ci->(VelocityStar,grads(p),sumFluxCfUR,vol),density,grads_f(p),CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating shear2ndPart<-CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating fluxVf<-area,ci->(cellcenter,gradv3d(Velocity)),facecenter,mdotf,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating pPrime_f<-ci->Velocity,ci->cellcenter,ci->pPrime,density,facecenter,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating ci->sumFluxCfFlux<-fluxCf,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating fluxCf<-mdotf,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating fluxCfVisc<-CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating wVel_f<-Velocity_f,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating vVel_f<-Velocity_f,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating uVel_f<-Velocity_f,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating Velocity_f{n+1}<-area,ci->Velocity{n+1},ci->cellcenter,ci->gradv3d(Velocity){n},facecenter,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating p_f<-ref->pOut,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating pOut<-BC_options,CONSTRAINT(pOut_BCoption) due to pOut_BCoption
+eliminating EfMag<-Ef,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating Ef<-area,boundaryNormalDistanceMag,distanceVec,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating boundaryNormalDistanceMag<-area,distanceVec,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating distanceVec<-ci->cellcenter,facecenter,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating DfGradPprimef<-CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating mdotfPrime<-CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating mdotfStar<-Velocity_f,area,density,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating shear2ndPart<-CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating fluxVf<-Velocity_f,fluxFf_vel,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating pPrime_f<-ci->Velocity,ci->cellcenter,ci->pPrime,density,facecenter,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating ci->sumFluxCfFlux<-mdotf,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating fluxFf_vel<-EfMag,boundaryNormalDistanceMag,mdotf,mu,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating fluxCfVisc<-EfMag,boundaryNormalDistanceMag,mu,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating wVel_f<-Velocity_f,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating vVel_f<-Velocity_f,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating uVel_f<-Velocity_f,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating Velocity_f<-ref->Uin,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating Uin<-BC_options,CONSTRAINT(Uin_BCoption) due to Uin_BCoption
+eliminating EfMag<-Ef,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating p_f{n+1}<-ci->cellcenter,ci->grads(p){n},ci->p{n+1},facecenter,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating Ef<-area,boundaryNormalDistanceMag,distanceVec,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating boundaryNormalDistanceMag<-area,distanceVec,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating distanceVec<-ci->cellcenter,facecenter,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating OUTPUT<-(boundary_map,lower,upper)->face2edge->edge2node->cell2node_v3d(Velocity),(boundary_map,lower,upper)->face2node->cell2node_v3d(Velocity),cutInfo,cutplanes,modelName,ncycle,plot_postfix,CONSTRAINT((boundary_map,lower,upper)->face2node->pos,plotOutput_Velocity),CONDITIONAL(doPlotCut) due to plotOutput_Velocity
+eliminating OUTPUT<-cell2node_v3d(Velocity),modelName,plot_postfix,CONSTRAINT(plotOutput_Velocity,pos),CONDITIONAL(do_plot) due to plotOutput_Velocity
+eliminating OUTPUT<-(boundary_map,lower,upper)->face2edge->edge2node->cell2node(pPrime),(boundary_map,lower,upper)->face2node->cell2node(pPrime),cutInfo,cutplanes,modelName,ncycle,plot_postfix,CONSTRAINT((boundary_map,lower,upper)->face2node->pos,plotOutput_pPrime),CONDITIONAL(doPlotCut) due to plotOutput_pPrime
+eliminating OUTPUT<-cell2node(pPrime),modelName,plot_postfix,CONSTRAINT(plotOutput_pPrime,pos),CONDITIONAL(do_plot) due to plotOutput_pPrime
+eliminating OUTPUT<-(boundary_map,lower,upper)->face2edge->edge2node->cell2node(p),(boundary_map,lower,upper)->face2node->cell2node(p),cutInfo,cutplanes,modelName,ncycle,plot_postfix,CONSTRAINT((boundary_map,lower,upper)->face2node->pos,plotOutput_p),CONDITIONAL(doPlotCut) due to plotOutput_p
+eliminating OUTPUT<-cell2node(p),modelName,plot_postfix,CONSTRAINT(plotOutput_p,pos),CONDITIONAL(do_plot) due to plotOutput_p
+eliminating LSGSmatrixPeriodic<-cr->fileNumber(geom_cells),pmap->cl->fileNumber(geom_cells) due to pmap
+eliminating FSGSmatrixPeriodic<-cr->fileNumber(geom_cells),pmap->cl->fileNumber(geom_cells) due to pmap
+eliminating Velocity_f{n=0}<-Velocity_initial,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating p_f{n=0}<-p_initial,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating mdotf{n=0}<-mdotf_initial,CONSTRAINT(bottomWall_BC) due to bottomWall_BC
+eliminating mdotf{n=0}<-mdotf_initial,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating mdotf{n=0}<-mdotf_initial,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating mdotf{n=0}<-mdotf_initial,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating farfield::DfGradPprimef<-CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating farfield::mdotfPrime<-CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating mdotfStar<-Velocity_f,area,density,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating farfield::shear2ndPart<-CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating fluxVf<-Velocity_f,fluxFf_vel,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating pPrime_f<-ci->pPrime,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating ci->sumFluxCfFlux<-mdotf,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating fluxFf_vel<-EfMag,boundaryNormalDistanceMag,mdotf,mu,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating farfield::fluxCfVisc<-EfMag,boundaryNormalDistanceMag,mu,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating wVel_f<-Velocity_f,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating vVel_f<-Velocity_f,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating uVel_f<-Velocity_f,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating Velocity_f<-ref->Uin,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating EfMag<-Ef,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating p_f<-ref->pOut,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating Ef<-area,boundaryNormalDistanceMag,distanceVec,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating boundaryNormalDistanceMag<-area,distanceVec,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating distanceVec<-ci->cellcenter,facecenter,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating momRefFlux<-area,density,ref->Uin,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating momRefFlux<-area,density,ref->Uin,CONSTRAINT(velInlet_BC) due to velInlet_BC
+unused variables = ()
+iteration_variables = ()
+time to execute internal query 0.18724
+precleaning rules that cannot be scheduled based on given facts:
+eliminating itgrads_f(p,itgrads(p))<-area,ci->(cellcenter,itgrads(p),p),facecenter,nishikawaDiffusionAlpha,p_f,CONSTRAINT(ci->(cellcenter,p),gradType_select_nishikawaUpwind) due to gradType_select_nishikawaUpwind
+eliminating itgrads_f(p,itgrads(p))<-(cl,cr)->(cellcenter,itgrads(p),p),area,facecenter,nishikawaDiffusionAlpha,CONSTRAINT((cl,cr)->(cellcenter,p),gradType_select_nishikawaUpwind) due to gradType_select_nishikawaUpwind
+eliminating itgrads_f(p,itgrads(p))<-area,cl->(cellcenter,itgrads(p),p),facecenter,p_f,CONSTRAINT(ci->p,gradType_select_directionalDerivative) due to gradType_select_directionalDerivative
+eliminating itgrads_f(p,itgrads(p))<-(cl,cr)->(cellcenter,itgrads(p),p,vol),area,CONSTRAINT((cl,cr)->p,gradType_select_directionalDerivative) due to gradType_select_directionalDerivative
+eliminating itgrads_f(pPrime,itgrads(pPrime))<-area,ci->(cellcenter,itgrads(pPrime),pPrime),facecenter,nishikawaDiffusionAlpha,pPrime_f,CONSTRAINT(ci->(cellcenter,pPrime),gradType_select_nishikawaUpwind) due to gradType_select_nishikawaUpwind
+eliminating itgrads_f(pPrime,itgrads(pPrime))<-(cl,cr)->(cellcenter,itgrads(pPrime),pPrime),area,facecenter,nishikawaDiffusionAlpha,CONSTRAINT((cl,cr)->(cellcenter,pPrime),gradType_select_nishikawaUpwind) due to gradType_select_nishikawaUpwind
+eliminating itgrads_f(pPrime,itgrads(pPrime))<-area,cl->(cellcenter,itgrads(pPrime),pPrime),facecenter,pPrime_f,CONSTRAINT(ci->pPrime,gradType_select_directionalDerivative) due to gradType_select_directionalDerivative
+eliminating itgrads_f(pPrime,itgrads(pPrime))<-(cl,cr)->(cellcenter,itgrads(pPrime),pPrime,vol),area,CONSTRAINT((cl,cr)->pPrime,gradType_select_directionalDerivative) due to gradType_select_directionalDerivative
+eliminating itgradv3d_f(Velocity,itgradv3d(Velocity))<-Velocity_f,area,ci->(Velocity,cellcenter,itgradv3d(Velocity)),facecenter,nishikawaDiffusionAlpha,CONSTRAINT(ci->(Velocity,cellcenter),gradType_select_nishikawaUpwind) due to gradType_select_nishikawaUpwind
+eliminating itgradv3d_f(Velocity,itgradv3d(Velocity))<-(cl,cr)->(Velocity,cellcenter,itgradv3d(Velocity)),area,facecenter,nishikawaDiffusionAlpha,CONSTRAINT((cl,cr)->(Velocity,cellcenter),gradType_select_nishikawaUpwind) due to gradType_select_nishikawaUpwind
+eliminating itgradv3d_f(Velocity,itgradv3d(Velocity))<-Velocity_f,area,cl->(Velocity,cellcenter,itgradv3d(Velocity)),facecenter,CONSTRAINT(ci->Velocity,gradType_select_directionalDerivative) due to gradType_select_directionalDerivative
+eliminating itgradv3d_f(Velocity,itgradv3d(Velocity))<-(cl,cr)->(Velocity,cellcenter,itgradv3d(Velocity),vol),area,CONSTRAINT((cl,cr)->Velocity,gradType_select_directionalDerivative) due to gradType_select_directionalDerivative
+eliminating lsmint3d(itgradv3d_f(Velocity,itgradv3d(Velocity)))<-(boundary_map,lower,upper)->(area,facecenter,itgradv3d_f(Velocity,itgradv3d(Velocity))),cellcenter,lower->cl->cellcenter,lsvec,upper->cr->cellcenter,CONSTRAINT(geom_cells,gradType_select_nishikawaUpwind) due to gradType_select_nishikawaUpwind
+eliminating lsmint3d(itgradv3d_f(Velocity,itgradv3d(Velocity)))<-(boundary_map,lower,upper)->(area,itgradv3d_f(Velocity,itgradv3d(Velocity))),cellcenter,lsvec,CONSTRAINT(geom_cells,gradType_select_directionalDerivative) due to gradType_select_directionalDerivative
+eliminating lsminv3d(itgrads_f(pPrime,itgrads(pPrime)))<-(boundary_map,lower,upper)->(area,facecenter,itgrads_f(pPrime,itgrads(pPrime))),cellcenter,lower->cl->cellcenter,lsvec,upper->cr->cellcenter,CONSTRAINT(geom_cells,gradType_select_nishikawaUpwind) due to gradType_select_nishikawaUpwind
+eliminating lsminv3d(itgrads_f(pPrime,itgrads(pPrime)))<-(boundary_map,lower,upper)->(area,itgrads_f(pPrime,itgrads(pPrime))),cellcenter,lsvec,CONSTRAINT(geom_cells,gradType_select_directionalDerivative) due to gradType_select_directionalDerivative
+eliminating lsminv3d(itgrads_f(p,itgrads(p)))<-(boundary_map,lower,upper)->(area,facecenter,itgrads_f(p,itgrads(p))),cellcenter,lower->cl->cellcenter,lsvec,upper->cr->cellcenter,CONSTRAINT(geom_cells,gradType_select_nishikawaUpwind) due to gradType_select_nishikawaUpwind
+eliminating lsminv3d(itgrads_f(p,itgrads(p)))<-(boundary_map,lower,upper)->(area,itgrads_f(p,itgrads(p))),cellcenter,lsvec,CONSTRAINT(geom_cells,gradType_select_directionalDerivative) due to gradType_select_directionalDerivative
+eliminating gradsIC(p)<-(lower,upper)->(cl,cr)->(p,vol),(lower,upper)->area,boundary_map->(area,p_f),vol,CONSTRAINT(geom_cells,gradStencil_select_green,nStepGrad,p) due to (gradStencil_select_green,nStepGrad)
+eliminating gradsIC(p)<-LSBWeights,LSWeights,boundary_map->p_f,cellStencil->p,p,CONSTRAINT(geom_cells,nStepGrad,p,useCellStencil) due to nStepGrad
+eliminating gradsIC(p)<-boundary_map->Wf_l,boundary_map->p_f,lower->Wf_r,lower->cl->p,p,upper->Wf_l,upper->cr->p,CONSTRAINT(geom_cells,gradStencil_select_standard,nStepGrad,p) due to nStepGrad
+eliminating SGSScalarSolve_forward(uInt)<-SGSScalarDinv(uInt),lower->cl->SGSScalarSolve_forward(uInt),lower->uInt_L,uInt_B,upper->cr->SGSScalarSolve(uInt),upper->uInt_U due to SGSScalarDinv(uInt)
+eliminating SGSScalarSolve_forward(vInt)<-SGSScalarDinv(vInt),lower->cl->SGSScalarSolve_forward(vInt),lower->vInt_L,upper->cr->SGSScalarSolve(vInt),upper->vInt_U,vInt_B due to SGSScalarDinv(vInt)
+eliminating SGSScalarSolve_forward(wInt)<-SGSScalarDinv(wInt),lower->cl->SGSScalarSolve_forward(wInt),lower->wInt_L,upper->cr->SGSScalarSolve(wInt),upper->wInt_U,wInt_B due to SGSScalarDinv(wInt)
+eliminating gradsIC(pPrime)<-(lower,upper)->(cl,cr)->(pPrime,vol),(lower,upper)->area,boundary_map->(area,pPrime_f),vol,CONSTRAINT(geom_cells,gradStencil_select_green,nStepGrad,pPrime) due to (gradStencil_select_green,nStepGrad)
+eliminating gradsIC(pPrime)<-LSBWeights,LSWeights,boundary_map->pPrime_f,cellStencil->pPrime,pPrime,CONSTRAINT(geom_cells,nStepGrad,pPrime,useCellStencil) due to nStepGrad
+eliminating gradsIC(pPrime)<-boundary_map->Wf_l,boundary_map->pPrime_f,lower->Wf_r,lower->cl->pPrime,pPrime,upper->Wf_l,upper->cr->pPrime,CONSTRAINT(geom_cells,gradStencil_select_standard,nStepGrad,pPrime) due to nStepGrad
+eliminating gradv3dIC(Velocity)<-(lower,upper)->(cl,cr)->(Velocity,vol),(lower,upper)->area,boundary_map->(Velocity_f,area),vol,CONSTRAINT(Velocity,geom_cells,gradStencil_select_green,nStepGrad) due to (gradStencil_select_green,nStepGrad)
+eliminating gradv3dIC(Velocity)<-LSBWeights,LSWeights,Velocity,boundary_map->Velocity_f,cellStencil->Velocity,CONSTRAINT(Velocity,geom_cells,nStepGrad,useCellStencil) due to nStepGrad
+eliminating gradv3dIC(Velocity)<-Velocity,boundary_map->Velocity_f,boundary_map->Wf_l,lower->Wf_r,lower->cl->Velocity,upper->Wf_l,upper->cr->Velocity,CONSTRAINT(Velocity,geom_cells,gradStencil_select_standard,nStepGrad) due to nStepGrad
+eliminating petscScalarSystemInit(pCor)<-lower->cl->petscCellToRow,lower->pCor_L,pCor_B,pCor_D,petscCellToRow,petscMatNNZ,petscNumCell,petscScalarSystem(pCor),upper->cr->petscCellToRow,upper->pCor_U,CONSTRAINT(geom_cells,usePetscCOOAssembly) due to usePetscCOOAssembly
+eliminating petscScalarSystemInit(pCor)<-lower->cl->petscCellToRow,petscCellToRow,petscMatNNZ,petscMatrixName(pCor),petscNumCell,petscOptions(pCor),petscOptionsPrefix(pCor),petscScalarSystem(pCor),upper->cr->petscCellToRow,CONSTRAINT(geom_cells,usePetscCOOAssembly) due to usePetscCOOAssembly
+eliminating petscScalarSystemInit(wInt)<-lower->cl->petscCellToRow,lower->wInt_L,petscCellToRow,petscMatNNZ,petscNumCell,petscScalarSystem(wInt),upper->cr->petscCellToRow,upper->wInt_U,wInt_B,wInt_D,CONSTRAINT(geom_cells,usePetscCOOAssembly) due to usePetscCOOAssembly
+eliminating petscScalarSystemInit(wInt)<-lower->cl->petscCellToRow,petscCellToRow,petscMatNNZ,petscMatrixName(wInt),petscNumCell,petscOptions(wInt),petscOptionsPrefix(wInt),petscScalarSystem(wInt),upper->cr->petscCellToRow,CONSTRAINT(geom_cells,usePetscCOOAssembly) due to usePetscCOOAssembly
+eliminating petscScalarSystemInit(vInt)<-lower->cl->petscCellToRow,lower->vInt_L,petscCellToRow,petscMatNNZ,petscNumCell,petscScalarSystem(vInt),upper->cr->petscCellToRow,upper->vInt_U,vInt_B,vInt_D,CONSTRAINT(geom_cells,usePetscCOOAssembly) due to usePetscCOOAssembly
+eliminating petscScalarSystemInit(vInt)<-lower->cl->petscCellToRow,petscCellToRow,petscMatNNZ,petscMatrixName(vInt),petscNumCell,petscOptions(vInt),petscOptionsPrefix(vInt),petscScalarSystem(vInt),upper->cr->petscCellToRow,CONSTRAINT(geom_cells,usePetscCOOAssembly) due to usePetscCOOAssembly
+eliminating petscScalarSystemInit(uInt)<-lower->cl->petscCellToRow,lower->uInt_L,petscCellToRow,petscMatNNZ,petscNumCell,petscScalarSystem(uInt),uInt_B,uInt_D,upper->cr->petscCellToRow,upper->uInt_U,CONSTRAINT(geom_cells,usePetscCOOAssembly) due to usePetscCOOAssembly
+eliminating petscScalarSystemInit(uInt)<-lower->cl->petscCellToRow,petscCellToRow,petscMatNNZ,petscMatrixName(uInt),petscNumCell,petscOptions(uInt),petscOptionsPrefix(uInt),petscScalarSystem(uInt),upper->cr->petscCellToRow,CONSTRAINT(geom_cells,usePetscCOOAssembly) due to usePetscCOOAssembly
+eliminating itgrads(p){FVMig_p+1}<-lsminv3d(itgrads_f(p,itgrads(p))){FVMig_p},CONSTRAINT(geom_cells,nStepGrad,p) due to nStepGrad
+eliminating itgrads(p){FVMig_p=0}<-gradsIC(p),CONSTRAINT(geom_cells,nStepGrad,p) due to nStepGrad
+eliminating cr->SGSScalarSolve_backward(uInt)<-pmap->cl->SGSScalarSolve_forward(uInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating SGSScalarSolve_backward(uInt)<-SGSScalarDinv(uInt),lower->cl->SGSScalarSolve_forward(uInt),lower->uInt_L,uInt_B,upper->cr->SGSScalarSolve_backward(uInt),upper->uInt_U due to (SGSScalarDinv(uInt),SGSScalarSolve_forward(uInt))
+eliminating cr->SGSScalarSolve_backward(vInt)<-pmap->cl->SGSScalarSolve_forward(vInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating SGSScalarSolve_backward(vInt)<-SGSScalarDinv(vInt),lower->cl->SGSScalarSolve_forward(vInt),lower->vInt_L,upper->cr->SGSScalarSolve_backward(vInt),upper->vInt_U,vInt_B due to (SGSScalarDinv(vInt),SGSScalarSolve_forward(vInt))
+eliminating cr->SGSScalarSolve_backward(wInt)<-pmap->cl->SGSScalarSolve_forward(wInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating SGSScalarSolve_backward(wInt)<-SGSScalarDinv(wInt),lower->cl->SGSScalarSolve_forward(wInt),lower->wInt_L,upper->cr->SGSScalarSolve_backward(wInt),upper->wInt_U,wInt_B due to (SGSScalarDinv(wInt),SGSScalarSolve_forward(wInt))
+eliminating itgrads(pPrime){FVMig_pPrime+1}<-lsminv3d(itgrads_f(pPrime,itgrads(pPrime))){FVMig_pPrime},CONSTRAINT(geom_cells,nStepGrad,pPrime) due to nStepGrad
+eliminating itgrads(pPrime){FVMig_pPrime=0}<-gradsIC(pPrime),CONSTRAINT(geom_cells,nStepGrad,pPrime) due to nStepGrad
+eliminating itgradv3d(Velocity){FVMig_Velocity+1}<-lsmint3d(itgradv3d_f(Velocity,itgradv3d(Velocity))){FVMig_Velocity},CONSTRAINT(Velocity,geom_cells,nStepGrad) due to nStepGrad
+eliminating itgradv3d(Velocity){FVMig_Velocity=0}<-gradv3dIC(Velocity),CONSTRAINT(Velocity,geom_cells,nStepGrad) due to nStepGrad
+eliminating FSGSscalarMatrix(pCor)<-FSGSmatrixTopology,lower->pCor_L,pCor_B,pCor_D,upper->pCor_U due to FSGSmatrixTopology
+eliminating limiters(p)<-p,CONSTRAINT(geom_cells,limiter_select_zero) due to limiter_select_zero
+eliminating stencil::limiters(p)<-Kl,boundary_map->facecenter,boundary_map->p_f,cellStencil->(cellcenter,p),cellcenter,firstOrderCells,grads(p),grid_vol,p,vol,CONSTRAINT(geom_cells,limiter_select_venkatakrishnan2) due to limiter_select_venkatakrishnan2
+eliminating limiters(p)<-Kl,boundary_map->facecenter,boundary_map->p_f,cellcenter,firstOrderCells,grads(p),grid_vol,lower->cl->(cellcenter,p),p,upper->cr->(cellcenter,p),vol,CONSTRAINT(geom_cells,limiter_select_venkatakrishnan2) due to limiter_select_venkatakrishnan2
+eliminating limiters(p)<-p,CONSTRAINT(geom_cells,limiter_select_none) due to limiter_select_none
+eliminating limiters(p)<-boundary_map->face2node->(NGTNodalMax(p),NGTNodalMin(p),pos),cellcenter,firstOrderCells,grads(p),lower->face2node->(NGTNodalMax(p),NGTNodalMin(p),pos),p,upper->face2node->(NGTNodalMax(p),NGTNodalMin(p),pos),CONSTRAINT(geom_cells,limiter_select_nodalbarth) due to limiter_select_nodalbarth
+eliminating stencil::limiters(p)<-Kl,boundary_map->facecenter,boundary_map->p_f,cellStencil->(cellcenter,p),cellcenter,firstOrderCells,grads(p),grid_vol,nisPow,p,vol,CONSTRAINT(geom_cells,limiter_select_nishikawac) due to limiter_select_nishikawac
+eliminating limiters(p)<-Kl,boundary_map->facecenter,boundary_map->p_f,cellcenter,firstOrderCells,grads(p),grid_vol,lower->cl->(cellcenter,p),nisPow,p,upper->cr->(cellcenter,p),vol,CONSTRAINT(geom_cells,limiter_select_nishikawac) due to limiter_select_nishikawac
+eliminating limiters(p)<-Kl,boundary_map->facecenter,boundary_map->p_f,cellcenter,firstOrderCells,grads(p),grid_vol,lower->cl->p,lower->facecenter,nisPow,p,upper->cr->p,upper->facecenter,vol,CONSTRAINT(geom_cells,limiter_select_nishikawaf) due to limiter_select_nishikawaf
+eliminating limiters(p)<-boundary_map->facecenter,boundary_map->p_f,cellcenter,firstOrderCells,grads(p),lower->cl->p,lower->facecenter,p,upper->cr->p,upper->facecenter,CONSTRAINT(geom_cells,limiter_select_barth) due to limiter_select_barth
+eliminating cr->limiters(p)<-pmap->cl->limiters(p),CONSTRAINT(cl->p,periodicFaces) due to periodicFaces
+eliminating SGSScalarDinv(wInt)<-wInt_D,CONSTRAINT(fluidLinearSolverSGS,geom_cells) due to fluidLinearSolverSGS
+eliminating SGSScalarDinv(vInt)<-vInt_D,CONSTRAINT(fluidLinearSolverSGS,geom_cells) due to fluidLinearSolverSGS
+eliminating SGSScalarDinv(uInt)<-uInt_D,CONSTRAINT(fluidLinearSolverSGS,geom_cells) due to fluidLinearSolverSGS
+eliminating FSGSscalarMatrix(wInt)<-FSGSmatrixTopology,lower->wInt_L,upper->wInt_U,wInt_B,wInt_D due to FSGSmatrixTopology
+eliminating FSGSscalarMatrix(vInt)<-FSGSmatrixTopology,lower->vInt_L,upper->vInt_U,vInt_B,vInt_D due to FSGSmatrixTopology
+eliminating FSGSscalarMatrix(uInt)<-FSGSmatrixTopology,lower->uInt_L,uInt_B,uInt_D,upper->uInt_U due to FSGSmatrixTopology
+eliminating limiterv3d(Velocity)<-Velocity,CONSTRAINT(geom_cells,limiter_select_zero) due to limiter_select_zero
+eliminating stencil::limiterv3d(Velocity)<-Kl,Velocity,boundary_map->Velocity_f,boundary_map->facecenter,cellStencil->(Velocity,cellcenter),cellcenter,firstOrderCells,gradv3d(Velocity),grid_vol,vol,CONSTRAINT(geom_cells,limiter_select_venkatakrishnan2) due to limiter_select_venkatakrishnan2
+eliminating limiterv3d(Velocity)<-Kl,Velocity,boundary_map->Velocity_f,boundary_map->facecenter,cellcenter,firstOrderCells,gradv3d(Velocity),grid_vol,lower->cl->(Velocity,cellcenter),upper->cr->(Velocity,cellcenter),vol,CONSTRAINT(geom_cells,limiter_select_venkatakrishnan2,minv3dLimit) due to (limiter_select_venkatakrishnan2,minv3dLimit)
+eliminating limiterv3d(Velocity)<-Kl,Velocity,boundary_map->Velocity_f,boundary_map->facecenter,cellcenter,firstOrderCells,gradv3d(Velocity),grid_vol,lower->cl->(Velocity,cellcenter),upper->cr->(Velocity,cellcenter),vol,CONSTRAINT(geom_cells,limiter_select_venkatakrishnan2,standardv3dLimit) due to limiter_select_venkatakrishnan2
+eliminating limiterv3d(Velocity)<-Kl,Velocity,boundary_map->Velocity_f,boundary_map->facecenter,cellcenter,firstOrderCells,gradv3d(Velocity),grid_vol,lower->cl->Velocity,lower->facecenter,upper->cr->Velocity,upper->facecenter,vol,CONSTRAINT(geom_cells,limiter_select_venkatakrishnan,minv3dLimit) due to minv3dLimit
+eliminating limiterv3d(Velocity)<-Velocity,CONSTRAINT(geom_cells,limiter_select_none) due to limiter_select_none
+eliminating limiterv3d(Velocity)<-Velocity,boundary_map->face2node->(NGTNodalv3dMax(Velocity),NGTNodalv3dMin(Velocity),pos),cellcenter,firstOrderCells,gradv3d(Velocity),lower->face2node->(NGTNodalv3dMax(Velocity),NGTNodalv3dMin(Velocity),pos),upper->face2node->(NGTNodalv3dMax(Velocity),NGTNodalv3dMin(Velocity),pos),CONSTRAINT(geom_cells,limiter_select_nodalbarth,minv3dLimit) due to (limiter_select_nodalbarth,minv3dLimit)
+eliminating limiterv3d(Velocity)<-Velocity,boundary_map->face2node->(NGTNodalv3dMax(Velocity),NGTNodalv3dMin(Velocity),pos),cellcenter,firstOrderCells,gradv3d(Velocity),lower->face2node->(NGTNodalv3dMax(Velocity),NGTNodalv3dMin(Velocity),pos),upper->face2node->(NGTNodalv3dMax(Velocity),NGTNodalv3dMin(Velocity),pos),CONSTRAINT(geom_cells,limiter_select_nodalbarth,standardv3dLimit) due to limiter_select_nodalbarth
+eliminating stencil::limiterv3d(Velocity)<-Kl,Velocity,boundary_map->Velocity_f,boundary_map->facecenter,cellStencil->(Velocity,cellcenter),cellcenter,firstOrderCells,gradv3d(Velocity),grid_vol,nisPow,vol,CONSTRAINT(geom_cells,limiter_select_nishikawac,minv3dLimit) due to (limiter_select_nishikawac,minv3dLimit)
+eliminating stencil::limiterv3d(Velocity)<-Kl,Velocity,boundary_map->Velocity_f,boundary_map->facecenter,cellStencil->(Velocity,cellcenter),cellcenter,firstOrderCells,gradv3d(Velocity),grid_vol,nisPow,vol,CONSTRAINT(geom_cells,limiter_select_nishikawac,standardv3dLimit) due to limiter_select_nishikawac
+eliminating limiterv3d(Velocity)<-Kl,Velocity,boundary_map->Velocity_f,boundary_map->facecenter,cellcenter,firstOrderCells,gradv3d(Velocity),grid_vol,lower->cl->(Velocity,cellcenter),nisPow,upper->cr->(Velocity,cellcenter),vol,CONSTRAINT(geom_cells,limiter_select_nishikawac,minv3dLimit) due to (limiter_select_nishikawac,minv3dLimit)
+eliminating limiterv3d(Velocity)<-Kl,Velocity,boundary_map->Velocity_f,boundary_map->facecenter,cellcenter,firstOrderCells,gradv3d(Velocity),grid_vol,lower->cl->(Velocity,cellcenter),nisPow,upper->cr->(Velocity,cellcenter),vol,CONSTRAINT(geom_cells,limiter_select_nishikawac,standardv3dLimit) due to limiter_select_nishikawac
+eliminating limiterv3d(Velocity)<-Kl,Velocity,boundary_map->Velocity_f,boundary_map->facecenter,cellcenter,firstOrderCells,gradv3d(Velocity),grid_vol,lower->cl->Velocity,lower->facecenter,nisPow,upper->cr->Velocity,upper->facecenter,vol,CONSTRAINT(geom_cells,limiter_select_nishikawaf,minv3dLimit) due to (limiter_select_nishikawaf,minv3dLimit)
+eliminating limiterv3d(Velocity)<-Kl,Velocity,boundary_map->Velocity_f,boundary_map->facecenter,cellcenter,firstOrderCells,gradv3d(Velocity),grid_vol,lower->cl->Velocity,lower->facecenter,nisPow,upper->cr->Velocity,upper->facecenter,vol,CONSTRAINT(geom_cells,limiter_select_nishikawaf,standardv3dLimit) due to limiter_select_nishikawaf
+eliminating limiterv3d(Velocity)<-Velocity,boundary_map->Velocity_f,boundary_map->facecenter,cellcenter,firstOrderCells,gradv3d(Velocity),lower->cl->Velocity,lower->facecenter,upper->cr->Velocity,upper->facecenter,CONSTRAINT(geom_cells,limiter_select_barth,minv3dLimit) due to (limiter_select_barth,minv3dLimit)
+eliminating limiterv3d(Velocity)<-Velocity,boundary_map->Velocity_f,boundary_map->facecenter,cellcenter,firstOrderCells,gradv3d(Velocity),lower->cl->Velocity,lower->facecenter,upper->cr->Velocity,upper->facecenter,CONSTRAINT(geom_cells,limiter_select_barth,standardv3dLimit) due to limiter_select_barth
+eliminating cr->limiterv3d(Velocity)<-pmap->cl->limiterv3d(Velocity),pmap->ref->periodicTransform,CONSTRAINT(cl->Velocity,periodicFaces) due to periodicFaces
+eliminating OUTPUT<-BCName_BC_1,BCNodesSize_BC_1,cell2node(p),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_1,plotSwitchNodes(p)),CONDITIONAL(doPlotBC_BC_1) due to (BCNodes_BC_1,plotSwitchNodes(p))
+eliminating OUTPUT<-BCName_BC_1,BCNodesSize_BC_1,cell2node(pPrime),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_1,plotSwitchNodes(pPrime)),CONDITIONAL(doPlotBC_BC_1) due to (BCNodes_BC_1,plotSwitchNodes(pPrime))
+eliminating OUTPUT<-BCName_BC_1,BCNodesSize_BC_1,cell2node_v3d(Velocity),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_1,plotSwitchNodes(Velocity)),CONDITIONAL(doPlotBC_BC_1) due to (BCNodes_BC_1,plotSwitchNodes(Velocity))
+eliminating OUTPUT<-BCName_BC_2,BCNodesSize_BC_2,cell2node(p),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_2,plotSwitchNodes(p)),CONDITIONAL(doPlotBC_BC_2) due to (BCNodes_BC_2,plotSwitchNodes(p))
+eliminating OUTPUT<-BCName_BC_2,BCNodesSize_BC_2,cell2node(pPrime),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_2,plotSwitchNodes(pPrime)),CONDITIONAL(doPlotBC_BC_2) due to (BCNodes_BC_2,plotSwitchNodes(pPrime))
+eliminating OUTPUT<-BCName_BC_2,BCNodesSize_BC_2,cell2node_v3d(Velocity),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_2,plotSwitchNodes(Velocity)),CONDITIONAL(doPlotBC_BC_2) due to (BCNodes_BC_2,plotSwitchNodes(Velocity))
+eliminating OUTPUT<-BCName_BC_3,BCNodesSize_BC_3,cell2node(p),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_3,plotSwitchNodes(p)),CONDITIONAL(doPlotBC_BC_3) due to (BCNodes_BC_3,plotSwitchNodes(p))
+eliminating OUTPUT<-BCName_BC_3,BCNodesSize_BC_3,cell2node(pPrime),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_3,plotSwitchNodes(pPrime)),CONDITIONAL(doPlotBC_BC_3) due to (BCNodes_BC_3,plotSwitchNodes(pPrime))
+eliminating OUTPUT<-BCName_BC_3,BCNodesSize_BC_3,cell2node_v3d(Velocity),modelName,ncycle,plot_postfix,CONSTRAINT(BCNodes_BC_3,plotSwitchNodes(Velocity)),CONDITIONAL(doPlotBC_BC_3) due to (BCNodes_BC_3,plotSwitchNodes(Velocity))
+eliminating gradv3d(Velocity)<-itgradv3d(Velocity){FVMig_Velocity},CONSTRAINT(Velocity,geom_cells,nStepGrad),CONDITIONAL(FVMIGFinished_Velocity{FVMig_Velocity}) due to nStepGrad
+eliminating gradv3d(Velocity)<-(lower,upper)->(cl,cr)->(Velocity,vol),(lower,upper)->area,boundary_map->(Velocity_f,area),vol,CONSTRAINT(geom_cells,gradStencil_select_green,gradType_select_standard) due to gradStencil_select_green
+eliminating cr->gradv3d(Velocity)<-pmap->cl->gradv3d(Velocity),pmap->ref->periodicTransform,CONSTRAINT(cl->Velocity,periodicFaces) due to periodicFaces
+eliminating grads(pPrime)<-itgrads(pPrime){FVMig_pPrime},CONSTRAINT(geom_cells,nStepGrad,pPrime),CONDITIONAL(FVMIGFinished_pPrime{FVMig_pPrime}) due to nStepGrad
+eliminating grads(pPrime)<-(lower,upper)->(cl,cr)->(pPrime,vol),(lower,upper)->area,boundary_map->(area,pPrime_f),vol,CONSTRAINT(geom_cells,gradStencil_select_green,gradType_select_standard) due to gradStencil_select_green
+eliminating cr->grads(pPrime)<-pmap->cl->grads(pPrime),pmap->ref->periodicTransform,CONSTRAINT(cl->pPrime,periodicFaces) due to periodicFaces
+eliminating FSGSScalarSolve(pCor)<-FSGSmatrixTopology,FSGSscalarMatrix(pCor),gauss_seidel_iter due to (FSGSmatrixTopology,FSGSscalarMatrix(pCor))
+eliminating grads_f(p)<-area,ci->(cellcenter,grads(p),p),facecenter,nishikawaDiffusionAlpha,p_f,CONSTRAINT(ci->cellcenter,faceGradStencil_select_nishikawa) due to faceGradStencil_select_nishikawa
+eliminating grads_f(p)<-(cl,cr)->(cellcenter,grads(p),p),area,facecenter,nishikawaDiffusionAlpha,CONSTRAINT((cl,cr)->cellcenter,faceGradStencil_select_nishikawa) due to faceGradStencil_select_nishikawa
+eliminating grads_f(p)<-area,ci->(cellcenter,grads(p),limiters(p),p),face2node->pos,facecenter,p_f,CONSTRAINT(ci->cellcenter,faceGradStencil_select_centered) due to faceGradStencil_select_centered
+eliminating grads_f(p)<-(cl,cr)->(cellcenter,grads(p),limiters(p),p),area,face2node->pos,facecenter,CONSTRAINT((cl,cr)->cellcenter,faceGradStencil_select_centered) due to faceGradStencil_select_centered
+eliminating grads_f(p)<-area,cl->(cellcenter,grads(p),p),facecenter,p_f,CONSTRAINT(ci->p,faceGradStencil_select_positive) due to faceGradStencil_select_positive
+eliminating grads_f(p)<-(cl,cr)->(cellcenter,grads(p),p,vol),area,CONSTRAINT((cl,cr)->p,faceGradStencil_select_positive) due to faceGradStencil_select_positive
+eliminating cr->SGSScalarSolve(wInt)<-pmap->cl->SGSScalarSolve(wInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating cr->SGSScalarSolve(vInt)<-pmap->cl->SGSScalarSolve(vInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating cr->SGSScalarSolve(uInt)<-pmap->cl->SGSScalarSolve(uInt),CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating FSGSScalarSolve(wInt)<-FSGSmatrixTopology,FSGSscalarMatrix(wInt),gauss_seidel_iter due to (FSGSmatrixTopology,FSGSscalarMatrix(wInt))
+eliminating FSGSScalarSolve(vInt)<-FSGSmatrixTopology,FSGSscalarMatrix(vInt),gauss_seidel_iter due to (FSGSmatrixTopology,FSGSscalarMatrix(vInt))
+eliminating FSGSScalarSolve(uInt)<-FSGSmatrixTopology,FSGSscalarMatrix(uInt),gauss_seidel_iter due to (FSGSmatrixTopology,FSGSscalarMatrix(uInt))
+eliminating grads(p)<-itgrads(p){FVMig_p},CONSTRAINT(geom_cells,nStepGrad,p),CONDITIONAL(FVMIGFinished_p{FVMig_p}) due to nStepGrad
+eliminating grads(p)<-(lower,upper)->(cl,cr)->(p,vol),(lower,upper)->area,boundary_map->(area,p_f),vol,CONSTRAINT(geom_cells,gradStencil_select_green,gradType_select_standard) due to gradStencil_select_green
+eliminating cr->grads(p)<-pmap->cl->grads(p),pmap->ref->periodicTransform,CONSTRAINT(cl->p,periodicFaces) due to periodicFaces
+eliminating gradv3d_f(Velocity)<-Velocity_f,area,ci->(Velocity,cellcenter,gradv3d(Velocity)),facecenter,nishikawaDiffusionAlpha,CONSTRAINT(ci->cellcenter,faceGradStencil_select_nishikawa) due to faceGradStencil_select_nishikawa
+eliminating gradv3d_f(Velocity)<-(cl,cr)->(Velocity,cellcenter,gradv3d(Velocity)),area,facecenter,nishikawaDiffusionAlpha,CONSTRAINT((cl,cr)->cellcenter,faceGradStencil_select_nishikawa) due to faceGradStencil_select_nishikawa
+eliminating gradv3d_f(Velocity)<-Velocity_f,area,ci->(Velocity,cellcenter,gradv3d(Velocity),limiterv3d(Velocity)),face2node->pos,facecenter,CONSTRAINT(ci->cellcenter,faceGradStencil_select_centered) due to faceGradStencil_select_centered
+eliminating gradv3d_f(Velocity)<-(cl,cr)->(Velocity,cellcenter,gradv3d(Velocity),limiterv3d(Velocity)),area,face2node->pos,facecenter,CONSTRAINT((cl,cr)->cellcenter,faceGradStencil_select_centered) due to faceGradStencil_select_centered
+eliminating gradv3d_f(Velocity)<-Velocity_f,area,cl->(Velocity,cellcenter,gradv3d(Velocity)),facecenter,CONSTRAINT(ci->Velocity,faceGradStencil_select_positive) due to faceGradStencil_select_positive
+eliminating gradv3d_f(Velocity)<-(cl,cr)->(Velocity,cellcenter,gradv3d(Velocity),vol),area,CONSTRAINT((cl,cr)->Velocity,faceGradStencil_select_positive) due to faceGradStencil_select_positive
+eliminating OUTPUT<-selector(gradStencilBias,off) due to selector(gradStencilBias,off)
+eliminating OUTPUT<-selector(gradStencilBias,on) due to selector(gradStencilBias,on)
+eliminating OUTPUT<-selector(gradStencil,standard) due to selector(gradStencil,standard)
+eliminating OUTPUT<-selector(gradStencil,full) due to selector(gradStencil,full)
+eliminating OUTPUT<-selector(gradStencil,stable) due to selector(gradStencil,stable)
+eliminating OUTPUT<-selector(gradStencil,symm) due to selector(gradStencil,symm)
+eliminating OUTPUT<-selector(gradStencil,symmF) due to selector(gradStencil,symmF)
+eliminating OUTPUT<-selector(gradStencil,symmC) due to selector(gradStencil,symmC)
+eliminating OUTPUT<-selector(gradStencil,green) due to selector(gradStencil,green)
+eliminating OUTPUT<-selector(gradType,standard) due to selector(gradType,standard)
+eliminating OUTPUT<-selector(faceGradStencil,positive) due to selector(faceGradStencil,positive)
+eliminating OUTPUT<-selector(faceGradStencil,limited) due to selector(faceGradStencil,limited)
+eliminating OUTPUT<-selector(faceGradStencil,centered) due to selector(faceGradStencil,centered)
+eliminating OUTPUT<-selector(faceGradStencil,nishikawa) due to selector(faceGradStencil,nishikawa)
+eliminating ci->firstOrderCells<-ci->vol,CONSTRAINT(ci->vol,ref->firstOrder_BCoption) due to firstOrder_BCoption
+eliminating OUTPUT<-selector(centroid,exact) due to selector(centroid,exact)
+eliminating OUTPUT<-selector(centroid,wireframe) due to selector(centroid,wireframe)
+eliminating minPg<-Pambient due to Pambient
+eliminating cr->petscCellToRow<-pmap->cl->petscCellToRow due to pmap
+eliminating cl->petscNumDiagonalFromPeriodic<-cl,cl->petscLocalCell,pmap->cl,CONSTRAINT(periodicFaces) due to periodicFaces
+eliminating OUTPUT<-selector(limiter,barth,B) due to selector(limiter,barth,B)
+eliminating OUTPUT<-selector(limiter,nishikawaf,NISf) due to selector(limiter,nishikawaf,NISf)
+eliminating OUTPUT<-selector(limiter,nishikawac,NISc) due to selector(limiter,nishikawac,NISc)
+eliminating OUTPUT<-selector(limiter,nodalbarth,NB) due to selector(limiter,nodalbarth,NB)
+eliminating OUTPUT<-selector(limiter,none) due to selector(limiter,none)
+eliminating OUTPUT<-selector(limiter,venkatakrishnan,V) due to selector(limiter,venkatakrishnan,V)
+eliminating OUTPUT<-selector(limiter,venkatakrishnan2,V2) due to selector(limiter,venkatakrishnan2,V2)
+eliminating OUTPUT<-selector(limiter,zero) due to selector(limiter,zero)
+eliminating OUTPUT<-selector(gradType,directionalDerivative,iterative1) due to selector(gradType,directionalDerivative,iterative1)
+eliminating OUTPUT<-selector(gradType,nishikawaUpwind,iterative2) due to selector(gradType,nishikawaUpwind,iterative2)
+eliminating DfGradPprimef<-CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating ci->a_C_p<-a_F_p_out,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating a_F_p_out<-area,ci->(sumFluxCfUR,vol),density,distanceVec,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating mdotfPrime<-area,ci->(pPrime,sumFluxCfUR,vol),density,distanceVec,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating mdotfStar<-Velocity_f,area,ci->(VelocityStar,grads(p),sumFluxCfUR,vol),density,grads_f(p),CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating shear2ndPart<-CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating fluxVf<-area,ci->(cellcenter,gradv3d(Velocity)),facecenter,mdotf,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating pPrime_f<-ci->Velocity,ci->cellcenter,ci->pPrime,density,facecenter,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating ci->sumFluxCfFlux<-fluxCf,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating fluxCf<-mdotf,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating fluxCfVisc<-CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating wVel_f<-Velocity_f,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating vVel_f<-Velocity_f,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating uVel_f<-Velocity_f,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating Velocity_f{n+1}<-area,ci->Velocity{n+1},ci->cellcenter,ci->gradv3d(Velocity){n},facecenter,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating p_f<-ref->pOut,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating pOut<-BC_options,CONSTRAINT(pOut_BCoption) due to pOut_BCoption
+eliminating EfMag<-Ef,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating Ef<-area,boundaryNormalDistanceMag,distanceVec,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating boundaryNormalDistanceMag<-area,distanceVec,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating distanceVec<-ci->cellcenter,facecenter,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating DfGradPprimef<-CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating mdotfPrime<-CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating mdotfStar<-Velocity_f,area,density,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating shear2ndPart<-CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating fluxVf<-Velocity_f,fluxFf_vel,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating pPrime_f<-ci->Velocity,ci->cellcenter,ci->pPrime,density,facecenter,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating ci->sumFluxCfFlux<-mdotf,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating fluxFf_vel<-EfMag,boundaryNormalDistanceMag,mdotf,mu,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating fluxCfVisc<-EfMag,boundaryNormalDistanceMag,mu,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating wVel_f<-Velocity_f,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating vVel_f<-Velocity_f,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating uVel_f<-Velocity_f,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating Velocity_f<-ref->Uin,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating Uin<-BC_options,CONSTRAINT(Uin_BCoption) due to Uin_BCoption
+eliminating EfMag<-Ef,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating p_f{n+1}<-ci->cellcenter,ci->grads(p){n},ci->p{n+1},facecenter,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating Ef<-area,boundaryNormalDistanceMag,distanceVec,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating boundaryNormalDistanceMag<-area,distanceVec,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating distanceVec<-ci->cellcenter,facecenter,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating OUTPUT<-(boundary_map,lower,upper)->face2edge->edge2node->cell2node_v3d(Velocity),(boundary_map,lower,upper)->face2node->cell2node_v3d(Velocity),cutInfo,cutplanes,modelName,ncycle,plot_postfix,CONSTRAINT((boundary_map,lower,upper)->face2node->pos,plotOutput_Velocity),CONDITIONAL(doPlotCut) due to plotOutput_Velocity
+eliminating OUTPUT<-cell2node_v3d(Velocity),modelName,plot_postfix,CONSTRAINT(plotOutput_Velocity,pos),CONDITIONAL(do_plot) due to plotOutput_Velocity
+eliminating OUTPUT<-(boundary_map,lower,upper)->face2edge->edge2node->cell2node(pPrime),(boundary_map,lower,upper)->face2node->cell2node(pPrime),cutInfo,cutplanes,modelName,ncycle,plot_postfix,CONSTRAINT((boundary_map,lower,upper)->face2node->pos,plotOutput_pPrime),CONDITIONAL(doPlotCut) due to plotOutput_pPrime
+eliminating OUTPUT<-cell2node(pPrime),modelName,plot_postfix,CONSTRAINT(plotOutput_pPrime,pos),CONDITIONAL(do_plot) due to plotOutput_pPrime
+eliminating OUTPUT<-(boundary_map,lower,upper)->face2edge->edge2node->cell2node(p),(boundary_map,lower,upper)->face2node->cell2node(p),cutInfo,cutplanes,modelName,ncycle,plot_postfix,CONSTRAINT((boundary_map,lower,upper)->face2node->pos,plotOutput_p),CONDITIONAL(doPlotCut) due to plotOutput_p
+eliminating OUTPUT<-cell2node(p),modelName,plot_postfix,CONSTRAINT(plotOutput_p,pos),CONDITIONAL(do_plot) due to plotOutput_p
+eliminating LSGSmatrixPeriodic<-cr->fileNumber(geom_cells),pmap->cl->fileNumber(geom_cells) due to pmap
+eliminating FSGSmatrixTopology<-(lower,upper)->area,FSGSmatrixInitialize,FSGSmatrixPeriodic,cellcenter,lower->cl->cellcenter,upper->cr->cellcenter due to FSGSmatrixInitialize
+eliminating FSGSmatrixPeriodic<-cr->fileNumber(geom_cells),pmap->cl->fileNumber(geom_cells) due to pmap
+eliminating Velocity_f{n=0}<-Velocity_initial,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating p_f{n=0}<-p_initial,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating mdotf{n=0}<-mdotf_initial,CONSTRAINT(bottomWall_BC) due to bottomWall_BC
+eliminating mdotf{n=0}<-mdotf_initial,CONSTRAINT(pOutlet_BC) due to pOutlet_BC
+eliminating mdotf{n=0}<-mdotf_initial,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating mdotf{n=0}<-mdotf_initial,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating farfield::DfGradPprimef<-CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating farfield::mdotfPrime<-CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating mdotfStar<-Velocity_f,area,density,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating farfield::shear2ndPart<-CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating fluxVf<-Velocity_f,fluxFf_vel,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating pPrime_f<-ci->pPrime,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating ci->sumFluxCfFlux<-mdotf,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating fluxFf_vel<-EfMag,boundaryNormalDistanceMag,mdotf,mu,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating farfield::fluxCfVisc<-EfMag,boundaryNormalDistanceMag,mu,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating wVel_f<-Velocity_f,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating vVel_f<-Velocity_f,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating uVel_f<-Velocity_f,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating Velocity_f<-ref->Uin,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating EfMag<-Ef,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating p_f<-ref->pOut,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating Ef<-area,boundaryNormalDistanceMag,distanceVec,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating boundaryNormalDistanceMag<-area,distanceVec,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating distanceVec<-ci->cellcenter,facecenter,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating momRefFlux<-area,density,ref->Uin,CONSTRAINT(farfield_BC) due to farfield_BC
+eliminating momRefFlux<-area,density,ref->Uin,CONSTRAINT(velInlet_BC) due to velInlet_BC
+eliminating pPrime<-petscScalarSolve(pCor),CONSTRAINT(fluidLinearSolverSGS,geom_cells) due to fluidLinearSolverSGS
+eliminating pPrime<-LSGSScalarSolve(pCor),CONSTRAINT(fluidLinearSolverLSGS,geom_cells) due to fluidLinearSolverLSGS
+eliminating pPrime<-FSGSScalarSolve(pCor),CONSTRAINT(fluidLinearSolverFSGS,geom_cells) due to fluidLinearSolverFSGS
+eliminating wStar<-SGSScalarSolve(wInt),CONSTRAINT(fluidLinearSolverSGS,geom_cells) due to fluidLinearSolverSGS
+eliminating vStar<-SGSScalarSolve(vInt),CONSTRAINT(fluidLinearSolverSGS,geom_cells) due to fluidLinearSolverSGS
+eliminating uStar<-SGSScalarSolve(uInt),CONSTRAINT(fluidLinearSolverSGS,geom_cells) due to fluidLinearSolverSGS
+eliminating wStar<-LSGSScalarSolve(wInt),CONSTRAINT(fluidLinearSolverLSGS,geom_cells) due to fluidLinearSolverLSGS
+eliminating vStar<-LSGSScalarSolve(vInt),CONSTRAINT(fluidLinearSolverLSGS,geom_cells) due to fluidLinearSolverLSGS
+eliminating uStar<-LSGSScalarSolve(uInt),CONSTRAINT(fluidLinearSolverLSGS,geom_cells) due to fluidLinearSolverLSGS
+eliminating wStar<-FSGSScalarSolve(wInt),CONSTRAINT(fluidLinearSolverFSGS,geom_cells) due to fluidLinearSolverFSGS
+eliminating vStar<-FSGSScalarSolve(vInt),CONSTRAINT(fluidLinearSolverFSGS,geom_cells) due to fluidLinearSolverFSGS
+eliminating uStar<-FSGSScalarSolve(uInt),CONSTRAINT(fluidLinearSolverFSGS,geom_cells) due to fluidLinearSolverFSGS
+cleanout gradv3d(Velocity){n}<-LSBWeights{n},LSWeights{n},Velocity{n},boundary_map{n}->Velocity_f{n},cellStencil{n}->Velocity{n},CONSTRAINT(geom_cells{n},gradType_select_standard{n},useCellStencil{n})
+because of variables cellStencil{n}
+cleanout grads(pPrime){n}<-LSBWeights{n},LSWeights{n},boundary_map{n}->pPrime_f{n},cellStencil{n}->pPrime{n},pPrime{n},CONSTRAINT(geom_cells{n},gradType_select_standard{n},useCellStencil{n})
+because of variables cellStencil{n}
+cleanout grads(p){n}<-LSBWeights{n},LSWeights{n},boundary_map{n}->p_f{n},cellStencil{n}->p{n},p{n},CONSTRAINT(geom_cells{n},gradType_select_standard{n},useCellStencil{n})
+because of variables cellStencil{n}
+cleanout LSBWeights,LSWeights<-(boundary_map,lower,upper)->facecenter,boundary_map->facecenter,cellStencil->cellcenter,cellcenter,CONSTRAINT(cellcenter,gradStencilBias_select_off)
+because of variables cellStencil
+cleanout LSBWeights,LSWeights<-(boundary_map,lower,upper)->facecenter,boundary_map->facecenter,cellStencil->(cellcenter,stencil_bias),cellcenter,lower->cl,stencil_bias,upper->cr,CONSTRAINT(cellcenter,gradStencilBias_select_on)
+because of variables (cellStencil,stencil_bias)
+cleanout promote:LSBWeights{n}<-LSBWeights
+because of variables LSBWeights
+cleanout promote:LSWeights{n}<-LSWeights
+because of variables LSWeights
+unused variables = ()
+iteration_variables = $n{n}
+ initial_vars = ()
+Time taken for dmm graph decoration = 0.0209331 seconds 
+Time taken for chomping subgraph searching = 0.0165557 seconds 
+Time taken for graph scheduling = 0.0089193 sceonds 
+Time taken for graph processing  = 0.321248  seconds 
+Time taken for existential_analysis  = 0.0820742  seconds 
+Time taken for create execution schedule = 0.00949479 seconds 
+time to create schedule 0.924153

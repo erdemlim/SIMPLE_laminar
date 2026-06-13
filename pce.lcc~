@@ -1,0 +1,1409 @@
+extern const char *docvar_pce_5793[] ;
+#line 1 "pce.loci"
+#include <Loci.h>
+#include <algorithm>    // for std::max
+#include <cmath>
+
+// Get Finite Volume Data structures
+// finite-volume module provides facilities for computing cell and face 
+// centroids, finding gradients, performing integrations, interpolating 
+// from cell to nodal values, and solving linear systems. The types for 
+// these rules are defined in the Loci include file “FVM.lh” which can be included
+#line 1 "FVM.lh"
+//#############################################################################
+//#
+//# Copyright 2008-2025, Mississippi State University
+//#
+//# This file is part of the Loci Framework.
+//#
+//# The Loci Framework is free software: you can redistribute it and/or modify
+//# it under the terms of the Lesser GNU General Public License as published by
+//# the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The Loci Framework is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# Lesser GNU General Public License for more details.
+//#
+//# You should have received a copy of the Lesser GNU General Public License
+//# along with the Loci Framework.  If not, see <http://www.gnu.org/licenses>
+//#
+//#############################################################################
+
+/** Geometric Cells of the Mesh (not including ghost cells) */
+// $type geom_cells Constraint
+
+/** Nodal Positions */
+// $type pos store<Loci::vector3d<Loci::real_t> > 
+
+/** Map from faces to left cells */
+// $type cl Map
+
+/** Map from faces to right cells */
+// $type cr Map
+
+/** Map from boundary faces to adjacent geom_cells */
+// $type ci Map
+
+/** Map from boundary faces to reference surface */
+// $type ref Map
+
+/** Mapping from periodic boundary faces to periodic face pair */
+// $type pmap Map
+
+/** The transformation that maps periodic faces */
+// $type periodicTransform store<Loci::rigid_transform> 
+
+/** Mapping from face to nodes that define the face */
+// $type face2node multiMap
+
+/** Mapping from cell to faces that form upper matrix entries */
+// $type upper multiMap
+
+/** Mapping from cell to faces that form lower matrix entries */
+// $type lower multiMap
+
+/** Mapping from cell to boundary faces */
+// $type boundary_map multiMap
+
+
+/**
+ * This sets the coordinate system for the grid metric computations.  May be
+ * set to either 'cartesian' or 'axisymmetric'.  Use axisymmetric for
+ * two dimensional axisymmetric computations
+ */
+// $type gridCoordinates param<std::string> 
+
+/** Vars file selector for type of centroid calculation */
+// $type centroid param<std::string> 
+
+/** Compute thickness of extrusion (for axisymmetric case) */
+// $type cell_thickness store<real_t> 
+
+/** Maximum Grid Thickness (used to check validity of 2-D axisymmetric mesh */
+// $type gridThickMax param<real_t> 
+
+/** Minimum Grid Thickness (used to check validity of 2-D axisymmetric mesh */
+// $type gridThickMin param<real_t> 
+
+/** Thickness of z axis extrusion in 2-D mesh */
+// $type gridThickness param<real_t> 
+
+/**
+ * The minimum allowable volume which can be used to override negative volume
+ * calculations
+ */
+// $type minVolume param<real_t> 
+
+/** maximum number of faces per cell for grid */
+// $type max_fpc param<int> 
+
+/** Cell centroid */
+// $type cellcenter store<Loci::vector3d<Loci::real_t> > 
+
+/** Face centroid */
+// $type facecenter store<Loci::vector3d<Loci::real_t> > 
+
+/** Face area and normal */
+// $type area store<Loci::Area> 
+
+/**  Cell volume */
+// $type vol store<Loci::real_t> 
+
+/** Total grid volume */
+// $type grid_vol param<Loci::real_t> 
+
+/** vector orthogonal to face normal */
+// $type mn store<Loci::vector3d<Loci::real_t> > 
+
+/** vector orthogonal to face normal and mn */
+// $type ln store<Loci::vector3d<Loci::real_t> > 
+
+/** Scalar Gradient (must provide cell and boundary face values) */
+// $type grads(Y) store<Loci::vector3d<Loci::real_t> > 
+
+/** General Vector Gradient (must provide cell and boundary face values) */
+// $type gradv(Y) storeVec<Loci::vector3d<Loci::real_t> > 
+
+/** 3-D vector gradient (must provide cell and boundary face values) */
+// $type gradv3d(Y) store<Loci::tensor3d<Loci::real_t> > 
+
+/** Face scalar gradient (uses cell gradients and boundary face values) */
+// $type grads_f(Y) store<Loci::vector3d<Loci::real_t> > 
+
+/** Face general vector gradient (uses cell gradients and boundary face values) */
+// $type gradv_f(Y) storeVec<Loci::vector3d<Loci::real_t> > 
+
+/** 3-D vector gradient (must provide cell and boundary face values) */
+// $type gradv3d_f(Y) store<Loci::tensor3d<Loci::real_t> > 
+
+/** Scalar variable monotone limiters */
+// $type limiters(X) store<Loci::real_t> 
+
+/** General vector monotone limiters */
+// $type limiterv(X) storeVec<Loci::real_t> 
+
+/** 3-D vector monotone limiter */
+// $type limiterv3d(X) store<Loci::vector3d<Loci::real_t> > 
+
+/** MUSCL extrapolation to left side of face */
+// $type lefts(X) store<Loci::real_t> 
+
+/** MUSCL extrapolation to right side of face */
+// $type rights(X) store<Loci::real_t> 
+
+/** MUSCL scalar extrapolation for positive values to left side of face */
+// $type leftsP(X,M) store<Loci::real_t> 
+
+/** MUSCL scalar extrapolation for positive values to right side of face */
+// $type rightsP(X,M) store<Loci::real_t> 
+
+/** MUSCL general vector extrapolation for left side of face */
+// $type leftvM(X) storeVec<Loci::real_t> 
+
+/** MUSCL general vector extrapolation for right side of face */
+// $type rightvM(X) storeVec<Loci::real_t> 
+
+/** MUSCL 3-D vector extrapolation for left side of face */
+// $type leftv3d(X) store<Loci::vector3d<Loci::real_t> > 
+
+/** MUSCL 3-D vector extrapolation for right side of face */
+// $type rightv3d(X) store<Loci::vector3d<Loci::real_t> > 
+
+
+/** Simple scalar interpolation from geom_cells and boundary faces to nodes */
+// $type cell2node(X) store<float> 
+
+/**
+ * Simple general vector interpolation from geom_cells and
+ * boundary faces to nodes
+ */
+// $type cell2node_v(X) storeVec<float> 
+
+/** Simple 3-D vector interpolation from geom_cells and boundary faces to
+ * nodes
+ */
+// $type cell2node_v3d(X) store<Loci::vector3d<float> > 
+
+/** Nodal maximum value of neighboring cell scalars */
+// $type cell2nodeMax(X) store<float> 
+
+/** Nodal minimum value of neighboring cell scalars */
+// $type cell2nodeMin(X) store<float> 
+
+/** Nodal maximum magnitude value of neighboring cells scalars */
+// $type cell2nodeMaxMag(X) store<float> 
+
+/** Nodal Maximum of fields of 3-D vector of neighboring cell vectors */
+// $type cell2nodeMaxv3d(X) store<vector3d<float> > 
+
+/** All boundary faces that are not marked as a symmetry boundary */
+// $type no_symmetry_BC Constraint
+
+/** All boundary faces */
+// $type boundary_faces Constraint
+
+/**
+ * boundary reference surfaces that are marked as utilizing
+ * first-order extrapolation
+ */
+// $type firstOrder_BCoption Constraint
+
+/** boundary reference surface options specified in boundary conditions */
+// $type BC_options store<Loci::options_list> 
+
+/** Integrate a scalar over the boundary surfaces of a cell */
+// $type integrateSurface(X) store<Loci::real_t> 
+
+/** Integrate a vector valued function dotted with surface vectors over cell */
+// $type integrateFlux(X) store<Loci::real_t> 
+
+/** Helper utility for interfacing with the PETSc solver for scalar equations */
+// $type petscScalarSolve(X) store<Loci::real_t> 
+
+/**
+ * Helper utility for interfacing with the PETSc solver for storeVec
+ * equations with double precision jacobians
+ */
+// $type petscBlockedSolve(X) storeVec<Loci::real_t> 
+
+/**
+ * Helper utility for interfacing with the PETSc solver for storeVec
+ * equations with single precision jacobians
+ */
+// $type petscBlockedSSolve(X) storeVec<Loci::real_t> 
+
+/** L-2 Norm of scalar over geom_cells */
+// $type L2Norm(X) param<Loci::real_t> 
+
+/** L-1 Norm of scalar over geom_cells */
+// $type L1Norm(X) param<Loci::real_t> 
+
+/** L-Infinity Norm of Scalar of geom_cells */
+// $type LinfNorm(X) param<Loci::real_t> 
+
+/** Get file number of entity */
+// $type fileNumber(X) store<int> 
+
+/// Convert argument into a string that is the name of the substitution used
+/// in parametricName(X)
+// $type parametricName(X) param<std::string> 
+
+/// Dummy type to facilitate adding selector generators using parametric rules
+// $type selector(SELECT,SELECTION,ABBREV) param<bool> 
+
+/// Dummy type to facilitate adding selector generators using parametric rules
+// $type selector(SELECT,SELECTION) param<bool> 
+
+/// get vector size of storeVec<real_t>
+// $type vecSize(M) param<int> 
+
+/** Used to store the volume tag name for tagged vog file regions */
+// $type volumeTag(X) param<string> 
+
+/** All boundary faces that are participating in periodic boundary conditions */
+// $type periodicFaces Constraint
+
+/** Tell grid metrics to use standard cartesian metrics */
+// $type cartesianCoordinateModel Constraint
+
+/** Tell grid metrics that grid represents a 2-D axisymmetric region */
+// $type axisymmetricCoordinateModel Constraint
+
+/** cell-based scalar quantity used in the adaptive gradient stencil
+    selection. It can be a volume-fraction, pressure, or any other
+    field of interest, and it is used to adapt the stencil of
+    full,stable,symm,symmF,symmC methods around large
+    "stencil_bias" jumps. This variable must
+    be provided by the simulation tool, otherwise setting
+    gradStencilBias: on
+    will result in an incomplete schedule.
+*/
+// $type stencil_bias store<Loci::real_t> 
+
+/**
+   Variable used to select between standard 1-step cell gradient
+   operators (standard) and the n-step iterative methods
+   (iterative1,iterative2).
+*/
+// $type gradType param<string> 
+
+/**
+   Number of iteration steps for the cell gradient n-step iterative methods
+   (iterative1,iterative2).
+*/
+// $type gradSteps param<int> 
+
+#line 10 "pce.loci"
+
+#line 1 "lid.lh"
+
+typedef Loci::real_t real ;
+typedef vector3d<Loci::real_t> vect3d ;
+
+// $type nGreaterThanZero param<bool> 
+
+// $type Velocity store<vect3d> 
+// $type uVel store<real> 
+// $type vVel store<real> 
+// $type wVel store<real> 
+// $type p store<real> 
+// $type p_interior store<real> 
+// $type mdotf store<real> 
+
+// $type Velocity_face_Prime store<vect3d> 
+// $type VelocityFace store<vect3d> 
+  // $type gradient_p store<vect3d> 
+ 
+// $type Velocity_f store<vect3d> 
+// $type uVel_f store<real> 
+// $type vVel_f store<real> 
+// $type wVel_f store<real> 
+// $type p_f store<real> 
+// $type pPrime_f store<real> 
+
+// $type pPrimeFaceGrad store<vect3d> 
+
+// $type cellPresGrad store<vect3d> 
+// $type DfGradPprimef store<vect3d> 
+
+// $type mu param<real> 
+// $type density param<real> 
+// $type dt param<real> 
+
+// $type stop_iter param<int> 
+// $type print_freq param<int> 
+// $type plot_freq param<int> 
+// $type plot_modulo param<int> 
+// $type epsilon param<real> 
+
+// $type mdotf_initial param<real> 
+// $type p_initial param<real> 
+// $type u_init param<real> 
+// $type v_init param<real> 
+// $type w_init param<real> 
+// $type Velocity_initial store<vect3d> 
+// $type linIntVel_initial param<vect3d> 
+// $type rcIntVel_initial param<vect3d> 
+
+// $type uRelax param<real> 
+// $type pRelax param<real> 
+
+// $type pOut store<real>   // to be read from the given BCs
+// $type Uin store<vect3d>   // to be read from the given BCs
+// $type Uwall store<vect3d>   // to be read from the given BCs
+
+// $type Uwall_BCoption Constraint
+// $type Uin_BCoption Constraint
+// $type pOut_BCoption Constraint
+
+// $type viscousWall_BC Constraint
+// $type velInlet_BC Constraint
+// $type farfield_BC Constraint
+// $type pOutlet_BC Constraint
+// $type bottomWall_BC Constraint
+// $type symmetry_BC Constraint
+
+
+
+// *** variables for geom.loci ***
+
+// $type distanceVec store<vect3d> 
+// $type distanceMag store<real> 
+// $type distanceUnitVec store<vect3d> 
+// $type Ef store<vect3d> 
+// $type Tf store<vect3d> 
+// $type EfMag store<real> 
+// $type geomFacLeft store<real> 
+// $type geomFacRight store<real> 
+// $type boundaryNormalDistanceMag store<real> 
+
+
+
+// *** variables for momentum.loci ***
+
+// $type faceUGrad store<vect3d> 
+// $type faceVGrad store<vect3d> 
+// $type faceWGrad store<vect3d> 
+
+// $type fluxCfRight store<vect3d> 
+// $type fluxCfLeft store<vect3d> 
+// $type fluxCf store<vect3d> 
+// $type fluxCfVisc store<vect3d> 
+
+// $type sumFluxCf store<vect3d> 
+// $type sumFluxCfFlux store<vect3d>  // reduction of face fluxes only (unit=0); transient added pointwise
+// $type sumFluxCfUR store<vect3d>  //underrelaxed
+// $type fluxFf_vel store<real> 
+// $type fluxFfLeft store<real> 
+// $type fluxFfRight store<real> 
+
+// $type fluxVf store<vect3d> 
+// $type rhsBoundaryMomP store<vect3d> 
+// $type sumFluxVf store<vect3d> 
+
+// $type shear2ndPart store<vect3d> 
+// $type sumShear2ndPart store<vect3d> 
+
+// $type rhsMomP store<vect3d> 
+
+// $type b store<vect3d> 
+// $type bUR store<vect3d>  //underrelaxed
+
+// $type uStar store<real> 
+// $type vStar store<real> 
+// $type wStar store<real> 
+// $type VelocityStar store<vect3d> 
+
+
+
+// *** variables for rhiechow.loci ***
+
+// $type linIntVel store<vect3d> 
+// $type Df store<vect3d> 
+// $type DfU store<real> 
+// $type DfV store<real> 
+// $type DfW store<real> 
+
+// $type firstPresGrad store<vect3d> 
+// $type secondPresGrad store<vect3d> 
+
+// $type rcIntVel store<vect3d> 
+
+// $type mdotfStar store<real> 
+
+
+
+// *** variables for pce.loci ***
+// $type a_F_p store<real> 
+// $type a_F_p2 store<real> 
+// $type a_F_p_out store<real> 
+// $type a_F_p_Left store<real> 
+// $type a_F_p_Right store<real> 
+// $type a_C_p store<real> 
+// $type a_C_p2 store<real> 
+// $type b_C_p store<real> 
+// $type b_C_p2 store<real> 
+// $type pPrime store<real> 
+
+
+
+// *** variables for correction.loci ***
+// $type VelocityPrime store<vect3d> 
+
+// $type mdotfPrime store<real> 
+
+
+
+// *** variables for convergenceCheck.loci ***
+// $type uRes param<real> 
+// $type vRes param<real> 
+// $type wRes param<real> 
+// $type continuityRes param<real> 
+
+// $type sumFluxFf store<vect3d> 
+
+// $type sumResUNom param<real> 
+// $type sumResUDenom param<real> 
+// $type sumResVNom param<real> 
+// $type sumResVDenom param<real> 
+// $type sumResWNom param<real> 
+// $type sumResWDenom param<real> 
+// $type sumResContinuity param<real> 
+// $type sumResContinuityRef param<real> 
+
+// Conditions for termination
+// $type finishMaxIter param<bool> 
+// $type finishURes param<bool> 
+// $type finishVRes param<bool> 
+// $type finishWRes param<bool> 
+// $type finishContinuityRes param<bool> 
+
+// $type solution store<vect3d> 
+
+
+// $type count param<flowPsi::real> 
+
+// $type sumResMom param<flowPsi::vect3d> 
+// $type sumRes_p param<flowPsi::real> 
+// $type uRes param<flowPsi::real> 
+// $type vRes param<flowPsi::real> 
+// $type wRes param<flowPsi::real> 
+// $type pRes param<flowPsi::real> 
+
+
+#line 11 "pce.loci"
+
+/*
+$rule pointwise(a_F_p<-density, Df, distanceVec, area,EfMag,distanceMag), constraint((cl,cr)->geom_cells) {
+  $a_F_p = -dot($Df,$area.n);
+}
+*/
+namespace {class file_pce000_9298m587 : public Loci::pointwise_rule {
+#line 17 "pce.loci"
+    Loci::const_store<Loci::Area>  L_area_ ; 
+#line 17 "pce.loci"
+    Loci::const_param<real>  L_density_ ; 
+#line 17 "pce.loci"
+    Loci::const_store<vect3d>  L_distanceVec_ ; 
+#line 17 "pce.loci"
+    Loci::const_store<real>  L_distanceMag_ ; 
+#line 17 "pce.loci"
+    Loci::const_store<real>  L_EfMag_ ; 
+#line 17 "pce.loci"
+    Loci::const_store<vect3d>  L_Df_ ; 
+#line 17 "pce.loci"
+    Loci::store<real>  L_a_F_p_ ; 
+#line 17 "pce.loci"
+public:
+#line 17 "pce.loci"
+    file_pce000_9298m587() {
+#line 17 "pce.loci"
+       name_store("area",L_area_) ;
+#line 17 "pce.loci"
+       store_info_id("area",0) ;
+#line 17 "pce.loci"
+       name_store("density",L_density_) ;
+#line 17 "pce.loci"
+       store_info_id("density",1) ;
+#line 17 "pce.loci"
+       name_store("distanceVec",L_distanceVec_) ;
+#line 17 "pce.loci"
+       store_info_id("distanceVec",2) ;
+#line 17 "pce.loci"
+       name_store("distanceMag",L_distanceMag_) ;
+#line 17 "pce.loci"
+       store_info_id("distanceMag",3) ;
+#line 17 "pce.loci"
+       name_store("EfMag",L_EfMag_) ;
+#line 17 "pce.loci"
+       store_info_id("EfMag",4) ;
+#line 17 "pce.loci"
+       name_store("Df",L_Df_) ;
+#line 17 "pce.loci"
+       store_info_id("Df",5) ;
+#line 17 "pce.loci"
+       name_store("a_F_p",L_a_F_p_) ;
+#line 17 "pce.loci"
+       store_info_id("a_F_p",6) ;
+#line 17 "pce.loci"
+       input("density,Df,distanceVec,area,EfMag,distanceMag") ;
+#line 17 "pce.loci"
+       output("a_F_p") ;
+#line 17 "pce.loci"
+       store_info_id("geom_cells",7) ;
+#line 17 "pce.loci"
+       store_info_id("cl",8) ;
+#line 17 "pce.loci"
+       store_info_id("cr",9) ;
+#line 17 "pce.loci"
+       constraint("(cl,cr)->geom_cells") ;
+#line 17 "pce.loci"
+       setvardoc(docvar_pce_5793) ;
+       set_file("pce.loci:17") ;
+#line 17 "pce.loci"
+    }
+#line 17 "pce.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 18 "pce.loci"
+     const vect3d Sf = L_area_[_e_].sada * L_area_[_e_].n ;
+     const real Efp =(std ::pow (L_Df_[_e_][0]*Sf [0],2.0)+std ::pow (L_Df_[_e_][1]*Sf [1],2.0)+std ::pow (L_Df_[_e_][2]*Sf [2],2.0))/(L_distanceVec_[_e_][0]*L_Df_[_e_][0]*Sf [0]+L_distanceVec_[_e_][1]*L_Df_[_e_][1]*Sf [1]+L_distanceVec_[_e_][2]*L_Df_[_e_][2]*Sf [2]) ;
+   L_a_F_p_[_e_]= -L_density_[_e_]*Efp ;
+//       std::cout << "area.n" << std::endl;
+//    std::cout << $area.n << std::endl;
+
+}    void compute(const Loci::sequence &seq) { 
+#line 24 "pce.loci"
+      do_loop(seq,this) ;
+#line 24 "pce.loci"
+    }
+#line 24 "pce.loci"
+} ;
+#line 24 "pce.loci"
+Loci::register_rule<file_pce000_9298m587> register_file_pce000_9298m587 ;
+#line 24 "pce.loci"
+}
+#line 24 "pce.loci"
+
+
+
+// Calculate the coefficient for the central cell (a_C_p). For this we need the 
+// summation of a_F_p's on faces of each cell
+
+// For summation start with a unit rule and initialize with value "0"
+namespace {class file_pce001_9298m601 : public Loci::unit_rule {
+#line 31 "pce.loci"
+    Loci::store<real>  L_a_C_p_ ; 
+#line 31 "pce.loci"
+public:
+#line 31 "pce.loci"
+    file_pce001_9298m601() {
+#line 31 "pce.loci"
+       name_store("a_C_p",L_a_C_p_) ;
+#line 31 "pce.loci"
+       store_info_id("a_C_p",10) ;
+#line 31 "pce.loci"
+       output("a_C_p") ;
+#line 31 "pce.loci"
+       store_info_id("geom_cells",7) ;
+#line 31 "pce.loci"
+       constraint("geom_cells") ;
+#line 31 "pce.loci"
+       setvardoc(docvar_pce_5793) ;
+       set_file("pce.loci:31") ;
+#line 31 "pce.loci"
+    }
+#line 31 "pce.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 32 "pce.loci"
+  L_a_C_p_[_e_]= 0.0 ;
+}    void compute(const Loci::sequence &seq) { 
+#line 33 "pce.loci"
+      do_loop(seq,this) ;
+#line 33 "pce.loci"
+    }
+#line 33 "pce.loci"
+} ;
+#line 33 "pce.loci"
+Loci::register_rule<file_pce001_9298m601> register_file_pce001_9298m601 ;
+#line 33 "pce.loci"
+}
+#line 33 "pce.loci"
+
+
+
+// Add to the left cell
+namespace {class file_pce002_9298m607 : public Loci::apply_rule< store<real> ,Loci::Summation<real> >  {
+#line 38 "pce.loci"
+    Loci::const_Map L_cl_ ; 
+#line 38 "pce.loci"
+    Loci::const_store<real>  L_a_F_p_ ; 
+#line 38 "pce.loci"
+    Loci::store<real>  L_a_C_p_ ; 
+#line 38 "pce.loci"
+public:
+#line 38 "pce.loci"
+    file_pce002_9298m607() {
+#line 38 "pce.loci"
+       name_store("cl",L_cl_) ;
+#line 38 "pce.loci"
+       store_info_id("cl",8) ;
+#line 38 "pce.loci"
+       name_store("a_F_p",L_a_F_p_) ;
+#line 38 "pce.loci"
+       store_info_id("a_F_p",6) ;
+#line 38 "pce.loci"
+       name_store("a_C_p",L_a_C_p_) ;
+#line 38 "pce.loci"
+       store_info_id("a_C_p",10) ;
+#line 38 "pce.loci"
+       input("a_F_p") ;
+#line 38 "pce.loci"
+       output("cl->a_C_p") ;
+#line 38 "pce.loci"
+       store_info_id("geom_cells",7) ;
+#line 38 "pce.loci"
+       store_info_id("cr",9) ;
+#line 38 "pce.loci"
+       constraint("(cl,cr)->geom_cells") ;
+#line 38 "pce.loci"
+       setvardoc(docvar_pce_5793) ;
+       set_file("pce.loci:38") ;
+#line 38 "pce.loci"
+    }
+#line 38 "pce.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 39 "pce.loci"
+  join (L_a_C_p_[L_cl_[_e_]],  -1*L_a_F_p_[_e_]) ;
+  }    void compute(const Loci::sequence &seq) { 
+#line 40 "pce.loci"
+      do_loop(seq,this) ;
+#line 40 "pce.loci"
+    }
+#line 40 "pce.loci"
+} ;
+#line 40 "pce.loci"
+Loci::register_rule<file_pce002_9298m607> register_file_pce002_9298m607 ;
+#line 40 "pce.loci"
+}
+#line 40 "pce.loci"
+
+
+// Add to the right cell
+  namespace {class file_pce003_9298m616 : public Loci::apply_rule< store<real> ,Loci::Summation<real> >  {
+#line 44 "pce.loci"
+    Loci::const_Map L_cr_ ; 
+#line 44 "pce.loci"
+    Loci::const_store<real>  L_a_F_p_ ; 
+#line 44 "pce.loci"
+    Loci::store<real>  L_a_C_p_ ; 
+#line 44 "pce.loci"
+public:
+#line 44 "pce.loci"
+    file_pce003_9298m616() {
+#line 44 "pce.loci"
+       name_store("cr",L_cr_) ;
+#line 44 "pce.loci"
+       store_info_id("cr",9) ;
+#line 44 "pce.loci"
+       name_store("a_F_p",L_a_F_p_) ;
+#line 44 "pce.loci"
+       store_info_id("a_F_p",6) ;
+#line 44 "pce.loci"
+       name_store("a_C_p",L_a_C_p_) ;
+#line 44 "pce.loci"
+       store_info_id("a_C_p",10) ;
+#line 44 "pce.loci"
+       input("a_F_p") ;
+#line 44 "pce.loci"
+       output("cr->a_C_p") ;
+#line 44 "pce.loci"
+       store_info_id("geom_cells",7) ;
+#line 44 "pce.loci"
+       store_info_id("cl",8) ;
+#line 44 "pce.loci"
+       constraint("(cl,cr)->geom_cells") ;
+#line 44 "pce.loci"
+       setvardoc(docvar_pce_5793) ;
+       set_file("pce.loci:44") ;
+#line 44 "pce.loci"
+    }
+#line 44 "pce.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 45 "pce.loci"
+  join (L_a_C_p_[L_cr_[_e_]],  -1*L_a_F_p_[_e_]) ;
+	  
+  }    void compute(const Loci::sequence &seq) { 
+#line 47 "pce.loci"
+      do_loop(seq,this) ;
+#line 47 "pce.loci"
+    }
+#line 47 "pce.loci"
+} ;
+#line 47 "pce.loci"
+Loci::register_rule<file_pce003_9298m616> register_file_pce003_9298m616 ;
+#line 47 "pce.loci"
+}
+#line 47 "pce.loci"
+
+
+
+
+// Calculate the value of the right hand side (b_C_p). For this we need the 
+// summation of mass flow rates on faces of each cell
+
+// For summation start with a unit rule and initialize with value "0"
+namespace {class file_pce004_9298m626 : public Loci::unit_rule {
+#line 55 "pce.loci"
+    Loci::store<real>  L_b_C_p_ ; 
+#line 55 "pce.loci"
+public:
+#line 55 "pce.loci"
+    file_pce004_9298m626() {
+#line 55 "pce.loci"
+       name_store("b_C_p",L_b_C_p_) ;
+#line 55 "pce.loci"
+       store_info_id("b_C_p",11) ;
+#line 55 "pce.loci"
+       output("b_C_p") ;
+#line 55 "pce.loci"
+       store_info_id("geom_cells",7) ;
+#line 55 "pce.loci"
+       constraint("geom_cells") ;
+#line 55 "pce.loci"
+       setvardoc(docvar_pce_5793) ;
+       set_file("pce.loci:55") ;
+#line 55 "pce.loci"
+    }
+#line 55 "pce.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 56 "pce.loci"
+  L_b_C_p_[_e_]= 0.0 ;
+}    void compute(const Loci::sequence &seq) { 
+#line 57 "pce.loci"
+      do_loop(seq,this) ;
+#line 57 "pce.loci"
+    }
+#line 57 "pce.loci"
+} ;
+#line 57 "pce.loci"
+Loci::register_rule<file_pce004_9298m626> register_file_pce004_9298m626 ;
+#line 57 "pce.loci"
+}
+#line 57 "pce.loci"
+
+
+// Add to the left cell
+namespace {class file_pce005_9298m632 : public Loci::apply_rule< store<real> ,Loci::Summation<real> >  {
+#line 61 "pce.loci"
+    Loci::const_Map L_cl_ ; 
+#line 61 "pce.loci"
+    Loci::const_store<Loci::Area>  L_area_ ; 
+#line 61 "pce.loci"
+    Loci::const_param<real>  L_density_ ; 
+#line 61 "pce.loci"
+    Loci::const_store<real>  L_mdotfStar_ ; 
+#line 61 "pce.loci"
+    Loci::store<real>  L_b_C_p_ ; 
+#line 61 "pce.loci"
+public:
+#line 61 "pce.loci"
+    file_pce005_9298m632() {
+#line 61 "pce.loci"
+       name_store("cl",L_cl_) ;
+#line 61 "pce.loci"
+       store_info_id("cl",8) ;
+#line 61 "pce.loci"
+       name_store("area",L_area_) ;
+#line 61 "pce.loci"
+       store_info_id("area",0) ;
+#line 61 "pce.loci"
+       name_store("density",L_density_) ;
+#line 61 "pce.loci"
+       store_info_id("density",1) ;
+#line 61 "pce.loci"
+       name_store("mdotfStar",L_mdotfStar_) ;
+#line 61 "pce.loci"
+       store_info_id("mdotfStar",12) ;
+#line 61 "pce.loci"
+       name_store("b_C_p",L_b_C_p_) ;
+#line 61 "pce.loci"
+       store_info_id("b_C_p",11) ;
+#line 61 "pce.loci"
+       input("mdotfStar,density,area") ;
+#line 61 "pce.loci"
+       output("cl->b_C_p") ;
+#line 61 "pce.loci"
+       store_info_id("geom_cells",7) ;
+#line 61 "pce.loci"
+       constraint("(cl)->geom_cells") ;
+#line 61 "pce.loci"
+       setvardoc(docvar_pce_5793) ;
+       set_file("pce.loci:61") ;
+#line 61 "pce.loci"
+    }
+#line 61 "pce.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 62 "pce.loci"
+  join (L_b_C_p_[L_cl_[_e_]],  -1.*L_mdotfStar_[_e_]) ;
+}    void compute(const Loci::sequence &seq) { 
+#line 63 "pce.loci"
+      do_loop(seq,this) ;
+#line 63 "pce.loci"
+    }
+#line 63 "pce.loci"
+} ;
+#line 63 "pce.loci"
+Loci::register_rule<file_pce005_9298m632> register_file_pce005_9298m632 ;
+#line 63 "pce.loci"
+}
+#line 63 "pce.loci"
+
+// Add to the right cell
+// multiplying -$mdotfStar with - yields +
+ namespace {class file_pce006_9298m642 : public Loci::apply_rule< store<real> ,Loci::Summation<real> >  {
+#line 67 "pce.loci"
+    Loci::const_Map L_cr_ ; 
+#line 67 "pce.loci"
+    Loci::const_store<Loci::Area>  L_area_ ; 
+#line 67 "pce.loci"
+    Loci::const_param<real>  L_density_ ; 
+#line 67 "pce.loci"
+    Loci::const_store<real>  L_mdotfStar_ ; 
+#line 67 "pce.loci"
+    Loci::store<real>  L_b_C_p_ ; 
+#line 67 "pce.loci"
+public:
+#line 67 "pce.loci"
+    file_pce006_9298m642() {
+#line 67 "pce.loci"
+       name_store("cr",L_cr_) ;
+#line 67 "pce.loci"
+       store_info_id("cr",9) ;
+#line 67 "pce.loci"
+       name_store("area",L_area_) ;
+#line 67 "pce.loci"
+       store_info_id("area",0) ;
+#line 67 "pce.loci"
+       name_store("density",L_density_) ;
+#line 67 "pce.loci"
+       store_info_id("density",1) ;
+#line 67 "pce.loci"
+       name_store("mdotfStar",L_mdotfStar_) ;
+#line 67 "pce.loci"
+       store_info_id("mdotfStar",12) ;
+#line 67 "pce.loci"
+       name_store("b_C_p",L_b_C_p_) ;
+#line 67 "pce.loci"
+       store_info_id("b_C_p",11) ;
+#line 67 "pce.loci"
+       input("mdotfStar,density,area") ;
+#line 67 "pce.loci"
+       output("cr->b_C_p") ;
+#line 67 "pce.loci"
+       store_info_id("geom_cells",7) ;
+#line 67 "pce.loci"
+       constraint("(cr)->geom_cells") ;
+#line 67 "pce.loci"
+       setvardoc(docvar_pce_5793) ;
+       set_file("pce.loci:67") ;
+#line 67 "pce.loci"
+    }
+#line 67 "pce.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 68 "pce.loci"
+   join (L_b_C_p_[L_cr_[_e_]], L_mdotfStar_[_e_]) ;
+ }    void compute(const Loci::sequence &seq) { 
+#line 69 "pce.loci"
+      do_loop(seq,this) ;
+#line 69 "pce.loci"
+    }
+#line 69 "pce.loci"
+} ;
+#line 69 "pce.loci"
+Loci::register_rule<file_pce006_9298m642> register_file_pce006_9298m642 ;
+#line 69 "pce.loci"
+}
+#line 69 "pce.loci"
+
+
+ 
+ 
+
+
+// Assemble the linear system (L+D+U)x = B for the pressure correction equation
+// in order to obtain the pressure correction field
+
+// x-momentum system - system name pPrime_....
+// $type pCor_B store<real> 
+// $type pCor_D store<real> 
+// $type pCor_L store<real> 
+// $type pCor_U store<real> 
+// $type counter store<int> 
+
+
+namespace {class file_pce007_9298m653 : public Loci::pointwise_rule {
+#line 86 "pce.loci"
+    Loci::const_store<Loci::vector3d<Loci::real_t> >  L_cellcenter_ ; 
+#line 86 "pce.loci"
+    Loci::const_store<real>  L_b_C_p_ ; 
+#line 86 "pce.loci"
+    Loci::store<real>  L_pCor_B_ ; 
+#line 86 "pce.loci"
+public:
+#line 86 "pce.loci"
+    file_pce007_9298m653() {
+#line 86 "pce.loci"
+       name_store("cellcenter",L_cellcenter_) ;
+#line 86 "pce.loci"
+       store_info_id("cellcenter",13) ;
+#line 86 "pce.loci"
+       name_store("b_C_p",L_b_C_p_) ;
+#line 86 "pce.loci"
+       store_info_id("b_C_p",11) ;
+#line 86 "pce.loci"
+       name_store("pCor_B",L_pCor_B_) ;
+#line 86 "pce.loci"
+       store_info_id("pCor_B",14) ;
+#line 86 "pce.loci"
+       input("b_C_p,cellcenter") ;
+#line 86 "pce.loci"
+       output("pCor_B") ;
+#line 86 "pce.loci"
+       setvardoc(docvar_pce_5793) ;
+       set_file("pce.loci:86") ;
+#line 86 "pce.loci"
+    }
+#line 86 "pce.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 87 "pce.loci"
+	L_pCor_B_[_e_]= L_b_C_p_[_e_];
+}    void compute(const Loci::sequence &seq) { 
+#line 88 "pce.loci"
+      do_loop(seq,this) ;
+#line 88 "pce.loci"
+    }
+#line 88 "pce.loci"
+} ;
+#line 88 "pce.loci"
+Loci::register_rule<file_pce007_9298m653> register_file_pce007_9298m653 ;
+#line 88 "pce.loci"
+}
+#line 88 "pce.loci"
+
+
+namespace {class file_pce008_9298m661 : public Loci::pointwise_rule {
+#line 90 "pce.loci"
+    Loci::const_store<Loci::vector3d<Loci::real_t> >  L_cellcenter_ ; 
+#line 90 "pce.loci"
+    Loci::const_store<real>  L_a_C_p_ ; 
+#line 90 "pce.loci"
+    Loci::store<real>  L_pCor_D_ ; 
+#line 90 "pce.loci"
+public:
+#line 90 "pce.loci"
+    file_pce008_9298m661() {
+#line 90 "pce.loci"
+       name_store("cellcenter",L_cellcenter_) ;
+#line 90 "pce.loci"
+       store_info_id("cellcenter",13) ;
+#line 90 "pce.loci"
+       name_store("a_C_p",L_a_C_p_) ;
+#line 90 "pce.loci"
+       store_info_id("a_C_p",10) ;
+#line 90 "pce.loci"
+       name_store("pCor_D",L_pCor_D_) ;
+#line 90 "pce.loci"
+       store_info_id("pCor_D",15) ;
+#line 90 "pce.loci"
+       input("a_C_p,cellcenter") ;
+#line 90 "pce.loci"
+       output("pCor_D") ;
+#line 90 "pce.loci"
+       setvardoc(docvar_pce_5793) ;
+       set_file("pce.loci:90") ;
+#line 90 "pce.loci"
+    }
+#line 90 "pce.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 91 "pce.loci"
+    L_pCor_D_[_e_]= L_a_C_p_[_e_];
+}    void compute(const Loci::sequence &seq) { 
+#line 92 "pce.loci"
+      do_loop(seq,this) ;
+#line 92 "pce.loci"
+    }
+#line 92 "pce.loci"
+} ;
+#line 92 "pce.loci"
+Loci::register_rule<file_pce008_9298m661> register_file_pce008_9298m661 ;
+#line 92 "pce.loci"
+}
+#line 92 "pce.loci"
+
+
+namespace {class file_pce009_9298m668 : public Loci::pointwise_rule {
+#line 94 "pce.loci"
+    Loci::const_store<Loci::vector3d<Loci::real_t> >  L_facecenter_ ; 
+#line 94 "pce.loci"
+    Loci::const_store<real>  L_a_F_p_ ; 
+#line 94 "pce.loci"
+    Loci::store<real>  L_pCor_U_ ; 
+#line 94 "pce.loci"
+public:
+#line 94 "pce.loci"
+    file_pce009_9298m668() {
+#line 94 "pce.loci"
+       name_store("facecenter",L_facecenter_) ;
+#line 94 "pce.loci"
+       store_info_id("facecenter",16) ;
+#line 94 "pce.loci"
+       name_store("a_F_p",L_a_F_p_) ;
+#line 94 "pce.loci"
+       store_info_id("a_F_p",6) ;
+#line 94 "pce.loci"
+       name_store("pCor_U",L_pCor_U_) ;
+#line 94 "pce.loci"
+       store_info_id("pCor_U",17) ;
+#line 94 "pce.loci"
+       input("a_F_p,facecenter") ;
+#line 94 "pce.loci"
+       output("pCor_U") ;
+#line 94 "pce.loci"
+       setvardoc(docvar_pce_5793) ;
+       set_file("pce.loci:94") ;
+#line 94 "pce.loci"
+    }
+#line 94 "pce.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 95 "pce.loci"
+	L_pCor_U_[_e_]= L_a_F_p_[_e_];
+}    void compute(const Loci::sequence &seq) { 
+#line 96 "pce.loci"
+      do_loop(seq,this) ;
+#line 96 "pce.loci"
+    }
+#line 96 "pce.loci"
+} ;
+#line 96 "pce.loci"
+Loci::register_rule<file_pce009_9298m668> register_file_pce009_9298m668 ;
+#line 96 "pce.loci"
+}
+#line 96 "pce.loci"
+
+
+
+
+
+
+namespace {class file_pce010_9298m676 : public Loci::pointwise_rule {
+#line 102 "pce.loci"
+    Loci::const_store<Loci::vector3d<Loci::real_t> >  L_facecenter_ ; 
+#line 102 "pce.loci"
+    Loci::const_store<real>  L_a_F_p_ ; 
+#line 102 "pce.loci"
+    Loci::store<real>  L_pCor_L_ ; 
+#line 102 "pce.loci"
+public:
+#line 102 "pce.loci"
+    file_pce010_9298m676() {
+#line 102 "pce.loci"
+       name_store("facecenter",L_facecenter_) ;
+#line 102 "pce.loci"
+       store_info_id("facecenter",16) ;
+#line 102 "pce.loci"
+       name_store("a_F_p",L_a_F_p_) ;
+#line 102 "pce.loci"
+       store_info_id("a_F_p",6) ;
+#line 102 "pce.loci"
+       name_store("pCor_L",L_pCor_L_) ;
+#line 102 "pce.loci"
+       store_info_id("pCor_L",18) ;
+#line 102 "pce.loci"
+       input("a_F_p,facecenter") ;
+#line 102 "pce.loci"
+       output("pCor_L") ;
+#line 102 "pce.loci"
+       setvardoc(docvar_pce_5793) ;
+       set_file("pce.loci:102") ;
+#line 102 "pce.loci"
+    }
+#line 102 "pce.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 103 "pce.loci"
+  L_pCor_L_[_e_]= L_a_F_p_[_e_];
+}    void compute(const Loci::sequence &seq) { 
+#line 104 "pce.loci"
+      do_loop(seq,this) ;
+#line 104 "pce.loci"
+    }
+#line 104 "pce.loci"
+} ;
+#line 104 "pce.loci"
+Loci::register_rule<file_pce010_9298m676> register_file_pce010_9298m676 ;
+#line 104 "pce.loci"
+}
+#line 104 "pce.loci"
+
+
+
+// $type fluidLinearSolverFSGS Constraint
+// $type fluidLinearSolverLSGS Constraint
+// $type fluidLinearSolverSGS Constraint
+
+// pCor back on FSGS when fsgs is selected: needed to isolate the parallel
+// interface-kink problem (petsc-pCor was the common piece in both failing
+// parallel configurations; pRes->0 does NOT certify petsc-pCor health since
+// the system becomes homogeneous at convergence).
+// $type FSGSScalarSolve(pCor) store<real> 
+namespace {class file_pce011_9298m684 : public Loci::pointwise_rule {
+#line 116 "pce.loci"
+    Loci::const_store<real>  L_FSGSScalarSolvepCor_ ; 
+#line 116 "pce.loci"
+    Loci::store<real>  L_pPrime_ ; 
+#line 116 "pce.loci"
+public:
+#line 116 "pce.loci"
+    file_pce011_9298m684() {
+#line 116 "pce.loci"
+       name_store("pPrime",L_pPrime_) ;
+#line 116 "pce.loci"
+       store_info_id("pPrime",19) ;
+#line 116 "pce.loci"
+       name_store("FSGSScalarSolve(pCor)",L_FSGSScalarSolvepCor_) ;
+#line 116 "pce.loci"
+       store_info_id("FSGSScalarSolve(pCor)",20) ;
+#line 116 "pce.loci"
+       input("FSGSScalarSolve(pCor)") ;
+#line 116 "pce.loci"
+       output("pPrime") ;
+#line 116 "pce.loci"
+       store_info_id("geom_cells",7) ;
+#line 116 "pce.loci"
+       store_info_id("fluidLinearSolverFSGS",21) ;
+#line 116 "pce.loci"
+       constraint("geom_cells,fluidLinearSolverFSGS") ;
+#line 116 "pce.loci"
+       setvardoc(docvar_pce_5793) ;
+       set_file("pce.loci:116") ;
+#line 116 "pce.loci"
+    }
+#line 116 "pce.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 117 "pce.loci"
+  L_pPrime_[_e_]= L_FSGSScalarSolvepCor_[_e_];
+}    void compute(const Loci::sequence &seq) { 
+#line 118 "pce.loci"
+      do_loop(seq,this) ;
+#line 118 "pce.loci"
+    }
+#line 118 "pce.loci"
+} ;
+#line 118 "pce.loci"
+Loci::register_rule<file_pce011_9298m684> register_file_pce011_9298m684 ;
+#line 118 "pce.loci"
+}
+#line 118 "pce.loci"
+
+
+// $type LSGSScalarSolve(pCor) store<real> 
+// Solve linear system described by uStar_...
+namespace {class file_pce012_9298m692 : public Loci::pointwise_rule {
+#line 122 "pce.loci"
+    Loci::const_store<real>  L_LSGSScalarSolvepCor_ ; 
+#line 122 "pce.loci"
+    Loci::store<real>  L_pPrime_ ; 
+#line 122 "pce.loci"
+public:
+#line 122 "pce.loci"
+    file_pce012_9298m692() {
+#line 122 "pce.loci"
+       name_store("pPrime",L_pPrime_) ;
+#line 122 "pce.loci"
+       store_info_id("pPrime",19) ;
+#line 122 "pce.loci"
+       name_store("LSGSScalarSolve(pCor)",L_LSGSScalarSolvepCor_) ;
+#line 122 "pce.loci"
+       store_info_id("LSGSScalarSolve(pCor)",22) ;
+#line 122 "pce.loci"
+       input("LSGSScalarSolve(pCor)") ;
+#line 122 "pce.loci"
+       output("pPrime") ;
+#line 122 "pce.loci"
+       store_info_id("geom_cells",7) ;
+#line 122 "pce.loci"
+       store_info_id("fluidLinearSolverLSGS",23) ;
+#line 122 "pce.loci"
+       constraint("geom_cells,fluidLinearSolverLSGS") ;
+#line 122 "pce.loci"
+       setvardoc(docvar_pce_5793) ;
+       set_file("pce.loci:122") ;
+#line 122 "pce.loci"
+    }
+#line 122 "pce.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 123 "pce.loci"
+  L_pPrime_[_e_]= L_LSGSScalarSolvepCor_[_e_];
+
+}    void compute(const Loci::sequence &seq) { 
+#line 125 "pce.loci"
+      do_loop(seq,this) ;
+#line 125 "pce.loci"
+    }
+#line 125 "pce.loci"
+} ;
+#line 125 "pce.loci"
+Loci::register_rule<file_pce012_9298m692> register_file_pce012_9298m692 ;
+#line 125 "pce.loci"
+}
+#line 125 "pce.loci"
+
+// NOTE: SGS for the pressure-correction system fails to schedule: the wall
+// pPrime_f rule depends on the solution (ci->pPrime), so Loci tries to pull
+// it into the {igs} loop and cannot type viscousWall_BC{n,igs}.  Use petsc
+// for pCor when momentum uses SGS instead.
+// $type SGSScalarSolve(pCor) store<real> 
+namespace {class file_pce013_9298m700 : public Loci::pointwise_rule {
+#line 131 "pce.loci"
+    Loci::const_store<Loci::real_t>  L_petscScalarSolvepCor_ ; 
+#line 131 "pce.loci"
+    Loci::store<real>  L_pPrime_ ; 
+#line 131 "pce.loci"
+public:
+#line 131 "pce.loci"
+    file_pce013_9298m700() {
+#line 131 "pce.loci"
+       name_store("pPrime",L_pPrime_) ;
+#line 131 "pce.loci"
+       store_info_id("pPrime",19) ;
+#line 131 "pce.loci"
+       name_store("petscScalarSolve(pCor)",L_petscScalarSolvepCor_) ;
+#line 131 "pce.loci"
+       store_info_id("petscScalarSolve(pCor)",24) ;
+#line 131 "pce.loci"
+       input("petscScalarSolve(pCor)") ;
+#line 131 "pce.loci"
+       output("pPrime") ;
+#line 131 "pce.loci"
+       store_info_id("geom_cells",7) ;
+#line 131 "pce.loci"
+       store_info_id("fluidLinearSolverSGS",25) ;
+#line 131 "pce.loci"
+       constraint("geom_cells,fluidLinearSolverSGS") ;
+#line 131 "pce.loci"
+       setvardoc(docvar_pce_5793) ;
+       set_file("pce.loci:131") ;
+#line 131 "pce.loci"
+    }
+#line 131 "pce.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 132 "pce.loci"
+  L_pPrime_[_e_]= L_petscScalarSolvepCor_[_e_];
+}    void compute(const Loci::sequence &seq) { 
+#line 133 "pce.loci"
+      do_loop(seq,this) ;
+#line 133 "pce.loci"
+    }
+#line 133 "pce.loci"
+} ;
+#line 133 "pce.loci"
+Loci::register_rule<file_pce013_9298m700> register_file_pce013_9298m700 ;
+#line 133 "pce.loci"
+}
+#line 133 "pce.loci"
+
+// $type petscScalarSolve(pCor) store<real> 
+namespace {class file_pce014_9298m708 : public Loci::pointwise_rule {
+#line 135 "pce.loci"
+    Loci::const_store<real>  L_petscScalarSolvepCor_ ; 
+#line 135 "pce.loci"
+    Loci::store<real>  L_pPrime_ ; 
+#line 135 "pce.loci"
+public:
+#line 135 "pce.loci"
+    file_pce014_9298m708() {
+#line 135 "pce.loci"
+       name_store("pPrime",L_pPrime_) ;
+#line 135 "pce.loci"
+       store_info_id("pPrime",19) ;
+#line 135 "pce.loci"
+       name_store("petscScalarSolve(pCor)",L_petscScalarSolvepCor_) ;
+#line 135 "pce.loci"
+       store_info_id("petscScalarSolve(pCor)",26) ;
+#line 135 "pce.loci"
+       input("petscScalarSolve(pCor)") ;
+#line 135 "pce.loci"
+       output("pPrime") ;
+#line 135 "pce.loci"
+       store_info_id("geom_cells",7) ;
+#line 135 "pce.loci"
+       constraint("geom_cells,fluidLinearSolverpetsc") ;
+#line 135 "pce.loci"
+       setvardoc(docvar_pce_5793) ;
+       set_file("pce.loci:135") ;
+#line 135 "pce.loci"
+    }
+#line 135 "pce.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 136 "pce.loci"
+  L_pPrime_[_e_]= L_petscScalarSolvepCor_[_e_];
+//       std::cout << "printing $pPrime PetSC" << std::endl;
+//     std::cout << $pPrime << std::endl;
+
+    
+}    void compute(const Loci::sequence &seq) { 
+#line 141 "pce.loci"
+      do_loop(seq,this) ;
+#line 141 "pce.loci"
+    }
+#line 141 "pce.loci"
+} ;
+#line 141 "pce.loci"
+Loci::register_rule<file_pce014_9298m708> register_file_pce014_9298m708 ;
+#line 141 "pce.loci"
+}
+#line 141 "pce.loci"
+
+
+
+
+
+
+
+
+
+
+
+
+const char *docvar_pce_5793[] = {
+"FVM.lh:97\000area\000store<Loci::Area> \000Face area and normal ",
+"lid.lh:32\000density\000param<real> \000",
+"lid.lh:72\000distanceVec\000store<vect3d> \000",
+"lid.lh:73\000distanceMag\000store<real> \000",
+"lid.lh:77\000EfMag\000store<real> \000",
+"lid.lh:124\000Df\000store<vect3d> \000",
+"lid.lh:139\000a_F_p\000store<real> \000",
+"FVM.lh:23\000geom_cells\000Constraint\000Geometric Cells of the Mesh (not including ghost cells) ",
+"FVM.lh:29\000cl\000Map\000Map from faces to left cells ",
+"FVM.lh:32\000cr\000Map\000Map from faces to right cells ",
+"lid.lh:144\000a_C_p\000store<real> \000",
+"lid.lh:146\000b_C_p\000store<real> \000",
+"lid.lh:134\000mdotfStar\000store<real> \000",
+"FVM.lh:91\000cellcenter\000store<Loci::vector3d<Loci::real_t> > \000Cell centroid ",
+"pce.loci:79\000pCor_B\000store<real> \000",
+"pce.loci:80\000pCor_D\000store<real> \000",
+"FVM.lh:94\000facecenter\000store<Loci::vector3d<Loci::real_t> > \000Face centroid ",
+"pce.loci:82\000pCor_U\000store<real> \000",
+"pce.loci:81\000pCor_L\000store<real> \000",
+"lid.lh:148\000pPrime\000store<real> \000",
+"pce.loci:115\000FSGSScalarSolve(pCor)\000store<real> \000",
+"pce.loci:107\000fluidLinearSolverFSGS\000Constraint\000",
+"pce.loci:120\000LSGSScalarSolve(pCor)\000store<real> \000",
+"pce.loci:108\000fluidLinearSolverLSGS\000Constraint\000",
+"FVM.lh:211\000petscScalarSolve(X)\000store<Loci::real_t> \000Helper utility for interfacing with the PETSc solver for scalar equations ",
+"pce.loci:109\000fluidLinearSolverSGS\000Constraint\000",
+"pce.loci:134\000petscScalarSolve(pCor)\000store<real> \000",
+"\000\000\000" } ;
+
+//DEPEND: /home/merdemli/local/loci/include/FVM.lh lid.lh

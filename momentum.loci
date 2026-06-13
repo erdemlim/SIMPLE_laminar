@@ -1,0 +1,404 @@
+#include <Loci.h>
+#include <algorithm>
+
+#include <iostream>
+
+$include "FVM.lh"
+
+$include "lid.lh"
+
+
+$rule pointwise(uVel<-Velocity), constraint(geom_cells) {
+  $uVel = $Velocity[0] ;
+}
+$rule pointwise(vVel<-Velocity), constraint(geom_cells) {
+  $vVel = $Velocity[1] ;
+}
+$rule pointwise(wVel<-Velocity), constraint(geom_cells) {
+  $wVel = $Velocity[2] ;
+}
+
+
+
+$rule pointwise(fluxCfVisc<- EfMag, distanceMag, mu), constraint((cl,cr)->geom_cells) {
+    $fluxCfVisc = vect3d ($mu*$EfMag/$distanceMag, $mu*$EfMag/$distanceMag, $mu*$EfMag/$distanceMag)  ;
+
+
+}
+
+//Cell based summation for fluxCf coeffs
+//x-direction:
+// PARALLEL-CORRECTNESS FIX (June 2026): the diagonal a_C is assembled as a
+// unit+apply reduction.  The per-cell transient term rho*V/dt must NOT live in
+// the unit: at a partition-boundary cell the value is reduced on BOTH its owner
+// and its clone and the partials are SUMMED (Loci::Summation), which double-
+// counts any nonzero per-cell baseline.  Measured directly: the assembled
+// diagonal was exactly 2x on partition seams, with the excess == rho*V/dt,
+// which corrupted the momentum solve there AND (via Df=V/sumFluxCfUR -> Rhie-
+// Chow) the continuity field -> the parallel "seam".  Interior cells have no
+// clone so they were unaffected; serial has no partitions so it never showed.
+// Fix: the reduction (sumFluxCfFlux) sums ONLY the face fluxes with unit=0
+// (identity); the per-cell rho*V/dt is added afterwards in a POINTWISE rule
+// (computed once per owned cell, then communicated as a value -> never doubled).
+$rule unit(sumFluxCfFlux),constraint(geom_cells) {
+  $sumFluxCfFlux = vect3d(0.,0.,0.) ;
+}
+$rule apply(cl->sumFluxCfFlux<-fluxCfVisc)[Loci::Summation],
+  constraint(cl->geom_cells) {
+  join($cl->$sumFluxCfFlux, $fluxCfVisc) ;
+}
+
+ $rule apply(cr->sumFluxCfFlux<-fluxCfVisc)[Loci::Summation],
+   constraint(cr->geom_cells) {
+   join($cr->$sumFluxCfFlux, $fluxCfVisc) ;
+ }
+
+
+
+//Add to the left cell
+$rule apply(cl->sumFluxCfFlux<-mdotf)[Loci::Summation],
+  constraint((cl,cr)->geom_cells) {
+  const vect3d pos_fluxCf = vect3d (std::max($mdotf, 0.0), std::max($mdotf, 0.0), std::max($mdotf, 0.0));
+   join($cl->$sumFluxCfFlux, pos_fluxCf) ;
+
+}
+ $rule apply(cr->sumFluxCfFlux<-mdotf)[Loci::Summation],
+ constraint((cl,cr)->geom_cells) {
+    const vect3d neg_fluxCf = vect3d (std::max(-$mdotf, 0.0), std::max(-$mdotf, 0.0), std::max(-$mdotf, 0.0));
+    join($cr->$sumFluxCfFlux, neg_fluxCf) ;
+ }
+
+// Add the per-cell transient AFTER the reduction (pointwise -> not doubled).
+$rule pointwise(sumFluxCf<-sumFluxCfFlux,density,vol,dt),constraint(geom_cells) {
+  const real unst_term = $density*$vol/$dt ;
+  $sumFluxCf = $sumFluxCfFlux + vect3d(unst_term,unst_term,unst_term) ;
+}
+
+$rule pointwise(sumFluxCfUR<-sumFluxCf, uRelax) {
+  $sumFluxCfUR = $sumFluxCf / $uRelax ;
+}
+
+$rule pointwise(fluxFfLeft<-mdotf, EfMag, distanceMag, mu), constraint((cl,cr)->geom_cells) {
+$fluxFfLeft = (-std::max($mdotf, 0.0) - $mu*$EfMag/$distanceMag) ;
+}
+
+$rule pointwise(fluxFfRight<-mdotf, EfMag, distanceMag, mu), constraint((cl,cr)->geom_cells) {
+  $fluxFfRight = (-std::max(-$mdotf, 0.0) - $mu*$EfMag/$distanceMag) ;
+}
+
+
+
+
+$rule pointwise(fluxVf<-gradv3d_f(Velocity), Tf, mu), constraint((cl,cr)->geom_cells) {
+  $fluxVf = $mu*dot($gradv3d_f(Velocity), $Tf);
+}
+
+// For summation start with a unit rule
+$rule unit(sumFluxVf),constraint(geom_cells) {
+  $sumFluxVf = vect3d(0.,0.,0.) ;
+}
+
+// Add to the left cell
+$rule apply(cl->sumFluxVf<-fluxVf)[Loci::Summation],
+  constraint(cl->geom_cells) {
+  join($cl->$sumFluxVf,$fluxVf) ;
+      
+}
+// Add to the right cell
+$rule apply(cr->sumFluxVf<-fluxVf)[Loci::Summation],
+  constraint(cr->geom_cells) {
+  join($cr->$sumFluxVf,-1*$fluxVf) ;
+
+}
+ 
+$rule pointwise(rhsMomP<-grads(p), vol), constraint(geom_cells) {
+  $rhsMomP = $vol*$grads(p) ;
+}
+
+// Second part of the shear stress: mu*(grad v)^T . Sf  (Darwish Eqns 15.65-15.66)
+// Note: gradv3d_f(Velocity).x is the gradient vector of the u-component, so
+// ((grad v)^T . Sf)_x = du/dx*Sfx + dv/dx*Sfy + dw/dx*Sfz, etc.
+$rule pointwise(shear2ndPart<-gradv3d_f(Velocity), area, mu), constraint((cl,cr)->geom_cells) {
+  const vect3d Sf = $area.sada * $area.n ;
+  const real sx = $gradv3d_f(Velocity).x.x*Sf.x + $gradv3d_f(Velocity).y.x*Sf.y + $gradv3d_f(Velocity).z.x*Sf.z ;
+  const real sy = $gradv3d_f(Velocity).x.y*Sf.x + $gradv3d_f(Velocity).y.y*Sf.y + $gradv3d_f(Velocity).z.y*Sf.z ;
+  const real sz = $gradv3d_f(Velocity).x.z*Sf.x + $gradv3d_f(Velocity).y.z*Sf.y + $gradv3d_f(Velocity).z.z*Sf.z ;
+  $shear2ndPart = $mu*vect3d(sx,sy,sz) ;
+}
+
+
+$rule unit(sumShear2ndPart),constraint(geom_cells) {
+  $sumShear2ndPart = vect3d(0.,0.,0.) ;
+}
+// Add to the left cell
+$rule apply(cl->sumShear2ndPart<-shear2ndPart)[Loci::Summation],
+  constraint(cl->geom_cells) {
+  join($cl->$sumShear2ndPart,$shear2ndPart) ;
+}
+// Add to the right cell
+$rule apply(cr->sumShear2ndPart<-shear2ndPart)[Loci::Summation],
+  constraint(cr->geom_cells) {
+  join($cr->$sumShear2ndPart,-1.*$shear2ndPart) ;
+}
+
+
+// Calculate the coeffs for the right hand side
+$rule pointwise(b<-sumFluxVf, rhsMomP, sumShear2ndPart,Velocity,density,vol,dt) {
+	vect3d unst_term = $Velocity*$density*$vol/$dt;
+   $b =  unst_term + $sumFluxVf - $rhsMomP + $sumShear2ndPart;
+}
+
+// Calculate the underrelaxed coeffs for the right hand side
+$rule pointwise(bUR<-b, uRelax, sumFluxCfUR, Velocity) {
+  $bUR[0] = $b[0] + (1.0 - $uRelax)*$sumFluxCfUR[0]*$Velocity[0];
+  $bUR[1] = $b[1] + (1.0 - $uRelax)*$sumFluxCfUR[1]*$Velocity[1];
+  $bUR[2] = $b[2] + (1.0 - $uRelax)*$sumFluxCfUR[2]*$Velocity[2];
+}
+
+
+
+// NOTE on L/U convention (settled empirically + from Loci source):
+// ALL solvers (petsc, fsgs, lsgs, sgs) use the same layout:
+//   U = coefficient of u_cr in row cl,  L = coefficient of u_cl in row cr.
+// An early "petsc reads them swapped" diagnosis was wrong: the real cause
+// of the petsc convergence plateau was the default KSP cap (rtol=1e-5,
+// max_it=100, zero initial guess) in Loci's petsc.loci.  Raise the limits
+// per system from the vars file, e.g.:
+//   PETSCSolverControls: <uInt=set(ksp_rtol=1e-9,ksp_max_it=5000), ...>
+
+// Assemble the linear system (L+D+U)x = B for the momentum equation
+// in order to obtain the intermediate velocities
+
+// x-momentum system - system name uStar_....
+$type uInt_B store<real> ;
+$type uInt_D store<real> ;
+$type uInt_L store<real> ;
+$type uInt_U store<real> ;
+
+// Right Hand Side - velInt_B
+$rule pointwise(uInt_B<-bUR) {
+  $uInt_B = $bUR[0] ;
+//           std::cout << "printing aUP_B" << std::endl;
+//     std::cout << $uInt_B << std::endl;
+}
+// Diagonal Term - velInt_D
+$rule pointwise(uInt_D<-sumFluxCfUR) {
+  $uInt_D = $sumFluxCfUR[0] ;
+//          std::cout << "printing aUP" << std::endl;
+//      std::cout << $uInt_D << std::endl;
+}
+// Off-diagonal terms: U = coef of u_cr in row cl, L = coef of u_cl in row cr
+$rule pointwise(uInt_U<-fluxFfRight) {
+  $uInt_U = $fluxFfRight;
+}
+$rule pointwise(uInt_L<-fluxFfLeft) {
+  $uInt_L = $fluxFfLeft;
+}
+// Solve linear system described by uStar_...
+//$rule pointwise(uStar<-petscScalarSolve(uInt)) {
+//  $uStar = $petscScalarSolve(uInt) ;
+//}
+
+// y-momentum system - system name vStar_....
+$type vInt_B store<real> ;
+$type vInt_D store<real> ;
+$type vInt_L store<real> ;
+$type vInt_U store<real> ;
+
+// Right Hand Side - velInt_B
+$rule pointwise(vInt_B<-bUR) {
+  $vInt_B = $bUR[1] ;
+}
+// Diagonal Term - velInt_D
+$rule pointwise(vInt_D<-sumFluxCfUR) {
+  $vInt_D = $sumFluxCfUR[1] ;
+          // std::cout << "printing aUP_V" << std::endl;
+    // std::cout << $vInt_D << std::endl;
+}
+// Off-diagonal terms: U = coef of u_cr in row cl, L = coef of u_cl in row cr
+$rule pointwise(vInt_U<-fluxFfRight) {
+  $vInt_U = $fluxFfRight;
+}
+$rule pointwise(vInt_L<-fluxFfLeft) {
+  $vInt_L = $fluxFfLeft;
+}
+
+// Solve linear system described by uStar_...
+//$rule pointwise(vStar<-petscScalarSolve(vInt)) {
+//  $vStar = $petscScalarSolve(vInt) ;
+//}
+
+// z-momentum system - system name wStar_....
+$type wInt_B store<real> ;
+$type wInt_D store<real> ;
+$type wInt_L store<real> ;
+$type wInt_U store<real> ;
+
+$type wInt store<real> ;
+$type vInt store<real> ;
+$type uInt store<real> ;
+// Right Hand Side - velInt_B
+$rule pointwise(wInt_B<-bUR) {
+  $wInt_B = $bUR[2] ;
+}
+// Diagonal Term - velInt_D
+$rule pointwise(wInt_D<-sumFluxCfUR) {
+  $wInt_D = $sumFluxCfUR[2] ;
+//	std::cout << "printing wINt" << std::endl;
+}
+// Off-diagonal terms: U = coef of u_cr in row cl, L = coef of u_cl in row cr
+$rule pointwise(wInt_U<-fluxFfRight) {
+  $wInt_U = $fluxFfRight;
+}
+$rule pointwise(wInt_L<-fluxFfLeft) {
+  $wInt_L = $fluxFfLeft;
+}
+// Solve linear system described by uStar_...
+//$rule pointwise(wStar<-petscScalarSolve(wInt)) {
+//  $wStar = $petscScalarSolve(wInt) ;
+//}
+
+
+$type fluidLinearSolver param<std::string> ;
+$type fluidLinearSolverFSGS Constraint ;
+$type fluidLinearSolverLSGS Constraint ;
+$type fluidLinearSolverSGS Constraint ;
+$type fluidLinearSolverpetsc Constraint ;
+$type gauss_seidel_iter param<int> ;
+
+//////////////////////////////////////////////////////
+
+$type FSGSScalarSolve(uInt) store<real> ;
+$rule pointwise(uStar<-FSGSScalarSolve(uInt)),constraint(geom_cells,fluidLinearSolverFSGS) {
+  $uStar = $FSGSScalarSolve(uInt) ;
+
+//         std::cout << "printing VelocityStar" << std::endl;
+//     std::cout << $uStar << std::endl;
+
+}
+
+$type FSGSScalarSolve(vInt) store<real> ;
+$rule pointwise(vStar<-FSGSScalarSolve(vInt)),constraint(geom_cells,fluidLinearSolverFSGS) {
+  $vStar= $FSGSScalarSolve(vInt) ;
+}
+
+$type FSGSScalarSolve(wInt) store<real> ;
+$rule pointwise(wStar<-FSGSScalarSolve(wInt)),constraint(geom_cells,fluidLinearSolverFSGS) {
+  //std::cout << "printing VelocityStar" << std::endl;
+  $wStar = $FSGSScalarSolve(wInt) ;
+}
+
+//////////////////////////////////////////////////////
+
+$type LSGSScalarSolve(uInt) store<real> ;
+$rule pointwise(uStar<-LSGSScalarSolve(uInt)),constraint(geom_cells,fluidLinearSolverLSGS) {
+  $uStar = $LSGSScalarSolve(uInt) ;
+//     std::cout << "printing VelocityStar" << std::endl;
+//     std::cout << $uStar << std::endl;
+
+}
+
+$type LSGSScalarSolve(vInt) store<real> ;
+$rule pointwise(vStar<-LSGSScalarSolve(vInt)),constraint(geom_cells,fluidLinearSolverLSGS) {
+  $vStar= $LSGSScalarSolve(vInt) ;
+}
+
+$type LSGSScalarSolve(wInt) store<real> ;
+$rule pointwise(wStar<-LSGSScalarSolve(wInt)),constraint(geom_cells,fluidLinearSolverLSGS) {
+  // std::cout << "printing VelocityStar" << std::endl;
+  $wStar = $LSGSScalarSolve(wInt) ;
+}
+
+//////////////////////////////////////////////////////
+$type SGSScalarSolve(uInt) store<real> ;
+$rule pointwise(uStar<-SGSScalarSolve(uInt)),constraint(geom_cells,fluidLinearSolverSGS) {
+  $uStar = $SGSScalarSolve(uInt) ;
+//     std::cout << "printing VelocityStar" << std::endl;
+//     std::cout << $uStar << std::endl;
+
+    
+}
+
+$type SGSScalarSolve(vInt) store<real> ;
+$rule pointwise(vStar<-SGSScalarSolve(vInt)),constraint(geom_cells,fluidLinearSolverSGS) {
+  $vStar= $SGSScalarSolve(vInt) ;
+}
+
+$type SGSScalarSolve(wInt) store<real> ;
+$rule pointwise(wStar<-SGSScalarSolve(wInt)),constraint(geom_cells,fluidLinearSolverSGS) {
+  $wStar = $SGSScalarSolve(wInt) ;
+}
+
+//////////////////////////////////////////////////////
+
+//////////////////////////////////////////////////////
+$type petscScalarSolve(uInt) store<real> ;
+$rule pointwise(uStar<-petscScalarSolve(uInt)),constraint(geom_cells,fluidLinearSolverpetsc) {
+  $uStar = $petscScalarSolve(uInt) ;
+//       std::cout << "printing VelocityStar PetSC" << std::endl;
+//     std::cout << $uStar << std::endl;
+
+}
+
+$type petscScalarSolve(vInt) store<real> ;
+$rule pointwise(vStar<-petscScalarSolve(vInt)),constraint(geom_cells,fluidLinearSolverpetsc) {
+  $vStar= $petscScalarSolve(vInt) ;
+}
+
+$type petscScalarSolve(wInt) store<real> ;
+$rule pointwise(wStar<-petscScalarSolve(wInt)),constraint(geom_cells,fluidLinearSolverpetsc) {
+  $wStar = $petscScalarSolve(wInt) ;
+}
+
+//////////////////////////////////////////////////////
+
+
+// put the intermediate velocities in a vector
+$rule pointwise(VelocityStar<-uStar, vStar, wStar) {
+  $VelocityStar = vect3d($uStar, $vStar, $wStar) ;
+}
+
+
+  $type LSGSRelaxation param<real> ;
+  $type LSGSAbsTol param<double> ;
+  $type LSGSRelTol param<double> ;
+  $type LSGSMaxIter param<int> ;
+
+  $rule default(LSGSRelaxation) {
+    $LSGSRelaxation = 0.2 ;
+  }
+  $rule default(LSGSAbsTol) {
+    $LSGSAbsTol = 1e-10 ;
+  }
+  $rule default(LSGSRelTol) {
+    $LSGSRelTol = 0.1 ;
+  }
+
+  $rule default(LSGSMaxIter) {
+    $LSGSMaxIter = 100 ;
+  }
+
+$rule default(fluidLinearSolver){
+    $fluidLinearSolver = "petsc" ;
+}
+
+
+  $rule constraint(fluidLinearSolverLSGS,fluidLinearSolverFSGS, fluidLinearSolverSGS,fluidLinearSolverpetsc<-fluidLinearSolver) {
+    $fluidLinearSolverFSGS = EMPTY ;
+    $fluidLinearSolverLSGS = EMPTY ;
+    $fluidLinearSolverSGS = EMPTY ;
+    $fluidLinearSolverpetsc = EMPTY ;
+    if ($fluidLinearSolver == "lsgs") {
+      $fluidLinearSolverLSGS = ~EMPTY ;
+    } else if ($fluidLinearSolver == "fsgs"){
+      $fluidLinearSolverFSGS = ~EMPTY ;
+    }
+        else if ($fluidLinearSolver == "sgs"){
+            $fluidLinearSolverSGS = ~EMPTY ;
+        }
+        else {$fluidLinearSolverpetsc = ~EMPTY ;}
+  }
+
+  $rule default(gauss_seidel_iter){
+    $gauss_seidel_iter = 1000 ;
+  }

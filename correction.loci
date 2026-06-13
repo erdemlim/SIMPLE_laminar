@@ -1,0 +1,80 @@
+#include <Loci.h>
+#include <algorithm>    // for std::max
+#include <iostream>
+
+// Get Finite Volume Data structures
+// finite-volume module provides facilities for computing cell and face 
+// centroids, finding gradients, performing integrations, interpolating 
+// from cell to nodal values, and solving linear systems. The types for 
+// these rules are defined in the Loci include file “FVM.lh” which can be included
+$include "FVM.lh"
+
+$include "lid.lh"
+
+// This part of the code calculates the velocity and mass flow rate corrections first.
+// Then it finds the corrected velocity, mass flow rate and pressure fields; which satisfy
+// the continuity equation as well following page 596 eqn 15.101
+
+// First calculate the velocity corrections, using the pressure correction calculated in PCE
+// Page 596 eqn 15.101, for D_c^V page 591 eqn 15.79 is used
+$rule pointwise(VelocityPrime<-vol, sumFluxCfUR, grads(pPrime),pPrime,cellcenter), constraint(geom_cells) {
+  $VelocityPrime[0] = -1.*$grads(pPrime)[0] * $vol / $sumFluxCfUR[0] ;
+  $VelocityPrime[1] = -1.*$grads(pPrime)[1] * $vol / $sumFluxCfUR[1] ;
+  $VelocityPrime[2] = -1.*$grads(pPrime)[2] * $vol / $sumFluxCfUR[2] ;
+//         std::cout << "printing $pPrime" << std::endl;
+//     std::cout << $pPrime << std::endl;
+
+//   std::cout << "printing $VelocityPrime_u" << std::endl;
+//     std::cout << $VelocityPrime[0] << std::endl;
+//             std::cout << "printing $grads(pPrime)" << std::endl;
+//     std::cout << $grads(pPrime)[0] << std::endl;
+//             std::cout << "printing $vol" << std::endl;
+//     std::cout << $vol << std::endl;
+//             std::cout << "printing $cellcenter" << std::endl;
+//     std::cout << $cellcenter << std::endl;
+
+
+}
+
+
+// Mass flow rate correction at interior faces (Darwish Eqns 15.97, 15.101):
+// mdot'_f = rho*Df_f*(p'_C - p'_F) = -a_F_p*(p'_C - p'_F)
+// Using a_F_p directly guarantees the corrected mass fluxes are exactly
+// consistent with the solved pressure correction system (discrete continuity).
+$rule pointwise(mdotfPrime<-(cl,cr)->pPrime, a_F_p) {
+  $mdotfPrime = -$a_F_p*($cl->$pPrime - $cr->$pPrime) ;
+}
+
+// Calculate the corrected variables using the correction terms (Eqn 15.101)
+$rule pointwise(Velocity{n+1}<-VelocityStar{n}, VelocityPrime{n}), constraint(geom_cells) {
+  $Velocity{n+1} = $VelocityStar{n} + $VelocityPrime{n} ;
+}
+
+$rule pointwise(mdotf{n+1}<-mdotfStar{n}, mdotfPrime{n}) {
+  $mdotf{n+1} = $mdotfStar{n} + $mdotfPrime{n} ;
+}
+
+/*
+$rule pointwise(mdotf{n+1}<-VelocityFace{n+1}, area,density) {
+    const vect3d Sf = $area.sada * $area.n ;
+  $mdotf{n+1} = $density*dot($VelocityFace{n+1}, Sf) ;;
+  std::cout << "mdotf" << std::endl;
+  std::cout << $mdotf{n+1} << std::endl;
+}
+*/
+
+$rule pointwise(p{n+1}<-p{n}, pPrime{n}, pRelax{n}), constraint(geom_cells) {
+  $p{n+1} = $p{n} + $pRelax{n}*$pPrime{n} ;
+//    std::cout << "pressure" << std::endl;
+//    std::cout << $p{n} << std::endl;
+}
+
+
+
+
+
+
+
+
+
+

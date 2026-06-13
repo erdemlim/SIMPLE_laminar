@@ -1,0 +1,56 @@
+#include <Loci.h>
+
+// Implement the Rhie-Chow interpolation to use colocated grid while preventing the 
+// checkerboard pattern. Here we add a dissipation term, representing the difference 
+// between 2 estimates of the cell face pressure gradient, to the linearly interpolated
+// cell face velocity.
+
+// Page 587 Eqns (15.57), (15.58), (15.59)
+
+$include "FVM.lh"
+
+$include "lid.lh"
+
+$rule pointwise(linIntVel<-geomFacLeft, geomFacRight, (cl,cr)->VelocityStar), constraint((cl,cr)->geom_cells) {
+  $linIntVel = ($geomFacRight*$cr->$VelocityStar + $geomFacLeft*$cl->$VelocityStar) / ($geomFacLeft + $geomFacRight);
+}
+
+$rule pointwise(DfU<-geomFacLeft, geomFacRight, (cl,cr)->(vol, sumFluxCfUR)), constraint((cl,cr)->geom_cells) {
+  $DfU = ($geomFacLeft*$cl->$vol/$cl->$sumFluxCfUR[0] + $geomFacRight*$cr->$vol/$cr->$sumFluxCfUR[0]) / ($geomFacLeft + $geomFacRight);
+    // std::cout << "geomFacLeft" << std::endl;
+  // std::cout << $geomFacLeft << std::endl;
+}
+$rule pointwise(DfV<-geomFacLeft, geomFacRight, (cl,cr)->(vol, sumFluxCfUR)), constraint((cl,cr)->geom_cells) {
+  $DfV = ($geomFacLeft*$cl->$vol/$cl->$sumFluxCfUR[1] + $geomFacRight*$cr->$vol/$cr->$sumFluxCfUR[1]) / ($geomFacLeft + $geomFacRight);
+}
+$rule pointwise(DfW<-geomFacLeft, geomFacRight, (cl,cr)->(vol, sumFluxCfUR)), constraint((cl,cr)->geom_cells) {
+  $DfW = ($geomFacLeft*$cl->$vol/$cl->$sumFluxCfUR[2] + $geomFacRight*$cr->$vol/$cr->$sumFluxCfUR[2]) / ($geomFacLeft + $geomFacRight);
+  
+}
+
+$rule pointwise(Df<-DfU, DfV, DfW), constraint((cl,cr)->geom_cells) {
+  $Df = vect3d($DfU, $DfV, $DfW) ;
+  //std::cout << "printing Df" << std::endl;
+  //std::cout << $Df << std::endl;
+}
+
+// Calculate the second pressure gradient term of the Rhie-Chow Interpolation
+$rule pointwise(secondPresGrad<-geomFacLeft, geomFacRight, (cl,cr)->grads(p)), constraint((cl,cr)->geom_cells) {
+  $secondPresGrad = ($geomFacLeft*$cl->$grads(p) + $geomFacRight*$cr->$grads(p)) / ($geomFacLeft + $geomFacRight) ;
+}
+
+
+
+// First calculate the not-underrelaxed rcIntVel
+$rule pointwise(rcIntVel<-linIntVel, Df, grads_f(p), secondPresGrad,area), constraint((cl,cr)->geom_cells) {
+  vect3d presGradDiff = $grads_f(p) - $secondPresGrad ; 
+  vect3d secondTerm = vect3d($Df[0]*presGradDiff[0], $Df[1]*presGradDiff[1], $Df[2]*presGradDiff[2]) ;
+  $rcIntVel = $linIntVel - secondTerm ;
+}
+
+
+// Calculate the Rhie-Chow Interpolated Mass Flow Rate, which satisfies the momentum eqn.
+$rule pointwise(mdotfStar<-density, area, rcIntVel), constraint((cl,cr)->geom_cells) {
+  const vect3d Sf = $area.sada * $area.n ;
+	$mdotfStar = $density*dot(Sf, $rcIntVel) ;
+}

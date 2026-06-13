@@ -1,0 +1,994 @@
+extern const char *docvar_geom_5823[] ;
+#line 1 "geom.loci"
+#include <Loci.h>
+#include <math.h>  // for using sqrt
+#include <iostream>
+
+#line 1 "FVM.lh"
+//#############################################################################
+//#
+//# Copyright 2008-2025, Mississippi State University
+//#
+//# This file is part of the Loci Framework.
+//#
+//# The Loci Framework is free software: you can redistribute it and/or modify
+//# it under the terms of the Lesser GNU General Public License as published by
+//# the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The Loci Framework is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# Lesser GNU General Public License for more details.
+//#
+//# You should have received a copy of the Lesser GNU General Public License
+//# along with the Loci Framework.  If not, see <http://www.gnu.org/licenses>
+//#
+//#############################################################################
+
+/** Geometric Cells of the Mesh (not including ghost cells) */
+// $type geom_cells Constraint
+
+/** Nodal Positions */
+// $type pos store<Loci::vector3d<Loci::real_t> > 
+
+/** Map from faces to left cells */
+// $type cl Map
+
+/** Map from faces to right cells */
+// $type cr Map
+
+/** Map from boundary faces to adjacent geom_cells */
+// $type ci Map
+
+/** Map from boundary faces to reference surface */
+// $type ref Map
+
+/** Mapping from periodic boundary faces to periodic face pair */
+// $type pmap Map
+
+/** The transformation that maps periodic faces */
+// $type periodicTransform store<Loci::rigid_transform> 
+
+/** Mapping from face to nodes that define the face */
+// $type face2node multiMap
+
+/** Mapping from cell to faces that form upper matrix entries */
+// $type upper multiMap
+
+/** Mapping from cell to faces that form lower matrix entries */
+// $type lower multiMap
+
+/** Mapping from cell to boundary faces */
+// $type boundary_map multiMap
+
+
+/**
+ * This sets the coordinate system for the grid metric computations.  May be
+ * set to either 'cartesian' or 'axisymmetric'.  Use axisymmetric for
+ * two dimensional axisymmetric computations
+ */
+// $type gridCoordinates param<std::string> 
+
+/** Vars file selector for type of centroid calculation */
+// $type centroid param<std::string> 
+
+/** Compute thickness of extrusion (for axisymmetric case) */
+// $type cell_thickness store<real_t> 
+
+/** Maximum Grid Thickness (used to check validity of 2-D axisymmetric mesh */
+// $type gridThickMax param<real_t> 
+
+/** Minimum Grid Thickness (used to check validity of 2-D axisymmetric mesh */
+// $type gridThickMin param<real_t> 
+
+/** Thickness of z axis extrusion in 2-D mesh */
+// $type gridThickness param<real_t> 
+
+/**
+ * The minimum allowable volume which can be used to override negative volume
+ * calculations
+ */
+// $type minVolume param<real_t> 
+
+/** maximum number of faces per cell for grid */
+// $type max_fpc param<int> 
+
+/** Cell centroid */
+// $type cellcenter store<Loci::vector3d<Loci::real_t> > 
+
+/** Face centroid */
+// $type facecenter store<Loci::vector3d<Loci::real_t> > 
+
+/** Face area and normal */
+// $type area store<Loci::Area> 
+
+/**  Cell volume */
+// $type vol store<Loci::real_t> 
+
+/** Total grid volume */
+// $type grid_vol param<Loci::real_t> 
+
+/** vector orthogonal to face normal */
+// $type mn store<Loci::vector3d<Loci::real_t> > 
+
+/** vector orthogonal to face normal and mn */
+// $type ln store<Loci::vector3d<Loci::real_t> > 
+
+/** Scalar Gradient (must provide cell and boundary face values) */
+// $type grads(Y) store<Loci::vector3d<Loci::real_t> > 
+
+/** General Vector Gradient (must provide cell and boundary face values) */
+// $type gradv(Y) storeVec<Loci::vector3d<Loci::real_t> > 
+
+/** 3-D vector gradient (must provide cell and boundary face values) */
+// $type gradv3d(Y) store<Loci::tensor3d<Loci::real_t> > 
+
+/** Face scalar gradient (uses cell gradients and boundary face values) */
+// $type grads_f(Y) store<Loci::vector3d<Loci::real_t> > 
+
+/** Face general vector gradient (uses cell gradients and boundary face values) */
+// $type gradv_f(Y) storeVec<Loci::vector3d<Loci::real_t> > 
+
+/** 3-D vector gradient (must provide cell and boundary face values) */
+// $type gradv3d_f(Y) store<Loci::tensor3d<Loci::real_t> > 
+
+/** Scalar variable monotone limiters */
+// $type limiters(X) store<Loci::real_t> 
+
+/** General vector monotone limiters */
+// $type limiterv(X) storeVec<Loci::real_t> 
+
+/** 3-D vector monotone limiter */
+// $type limiterv3d(X) store<Loci::vector3d<Loci::real_t> > 
+
+/** MUSCL extrapolation to left side of face */
+// $type lefts(X) store<Loci::real_t> 
+
+/** MUSCL extrapolation to right side of face */
+// $type rights(X) store<Loci::real_t> 
+
+/** MUSCL scalar extrapolation for positive values to left side of face */
+// $type leftsP(X,M) store<Loci::real_t> 
+
+/** MUSCL scalar extrapolation for positive values to right side of face */
+// $type rightsP(X,M) store<Loci::real_t> 
+
+/** MUSCL general vector extrapolation for left side of face */
+// $type leftvM(X) storeVec<Loci::real_t> 
+
+/** MUSCL general vector extrapolation for right side of face */
+// $type rightvM(X) storeVec<Loci::real_t> 
+
+/** MUSCL 3-D vector extrapolation for left side of face */
+// $type leftv3d(X) store<Loci::vector3d<Loci::real_t> > 
+
+/** MUSCL 3-D vector extrapolation for right side of face */
+// $type rightv3d(X) store<Loci::vector3d<Loci::real_t> > 
+
+
+/** Simple scalar interpolation from geom_cells and boundary faces to nodes */
+// $type cell2node(X) store<float> 
+
+/**
+ * Simple general vector interpolation from geom_cells and
+ * boundary faces to nodes
+ */
+// $type cell2node_v(X) storeVec<float> 
+
+/** Simple 3-D vector interpolation from geom_cells and boundary faces to
+ * nodes
+ */
+// $type cell2node_v3d(X) store<Loci::vector3d<float> > 
+
+/** Nodal maximum value of neighboring cell scalars */
+// $type cell2nodeMax(X) store<float> 
+
+/** Nodal minimum value of neighboring cell scalars */
+// $type cell2nodeMin(X) store<float> 
+
+/** Nodal maximum magnitude value of neighboring cells scalars */
+// $type cell2nodeMaxMag(X) store<float> 
+
+/** Nodal Maximum of fields of 3-D vector of neighboring cell vectors */
+// $type cell2nodeMaxv3d(X) store<vector3d<float> > 
+
+/** All boundary faces that are not marked as a symmetry boundary */
+// $type no_symmetry_BC Constraint
+
+/** All boundary faces */
+// $type boundary_faces Constraint
+
+/**
+ * boundary reference surfaces that are marked as utilizing
+ * first-order extrapolation
+ */
+// $type firstOrder_BCoption Constraint
+
+/** boundary reference surface options specified in boundary conditions */
+// $type BC_options store<Loci::options_list> 
+
+/** Integrate a scalar over the boundary surfaces of a cell */
+// $type integrateSurface(X) store<Loci::real_t> 
+
+/** Integrate a vector valued function dotted with surface vectors over cell */
+// $type integrateFlux(X) store<Loci::real_t> 
+
+/** Helper utility for interfacing with the PETSc solver for scalar equations */
+// $type petscScalarSolve(X) store<Loci::real_t> 
+
+/**
+ * Helper utility for interfacing with the PETSc solver for storeVec
+ * equations with double precision jacobians
+ */
+// $type petscBlockedSolve(X) storeVec<Loci::real_t> 
+
+/**
+ * Helper utility for interfacing with the PETSc solver for storeVec
+ * equations with single precision jacobians
+ */
+// $type petscBlockedSSolve(X) storeVec<Loci::real_t> 
+
+/** L-2 Norm of scalar over geom_cells */
+// $type L2Norm(X) param<Loci::real_t> 
+
+/** L-1 Norm of scalar over geom_cells */
+// $type L1Norm(X) param<Loci::real_t> 
+
+/** L-Infinity Norm of Scalar of geom_cells */
+// $type LinfNorm(X) param<Loci::real_t> 
+
+/** Get file number of entity */
+// $type fileNumber(X) store<int> 
+
+/// Convert argument into a string that is the name of the substitution used
+/// in parametricName(X)
+// $type parametricName(X) param<std::string> 
+
+/// Dummy type to facilitate adding selector generators using parametric rules
+// $type selector(SELECT,SELECTION,ABBREV) param<bool> 
+
+/// Dummy type to facilitate adding selector generators using parametric rules
+// $type selector(SELECT,SELECTION) param<bool> 
+
+/// get vector size of storeVec<real_t>
+// $type vecSize(M) param<int> 
+
+/** Used to store the volume tag name for tagged vog file regions */
+// $type volumeTag(X) param<string> 
+
+/** All boundary faces that are participating in periodic boundary conditions */
+// $type periodicFaces Constraint
+
+/** Tell grid metrics to use standard cartesian metrics */
+// $type cartesianCoordinateModel Constraint
+
+/** Tell grid metrics that grid represents a 2-D axisymmetric region */
+// $type axisymmetricCoordinateModel Constraint
+
+/** cell-based scalar quantity used in the adaptive gradient stencil
+    selection. It can be a volume-fraction, pressure, or any other
+    field of interest, and it is used to adapt the stencil of
+    full,stable,symm,symmF,symmC methods around large
+    "stencil_bias" jumps. This variable must
+    be provided by the simulation tool, otherwise setting
+    gradStencilBias: on
+    will result in an incomplete schedule.
+*/
+// $type stencil_bias store<Loci::real_t> 
+
+/**
+   Variable used to select between standard 1-step cell gradient
+   operators (standard) and the n-step iterative methods
+   (iterative1,iterative2).
+*/
+// $type gradType param<string> 
+
+/**
+   Number of iteration steps for the cell gradient n-step iterative methods
+   (iterative1,iterative2).
+*/
+// $type gradSteps param<int> 
+
+#line 5 "geom.loci"
+
+#line 1 "lid.lh"
+
+typedef Loci::real_t real ;
+typedef vector3d<Loci::real_t> vect3d ;
+
+// $type nGreaterThanZero param<bool> 
+
+// $type Velocity store<vect3d> 
+// $type uVel store<real> 
+// $type vVel store<real> 
+// $type wVel store<real> 
+// $type p store<real> 
+// $type p_interior store<real> 
+// $type mdotf store<real> 
+
+// $type Velocity_face_Prime store<vect3d> 
+// $type VelocityFace store<vect3d> 
+  // $type gradient_p store<vect3d> 
+ 
+// $type Velocity_f store<vect3d> 
+// $type uVel_f store<real> 
+// $type vVel_f store<real> 
+// $type wVel_f store<real> 
+// $type p_f store<real> 
+// $type pPrime_f store<real> 
+
+// $type pPrimeFaceGrad store<vect3d> 
+
+// $type cellPresGrad store<vect3d> 
+// $type DfGradPprimef store<vect3d> 
+
+// $type mu param<real> 
+// $type density param<real> 
+// $type dt param<real> 
+
+// $type stop_iter param<int> 
+// $type print_freq param<int> 
+// $type plot_freq param<int> 
+// $type plot_modulo param<int> 
+// $type epsilon param<real> 
+
+// $type mdotf_initial param<real> 
+// $type p_initial param<real> 
+// $type u_init param<real> 
+// $type v_init param<real> 
+// $type w_init param<real> 
+// $type Velocity_initial store<vect3d> 
+// $type linIntVel_initial param<vect3d> 
+// $type rcIntVel_initial param<vect3d> 
+
+// $type uRelax param<real> 
+// $type pRelax param<real> 
+
+// $type pOut store<real>   // to be read from the given BCs
+// $type Uin store<vect3d>   // to be read from the given BCs
+// $type Uwall store<vect3d>   // to be read from the given BCs
+
+// $type Uwall_BCoption Constraint
+// $type Uin_BCoption Constraint
+// $type pOut_BCoption Constraint
+
+// $type viscousWall_BC Constraint
+// $type velInlet_BC Constraint
+// $type farfield_BC Constraint
+// $type pOutlet_BC Constraint
+// $type bottomWall_BC Constraint
+// $type symmetry_BC Constraint
+
+
+
+// *** variables for geom.loci ***
+
+// $type distanceVec store<vect3d> 
+// $type distanceMag store<real> 
+// $type distanceUnitVec store<vect3d> 
+// $type Ef store<vect3d> 
+// $type Tf store<vect3d> 
+// $type EfMag store<real> 
+// $type geomFacLeft store<real> 
+// $type geomFacRight store<real> 
+// $type boundaryNormalDistanceMag store<real> 
+
+
+
+// *** variables for momentum.loci ***
+
+// $type faceUGrad store<vect3d> 
+// $type faceVGrad store<vect3d> 
+// $type faceWGrad store<vect3d> 
+
+// $type fluxCfRight store<vect3d> 
+// $type fluxCfLeft store<vect3d> 
+// $type fluxCf store<vect3d> 
+// $type fluxCfVisc store<vect3d> 
+
+// $type sumFluxCf store<vect3d> 
+// $type sumFluxCfFlux store<vect3d>  // reduction of face fluxes only (unit=0); transient added pointwise
+// $type sumFluxCfUR store<vect3d>  //underrelaxed
+// $type fluxFf_vel store<real> 
+// $type fluxFfLeft store<real> 
+// $type fluxFfRight store<real> 
+
+// $type fluxVf store<vect3d> 
+// $type rhsBoundaryMomP store<vect3d> 
+// $type sumFluxVf store<vect3d> 
+
+// $type shear2ndPart store<vect3d> 
+// $type sumShear2ndPart store<vect3d> 
+
+// $type rhsMomP store<vect3d> 
+
+// $type b store<vect3d> 
+// $type bUR store<vect3d>  //underrelaxed
+
+// $type uStar store<real> 
+// $type vStar store<real> 
+// $type wStar store<real> 
+// $type VelocityStar store<vect3d> 
+
+
+
+// *** variables for rhiechow.loci ***
+
+// $type linIntVel store<vect3d> 
+// $type Df store<vect3d> 
+// $type DfU store<real> 
+// $type DfV store<real> 
+// $type DfW store<real> 
+
+// $type firstPresGrad store<vect3d> 
+// $type secondPresGrad store<vect3d> 
+
+// $type rcIntVel store<vect3d> 
+
+// $type mdotfStar store<real> 
+
+
+
+// *** variables for pce.loci ***
+// $type a_F_p store<real> 
+// $type a_F_p2 store<real> 
+// $type a_F_p_out store<real> 
+// $type a_F_p_Left store<real> 
+// $type a_F_p_Right store<real> 
+// $type a_C_p store<real> 
+// $type a_C_p2 store<real> 
+// $type b_C_p store<real> 
+// $type b_C_p2 store<real> 
+// $type pPrime store<real> 
+
+
+
+// *** variables for correction.loci ***
+// $type VelocityPrime store<vect3d> 
+
+// $type mdotfPrime store<real> 
+
+
+
+// *** variables for convergenceCheck.loci ***
+// $type uRes param<real> 
+// $type vRes param<real> 
+// $type wRes param<real> 
+// $type continuityRes param<real> 
+
+// $type sumFluxFf store<vect3d> 
+
+// $type sumResUNom param<real> 
+// $type sumResUDenom param<real> 
+// $type sumResVNom param<real> 
+// $type sumResVDenom param<real> 
+// $type sumResWNom param<real> 
+// $type sumResWDenom param<real> 
+// $type sumResContinuity param<real> 
+// $type sumResContinuityRef param<real> 
+
+// Conditions for termination
+// $type finishMaxIter param<bool> 
+// $type finishURes param<bool> 
+// $type finishVRes param<bool> 
+// $type finishWRes param<bool> 
+// $type finishContinuityRes param<bool> 
+
+// $type solution store<vect3d> 
+
+
+// $type count param<flowPsi::real> 
+
+// $type sumResMom param<flowPsi::vect3d> 
+// $type sumRes_p param<flowPsi::real> 
+// $type uRes param<flowPsi::real> 
+// $type vRes param<flowPsi::real> 
+// $type wRes param<flowPsi::real> 
+// $type pRes param<flowPsi::real> 
+
+
+#line 6 "geom.loci"
+
+
+// This file contains the rules for computing necessary geometric info regarding the grid
+
+// Find the distance vector between cell centroids of neighboring cells for inner cell faces
+namespace {class file_geom000_9300m771 : public Loci::pointwise_rule {
+#line 11 "geom.loci"
+    Loci::const_Map L_cl_ ; 
+#line 11 "geom.loci"
+    Loci::const_Map L_cr_ ; 
+#line 11 "geom.loci"
+    Loci::const_store<Loci::vector3d<Loci::real_t> >  L_cellcenter_ ; 
+#line 11 "geom.loci"
+    Loci::store<vect3d>  L_distanceVec_ ; 
+#line 11 "geom.loci"
+public:
+#line 11 "geom.loci"
+    file_geom000_9300m771() {
+#line 11 "geom.loci"
+       name_store("cl",L_cl_) ;
+#line 11 "geom.loci"
+       store_info_id("cl",0) ;
+#line 11 "geom.loci"
+       name_store("cr",L_cr_) ;
+#line 11 "geom.loci"
+       store_info_id("cr",1) ;
+#line 11 "geom.loci"
+       name_store("cellcenter",L_cellcenter_) ;
+#line 11 "geom.loci"
+       store_info_id("cellcenter",2) ;
+#line 11 "geom.loci"
+       name_store("distanceVec",L_distanceVec_) ;
+#line 11 "geom.loci"
+       store_info_id("distanceVec",3) ;
+#line 11 "geom.loci"
+       input("(cr,cl)->cellcenter") ;
+#line 11 "geom.loci"
+       output("distanceVec") ;
+#line 11 "geom.loci"
+       store_info_id("geom_cells",4) ;
+#line 11 "geom.loci"
+       constraint("(cl,cr)->geom_cells") ;
+#line 11 "geom.loci"
+       setvardoc(docvar_geom_5823) ;
+       set_file("geom.loci:11") ;
+#line 11 "geom.loci"
+    }
+#line 11 "geom.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 12 "geom.loci"
+  L_distanceVec_[_e_]= (L_cellcenter_[L_cr_[_e_]]-L_cellcenter_[L_cl_[_e_]]) ; 
+}    void compute(const Loci::sequence &seq) { 
+#line 13 "geom.loci"
+      do_loop(seq,this) ;
+#line 13 "geom.loci"
+    }
+#line 13 "geom.loci"
+} ;
+#line 13 "geom.loci"
+Loci::register_rule<file_geom000_9300m771> register_file_geom000_9300m771 ;
+#line 13 "geom.loci"
+}
+#line 13 "geom.loci"
+
+
+// Find the distance (magnitude) between cell centroids for inner cell faces
+namespace {class file_geom001_9300m781 : public Loci::pointwise_rule {
+#line 16 "geom.loci"
+    Loci::const_store<vect3d>  L_distanceVec_ ; 
+#line 16 "geom.loci"
+    Loci::store<real>  L_distanceMag_ ; 
+#line 16 "geom.loci"
+public:
+#line 16 "geom.loci"
+    file_geom001_9300m781() {
+#line 16 "geom.loci"
+       name_store("distanceVec",L_distanceVec_) ;
+#line 16 "geom.loci"
+       store_info_id("distanceVec",3) ;
+#line 16 "geom.loci"
+       name_store("distanceMag",L_distanceMag_) ;
+#line 16 "geom.loci"
+       store_info_id("distanceMag",5) ;
+#line 16 "geom.loci"
+       input("distanceVec") ;
+#line 16 "geom.loci"
+       output("distanceMag") ;
+#line 16 "geom.loci"
+       store_info_id("geom_cells",4) ;
+#line 16 "geom.loci"
+       store_info_id("cl",0) ;
+#line 16 "geom.loci"
+       store_info_id("cr",1) ;
+#line 16 "geom.loci"
+       constraint("(cl,cr)->geom_cells") ;
+#line 16 "geom.loci"
+       setvardoc(docvar_geom_5823) ;
+       set_file("geom.loci:16") ;
+#line 16 "geom.loci"
+    }
+#line 16 "geom.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 17 "geom.loci"
+  L_distanceMag_[_e_]= norm (L_distanceVec_[_e_]) ;
+}    void compute(const Loci::sequence &seq) { 
+#line 18 "geom.loci"
+      do_loop(seq,this) ;
+#line 18 "geom.loci"
+    }
+#line 18 "geom.loci"
+} ;
+#line 18 "geom.loci"
+Loci::register_rule<file_geom001_9300m781> register_file_geom001_9300m781 ;
+#line 18 "geom.loci"
+}
+#line 18 "geom.loci"
+
+
+// Find the unit distance vector between cell centroids for inner cell faces
+namespace {class file_geom002_9300m789 : public Loci::pointwise_rule {
+#line 21 "geom.loci"
+    Loci::const_store<vect3d>  L_distanceVec_ ; 
+#line 21 "geom.loci"
+    Loci::const_store<real>  L_distanceMag_ ; 
+#line 21 "geom.loci"
+    Loci::store<vect3d>  L_distanceUnitVec_ ; 
+#line 21 "geom.loci"
+public:
+#line 21 "geom.loci"
+    file_geom002_9300m789() {
+#line 21 "geom.loci"
+       name_store("distanceVec",L_distanceVec_) ;
+#line 21 "geom.loci"
+       store_info_id("distanceVec",3) ;
+#line 21 "geom.loci"
+       name_store("distanceMag",L_distanceMag_) ;
+#line 21 "geom.loci"
+       store_info_id("distanceMag",5) ;
+#line 21 "geom.loci"
+       name_store("distanceUnitVec",L_distanceUnitVec_) ;
+#line 21 "geom.loci"
+       store_info_id("distanceUnitVec",6) ;
+#line 21 "geom.loci"
+       input("distanceVec,distanceMag") ;
+#line 21 "geom.loci"
+       output("distanceUnitVec") ;
+#line 21 "geom.loci"
+       store_info_id("geom_cells",4) ;
+#line 21 "geom.loci"
+       store_info_id("cl",0) ;
+#line 21 "geom.loci"
+       store_info_id("cr",1) ;
+#line 21 "geom.loci"
+       constraint("(cl,cr)->geom_cells") ;
+#line 21 "geom.loci"
+       setvardoc(docvar_geom_5823) ;
+       set_file("geom.loci:21") ;
+#line 21 "geom.loci"
+    }
+#line 21 "geom.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 22 "geom.loci"
+  L_distanceUnitVec_[_e_]= L_distanceVec_[_e_]/ L_distanceMag_[_e_];   
+}    void compute(const Loci::sequence &seq) { 
+#line 23 "geom.loci"
+      do_loop(seq,this) ;
+#line 23 "geom.loci"
+    }
+#line 23 "geom.loci"
+} ;
+#line 23 "geom.loci"
+Loci::register_rule<file_geom002_9300m789> register_file_geom002_9300m789 ;
+#line 23 "geom.loci"
+}
+#line 23 "geom.loci"
+
+ 
+// Find the surface vector's component along CF (centroids of two neighboring cells) direction
+// for iner cell faces
+
+namespace {class file_geom003_9300m799 : public Loci::pointwise_rule {
+#line 28 "geom.loci"
+    Loci::const_store<Loci::Area>  L_area_ ; 
+#line 28 "geom.loci"
+    Loci::const_store<vect3d>  L_distanceUnitVec_ ; 
+#line 28 "geom.loci"
+    Loci::store<vect3d>  L_Ef_ ; 
+#line 28 "geom.loci"
+public:
+#line 28 "geom.loci"
+    file_geom003_9300m799() {
+#line 28 "geom.loci"
+       name_store("area",L_area_) ;
+#line 28 "geom.loci"
+       store_info_id("area",7) ;
+#line 28 "geom.loci"
+       name_store("distanceUnitVec",L_distanceUnitVec_) ;
+#line 28 "geom.loci"
+       store_info_id("distanceUnitVec",6) ;
+#line 28 "geom.loci"
+       name_store("Ef",L_Ef_) ;
+#line 28 "geom.loci"
+       store_info_id("Ef",8) ;
+#line 28 "geom.loci"
+       input("area,distanceUnitVec") ;
+#line 28 "geom.loci"
+       output("Ef") ;
+#line 28 "geom.loci"
+       store_info_id("geom_cells",4) ;
+#line 28 "geom.loci"
+       store_info_id("cl",0) ;
+#line 28 "geom.loci"
+       store_info_id("cr",1) ;
+#line 28 "geom.loci"
+       constraint("(cl,cr)->geom_cells") ;
+#line 28 "geom.loci"
+       setvardoc(docvar_geom_5823) ;
+       set_file("geom.loci:28") ;
+#line 28 "geom.loci"
+    }
+#line 28 "geom.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 29 "geom.loci"
+  L_Ef_[_e_]= L_distanceUnitVec_[_e_]*(dot (L_area_[_e_].sada *L_area_[_e_].n ,L_area_[_e_].sada *L_area_[_e_].n )/dot (L_distanceUnitVec_[_e_],L_area_[_e_].sada *L_area_[_e_].n )) ;
+}    void compute(const Loci::sequence &seq) { 
+#line 30 "geom.loci"
+      do_loop(seq,this) ;
+#line 30 "geom.loci"
+    }
+#line 30 "geom.loci"
+} ;
+#line 30 "geom.loci"
+Loci::register_rule<file_geom003_9300m799> register_file_geom003_9300m799 ;
+#line 30 "geom.loci"
+}
+#line 30 "geom.loci"
+
+
+// $rule pointwise(Ef<-Df, distanceVec, area, distanceMag), constraint((cl,cr)->geom_cells) {
+//      const vect3d Sf = $area.sada * $area.n ;
+//      
+//      $Ef=(($distanceVec[0]*$Df[0]*Sf[0]+$distanceVec[1]*$Df[1]*Sf[1]+$distanceVec[2]*$Df[2]*Sf[2])/($distanceMag*$distanceMag))*$distanceVec;
+//     
+// }
+
+
+
+// Find its magnitude
+namespace {class file_geom004_9300m809 : public Loci::pointwise_rule {
+#line 42 "geom.loci"
+    Loci::const_store<vect3d>  L_Ef_ ; 
+#line 42 "geom.loci"
+    Loci::store<real>  L_EfMag_ ; 
+#line 42 "geom.loci"
+public:
+#line 42 "geom.loci"
+    file_geom004_9300m809() {
+#line 42 "geom.loci"
+       name_store("Ef",L_Ef_) ;
+#line 42 "geom.loci"
+       store_info_id("Ef",8) ;
+#line 42 "geom.loci"
+       name_store("EfMag",L_EfMag_) ;
+#line 42 "geom.loci"
+       store_info_id("EfMag",9) ;
+#line 42 "geom.loci"
+       input("Ef") ;
+#line 42 "geom.loci"
+       output("EfMag") ;
+#line 42 "geom.loci"
+       store_info_id("geom_cells",4) ;
+#line 42 "geom.loci"
+       store_info_id("cl",0) ;
+#line 42 "geom.loci"
+       store_info_id("cr",1) ;
+#line 42 "geom.loci"
+       constraint("(cl,cr)->geom_cells") ;
+#line 42 "geom.loci"
+       setvardoc(docvar_geom_5823) ;
+       set_file("geom.loci:42") ;
+#line 42 "geom.loci"
+    }
+#line 42 "geom.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 43 "geom.loci"
+  L_EfMag_[_e_]= norm (L_Ef_[_e_]);
+}    void compute(const Loci::sequence &seq) { 
+#line 44 "geom.loci"
+      do_loop(seq,this) ;
+#line 44 "geom.loci"
+    }
+#line 44 "geom.loci"
+} ;
+#line 44 "geom.loci"
+Loci::register_rule<file_geom004_9300m809> register_file_geom004_9300m809 ;
+#line 44 "geom.loci"
+}
+#line 44 "geom.loci"
+
+
+// Find the surface vector's component along cross diffusion direction
+namespace {class file_geom005_9300m817 : public Loci::pointwise_rule {
+#line 47 "geom.loci"
+    Loci::const_store<Loci::Area>  L_area_ ; 
+#line 47 "geom.loci"
+    Loci::const_store<vect3d>  L_Ef_ ; 
+#line 47 "geom.loci"
+    Loci::store<vect3d>  L_Tf_ ; 
+#line 47 "geom.loci"
+public:
+#line 47 "geom.loci"
+    file_geom005_9300m817() {
+#line 47 "geom.loci"
+       name_store("area",L_area_) ;
+#line 47 "geom.loci"
+       store_info_id("area",7) ;
+#line 47 "geom.loci"
+       name_store("Ef",L_Ef_) ;
+#line 47 "geom.loci"
+       store_info_id("Ef",8) ;
+#line 47 "geom.loci"
+       name_store("Tf",L_Tf_) ;
+#line 47 "geom.loci"
+       store_info_id("Tf",10) ;
+#line 47 "geom.loci"
+       input("area,Ef") ;
+#line 47 "geom.loci"
+       output("Tf") ;
+#line 47 "geom.loci"
+       store_info_id("geom_cells",4) ;
+#line 47 "geom.loci"
+       store_info_id("cl",0) ;
+#line 47 "geom.loci"
+       store_info_id("cr",1) ;
+#line 47 "geom.loci"
+       constraint("(cl,cr)->geom_cells") ;
+#line 47 "geom.loci"
+       setvardoc(docvar_geom_5823) ;
+       set_file("geom.loci:47") ;
+#line 47 "geom.loci"
+    }
+#line 47 "geom.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 48 "geom.loci"
+  // Surface vector along CF direction
+  L_Tf_[_e_]= L_area_[_e_].sada *L_area_[_e_].n - L_Ef_[_e_];
+}    void compute(const Loci::sequence &seq) { 
+#line 50 "geom.loci"
+      do_loop(seq,this) ;
+#line 50 "geom.loci"
+    }
+#line 50 "geom.loci"
+} ;
+#line 50 "geom.loci"
+Loci::register_rule<file_geom005_9300m817> register_file_geom005_9300m817 ;
+#line 50 "geom.loci"
+}
+#line 50 "geom.loci"
+
+
+namespace {class file_geom006_9300m827 : public Loci::pointwise_rule {
+#line 52 "geom.loci"
+    Loci::const_Map L_cr_ ; 
+#line 52 "geom.loci"
+    Loci::const_store<Loci::vector3d<Loci::real_t> >  L_cellcenter_ ; 
+#line 52 "geom.loci"
+    Loci::const_store<Loci::vector3d<Loci::real_t> >  L_facecenter_ ; 
+#line 52 "geom.loci"
+    Loci::store<real>  L_geomFacLeft_ ; 
+#line 52 "geom.loci"
+public:
+#line 52 "geom.loci"
+    file_geom006_9300m827() {
+#line 52 "geom.loci"
+       name_store("cr",L_cr_) ;
+#line 52 "geom.loci"
+       store_info_id("cr",1) ;
+#line 52 "geom.loci"
+       name_store("cellcenter",L_cellcenter_) ;
+#line 52 "geom.loci"
+       store_info_id("cellcenter",2) ;
+#line 52 "geom.loci"
+       name_store("facecenter",L_facecenter_) ;
+#line 52 "geom.loci"
+       store_info_id("facecenter",11) ;
+#line 52 "geom.loci"
+       name_store("geomFacLeft",L_geomFacLeft_) ;
+#line 52 "geom.loci"
+       store_info_id("geomFacLeft",12) ;
+#line 52 "geom.loci"
+       input("cr->cellcenter,facecenter") ;
+#line 52 "geom.loci"
+       output("geomFacLeft") ;
+#line 52 "geom.loci"
+       store_info_id("geom_cells",4) ;
+#line 52 "geom.loci"
+       constraint("cr->geom_cells") ;
+#line 52 "geom.loci"
+       setvardoc(docvar_geom_5823) ;
+       set_file("geom.loci:52") ;
+#line 52 "geom.loci"
+    }
+#line 52 "geom.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 53 "geom.loci"
+  const vect3d tempDistLeft = L_facecenter_[_e_]-L_cellcenter_[L_cr_[_e_]];
+  L_geomFacLeft_[_e_]= norm (tempDistLeft ) ;
+}    void compute(const Loci::sequence &seq) { 
+#line 55 "geom.loci"
+      do_loop(seq,this) ;
+#line 55 "geom.loci"
+    }
+#line 55 "geom.loci"
+} ;
+#line 55 "geom.loci"
+Loci::register_rule<file_geom006_9300m827> register_file_geom006_9300m827 ;
+#line 55 "geom.loci"
+}
+#line 55 "geom.loci"
+
+// for the right cells
+namespace {class file_geom007_9300m836 : public Loci::pointwise_rule {
+#line 57 "geom.loci"
+    Loci::const_Map L_cl_ ; 
+#line 57 "geom.loci"
+    Loci::const_store<Loci::vector3d<Loci::real_t> >  L_cellcenter_ ; 
+#line 57 "geom.loci"
+    Loci::const_store<Loci::vector3d<Loci::real_t> >  L_facecenter_ ; 
+#line 57 "geom.loci"
+    Loci::store<real>  L_geomFacRight_ ; 
+#line 57 "geom.loci"
+public:
+#line 57 "geom.loci"
+    file_geom007_9300m836() {
+#line 57 "geom.loci"
+       name_store("cl",L_cl_) ;
+#line 57 "geom.loci"
+       store_info_id("cl",0) ;
+#line 57 "geom.loci"
+       name_store("cellcenter",L_cellcenter_) ;
+#line 57 "geom.loci"
+       store_info_id("cellcenter",2) ;
+#line 57 "geom.loci"
+       name_store("facecenter",L_facecenter_) ;
+#line 57 "geom.loci"
+       store_info_id("facecenter",11) ;
+#line 57 "geom.loci"
+       name_store("geomFacRight",L_geomFacRight_) ;
+#line 57 "geom.loci"
+       store_info_id("geomFacRight",13) ;
+#line 57 "geom.loci"
+       input("cl->cellcenter,facecenter") ;
+#line 57 "geom.loci"
+       output("geomFacRight") ;
+#line 57 "geom.loci"
+       store_info_id("geom_cells",4) ;
+#line 57 "geom.loci"
+       constraint("cl->geom_cells") ;
+#line 57 "geom.loci"
+       setvardoc(docvar_geom_5823) ;
+       set_file("geom.loci:57") ;
+#line 57 "geom.loci"
+    }
+#line 57 "geom.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 58 "geom.loci"
+  const vect3d tempDistRight = L_facecenter_[_e_]-L_cellcenter_[L_cl_[_e_]];
+  L_geomFacRight_[_e_]= norm (tempDistRight ) ;
+}    void compute(const Loci::sequence &seq) { 
+#line 60 "geom.loci"
+      do_loop(seq,this) ;
+#line 60 "geom.loci"
+    }
+#line 60 "geom.loci"
+} ;
+#line 60 "geom.loci"
+Loci::register_rule<file_geom007_9300m836> register_file_geom007_9300m836 ;
+#line 60 "geom.loci"
+}
+#line 60 "geom.loci"
+
+
+  
+
+
+const char *docvar_geom_5823[] = {
+"FVM.lh:29\000cl\000Map\000Map from faces to left cells ",
+"FVM.lh:32\000cr\000Map\000Map from faces to right cells ",
+"FVM.lh:91\000cellcenter\000store<Loci::vector3d<Loci::real_t> > \000Cell centroid ",
+"lid.lh:72\000distanceVec\000store<vect3d> \000",
+"FVM.lh:23\000geom_cells\000Constraint\000Geometric Cells of the Mesh (not including ghost cells) ",
+"lid.lh:73\000distanceMag\000store<real> \000",
+"lid.lh:74\000distanceUnitVec\000store<vect3d> \000",
+"FVM.lh:97\000area\000store<Loci::Area> \000Face area and normal ",
+"lid.lh:75\000Ef\000store<vect3d> \000",
+"lid.lh:77\000EfMag\000store<real> \000",
+"lid.lh:76\000Tf\000store<vect3d> \000",
+"FVM.lh:94\000facecenter\000store<Loci::vector3d<Loci::real_t> > \000Face centroid ",
+"lid.lh:78\000geomFacLeft\000store<real> \000",
+"lid.lh:79\000geomFacRight\000store<real> \000",
+"\000\000\000" } ;
+
+//DEPEND: /home/merdemli/local/loci/include/FVM.lh lid.lh

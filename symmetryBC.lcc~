@@ -1,0 +1,1455 @@
+extern const char *docvar_symmetryBC_5740[] ;
+#line 1 "symmetryBC.loci"
+#include <Loci.h>
+#include <math.h>
+
+#line 1 "FVM.lh"
+//#############################################################################
+//#
+//# Copyright 2008-2025, Mississippi State University
+//#
+//# This file is part of the Loci Framework.
+//#
+//# The Loci Framework is free software: you can redistribute it and/or modify
+//# it under the terms of the Lesser GNU General Public License as published by
+//# the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The Loci Framework is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# Lesser GNU General Public License for more details.
+//#
+//# You should have received a copy of the Lesser GNU General Public License
+//# along with the Loci Framework.  If not, see <http://www.gnu.org/licenses>
+//#
+//#############################################################################
+
+/** Geometric Cells of the Mesh (not including ghost cells) */
+// $type geom_cells Constraint
+
+/** Nodal Positions */
+// $type pos store<Loci::vector3d<Loci::real_t> > 
+
+/** Map from faces to left cells */
+// $type cl Map
+
+/** Map from faces to right cells */
+// $type cr Map
+
+/** Map from boundary faces to adjacent geom_cells */
+// $type ci Map
+
+/** Map from boundary faces to reference surface */
+// $type ref Map
+
+/** Mapping from periodic boundary faces to periodic face pair */
+// $type pmap Map
+
+/** The transformation that maps periodic faces */
+// $type periodicTransform store<Loci::rigid_transform> 
+
+/** Mapping from face to nodes that define the face */
+// $type face2node multiMap
+
+/** Mapping from cell to faces that form upper matrix entries */
+// $type upper multiMap
+
+/** Mapping from cell to faces that form lower matrix entries */
+// $type lower multiMap
+
+/** Mapping from cell to boundary faces */
+// $type boundary_map multiMap
+
+
+/**
+ * This sets the coordinate system for the grid metric computations.  May be
+ * set to either 'cartesian' or 'axisymmetric'.  Use axisymmetric for
+ * two dimensional axisymmetric computations
+ */
+// $type gridCoordinates param<std::string> 
+
+/** Vars file selector for type of centroid calculation */
+// $type centroid param<std::string> 
+
+/** Compute thickness of extrusion (for axisymmetric case) */
+// $type cell_thickness store<real_t> 
+
+/** Maximum Grid Thickness (used to check validity of 2-D axisymmetric mesh */
+// $type gridThickMax param<real_t> 
+
+/** Minimum Grid Thickness (used to check validity of 2-D axisymmetric mesh */
+// $type gridThickMin param<real_t> 
+
+/** Thickness of z axis extrusion in 2-D mesh */
+// $type gridThickness param<real_t> 
+
+/**
+ * The minimum allowable volume which can be used to override negative volume
+ * calculations
+ */
+// $type minVolume param<real_t> 
+
+/** maximum number of faces per cell for grid */
+// $type max_fpc param<int> 
+
+/** Cell centroid */
+// $type cellcenter store<Loci::vector3d<Loci::real_t> > 
+
+/** Face centroid */
+// $type facecenter store<Loci::vector3d<Loci::real_t> > 
+
+/** Face area and normal */
+// $type area store<Loci::Area> 
+
+/**  Cell volume */
+// $type vol store<Loci::real_t> 
+
+/** Total grid volume */
+// $type grid_vol param<Loci::real_t> 
+
+/** vector orthogonal to face normal */
+// $type mn store<Loci::vector3d<Loci::real_t> > 
+
+/** vector orthogonal to face normal and mn */
+// $type ln store<Loci::vector3d<Loci::real_t> > 
+
+/** Scalar Gradient (must provide cell and boundary face values) */
+// $type grads(Y) store<Loci::vector3d<Loci::real_t> > 
+
+/** General Vector Gradient (must provide cell and boundary face values) */
+// $type gradv(Y) storeVec<Loci::vector3d<Loci::real_t> > 
+
+/** 3-D vector gradient (must provide cell and boundary face values) */
+// $type gradv3d(Y) store<Loci::tensor3d<Loci::real_t> > 
+
+/** Face scalar gradient (uses cell gradients and boundary face values) */
+// $type grads_f(Y) store<Loci::vector3d<Loci::real_t> > 
+
+/** Face general vector gradient (uses cell gradients and boundary face values) */
+// $type gradv_f(Y) storeVec<Loci::vector3d<Loci::real_t> > 
+
+/** 3-D vector gradient (must provide cell and boundary face values) */
+// $type gradv3d_f(Y) store<Loci::tensor3d<Loci::real_t> > 
+
+/** Scalar variable monotone limiters */
+// $type limiters(X) store<Loci::real_t> 
+
+/** General vector monotone limiters */
+// $type limiterv(X) storeVec<Loci::real_t> 
+
+/** 3-D vector monotone limiter */
+// $type limiterv3d(X) store<Loci::vector3d<Loci::real_t> > 
+
+/** MUSCL extrapolation to left side of face */
+// $type lefts(X) store<Loci::real_t> 
+
+/** MUSCL extrapolation to right side of face */
+// $type rights(X) store<Loci::real_t> 
+
+/** MUSCL scalar extrapolation for positive values to left side of face */
+// $type leftsP(X,M) store<Loci::real_t> 
+
+/** MUSCL scalar extrapolation for positive values to right side of face */
+// $type rightsP(X,M) store<Loci::real_t> 
+
+/** MUSCL general vector extrapolation for left side of face */
+// $type leftvM(X) storeVec<Loci::real_t> 
+
+/** MUSCL general vector extrapolation for right side of face */
+// $type rightvM(X) storeVec<Loci::real_t> 
+
+/** MUSCL 3-D vector extrapolation for left side of face */
+// $type leftv3d(X) store<Loci::vector3d<Loci::real_t> > 
+
+/** MUSCL 3-D vector extrapolation for right side of face */
+// $type rightv3d(X) store<Loci::vector3d<Loci::real_t> > 
+
+
+/** Simple scalar interpolation from geom_cells and boundary faces to nodes */
+// $type cell2node(X) store<float> 
+
+/**
+ * Simple general vector interpolation from geom_cells and
+ * boundary faces to nodes
+ */
+// $type cell2node_v(X) storeVec<float> 
+
+/** Simple 3-D vector interpolation from geom_cells and boundary faces to
+ * nodes
+ */
+// $type cell2node_v3d(X) store<Loci::vector3d<float> > 
+
+/** Nodal maximum value of neighboring cell scalars */
+// $type cell2nodeMax(X) store<float> 
+
+/** Nodal minimum value of neighboring cell scalars */
+// $type cell2nodeMin(X) store<float> 
+
+/** Nodal maximum magnitude value of neighboring cells scalars */
+// $type cell2nodeMaxMag(X) store<float> 
+
+/** Nodal Maximum of fields of 3-D vector of neighboring cell vectors */
+// $type cell2nodeMaxv3d(X) store<vector3d<float> > 
+
+/** All boundary faces that are not marked as a symmetry boundary */
+// $type no_symmetry_BC Constraint
+
+/** All boundary faces */
+// $type boundary_faces Constraint
+
+/**
+ * boundary reference surfaces that are marked as utilizing
+ * first-order extrapolation
+ */
+// $type firstOrder_BCoption Constraint
+
+/** boundary reference surface options specified in boundary conditions */
+// $type BC_options store<Loci::options_list> 
+
+/** Integrate a scalar over the boundary surfaces of a cell */
+// $type integrateSurface(X) store<Loci::real_t> 
+
+/** Integrate a vector valued function dotted with surface vectors over cell */
+// $type integrateFlux(X) store<Loci::real_t> 
+
+/** Helper utility for interfacing with the PETSc solver for scalar equations */
+// $type petscScalarSolve(X) store<Loci::real_t> 
+
+/**
+ * Helper utility for interfacing with the PETSc solver for storeVec
+ * equations with double precision jacobians
+ */
+// $type petscBlockedSolve(X) storeVec<Loci::real_t> 
+
+/**
+ * Helper utility for interfacing with the PETSc solver for storeVec
+ * equations with single precision jacobians
+ */
+// $type petscBlockedSSolve(X) storeVec<Loci::real_t> 
+
+/** L-2 Norm of scalar over geom_cells */
+// $type L2Norm(X) param<Loci::real_t> 
+
+/** L-1 Norm of scalar over geom_cells */
+// $type L1Norm(X) param<Loci::real_t> 
+
+/** L-Infinity Norm of Scalar of geom_cells */
+// $type LinfNorm(X) param<Loci::real_t> 
+
+/** Get file number of entity */
+// $type fileNumber(X) store<int> 
+
+/// Convert argument into a string that is the name of the substitution used
+/// in parametricName(X)
+// $type parametricName(X) param<std::string> 
+
+/// Dummy type to facilitate adding selector generators using parametric rules
+// $type selector(SELECT,SELECTION,ABBREV) param<bool> 
+
+/// Dummy type to facilitate adding selector generators using parametric rules
+// $type selector(SELECT,SELECTION) param<bool> 
+
+/// get vector size of storeVec<real_t>
+// $type vecSize(M) param<int> 
+
+/** Used to store the volume tag name for tagged vog file regions */
+// $type volumeTag(X) param<string> 
+
+/** All boundary faces that are participating in periodic boundary conditions */
+// $type periodicFaces Constraint
+
+/** Tell grid metrics to use standard cartesian metrics */
+// $type cartesianCoordinateModel Constraint
+
+/** Tell grid metrics that grid represents a 2-D axisymmetric region */
+// $type axisymmetricCoordinateModel Constraint
+
+/** cell-based scalar quantity used in the adaptive gradient stencil
+    selection. It can be a volume-fraction, pressure, or any other
+    field of interest, and it is used to adapt the stencil of
+    full,stable,symm,symmF,symmC methods around large
+    "stencil_bias" jumps. This variable must
+    be provided by the simulation tool, otherwise setting
+    gradStencilBias: on
+    will result in an incomplete schedule.
+*/
+// $type stencil_bias store<Loci::real_t> 
+
+/**
+   Variable used to select between standard 1-step cell gradient
+   operators (standard) and the n-step iterative methods
+   (iterative1,iterative2).
+*/
+// $type gradType param<string> 
+
+/**
+   Number of iteration steps for the cell gradient n-step iterative methods
+   (iterative1,iterative2).
+*/
+// $type gradSteps param<int> 
+
+#line 4 "symmetryBC.loci"
+
+#line 1 "lid.lh"
+
+typedef Loci::real_t real ;
+typedef vector3d<Loci::real_t> vect3d ;
+
+// $type nGreaterThanZero param<bool> 
+
+// $type Velocity store<vect3d> 
+// $type uVel store<real> 
+// $type vVel store<real> 
+// $type wVel store<real> 
+// $type p store<real> 
+// $type p_interior store<real> 
+// $type mdotf store<real> 
+
+// $type Velocity_face_Prime store<vect3d> 
+// $type VelocityFace store<vect3d> 
+  // $type gradient_p store<vect3d> 
+ 
+// $type Velocity_f store<vect3d> 
+// $type uVel_f store<real> 
+// $type vVel_f store<real> 
+// $type wVel_f store<real> 
+// $type p_f store<real> 
+// $type pPrime_f store<real> 
+
+// $type pPrimeFaceGrad store<vect3d> 
+
+// $type cellPresGrad store<vect3d> 
+// $type DfGradPprimef store<vect3d> 
+
+// $type mu param<real> 
+// $type density param<real> 
+// $type dt param<real> 
+
+// $type stop_iter param<int> 
+// $type print_freq param<int> 
+// $type plot_freq param<int> 
+// $type plot_modulo param<int> 
+// $type epsilon param<real> 
+
+// $type mdotf_initial param<real> 
+// $type p_initial param<real> 
+// $type u_init param<real> 
+// $type v_init param<real> 
+// $type w_init param<real> 
+// $type Velocity_initial store<vect3d> 
+// $type linIntVel_initial param<vect3d> 
+// $type rcIntVel_initial param<vect3d> 
+
+// $type uRelax param<real> 
+// $type pRelax param<real> 
+
+// $type pOut store<real>   // to be read from the given BCs
+// $type Uin store<vect3d>   // to be read from the given BCs
+// $type Uwall store<vect3d>   // to be read from the given BCs
+
+// $type Uwall_BCoption Constraint
+// $type Uin_BCoption Constraint
+// $type pOut_BCoption Constraint
+
+// $type viscousWall_BC Constraint
+// $type velInlet_BC Constraint
+// $type farfield_BC Constraint
+// $type pOutlet_BC Constraint
+// $type bottomWall_BC Constraint
+// $type symmetry_BC Constraint
+
+
+
+// *** variables for geom.loci ***
+
+// $type distanceVec store<vect3d> 
+// $type distanceMag store<real> 
+// $type distanceUnitVec store<vect3d> 
+// $type Ef store<vect3d> 
+// $type Tf store<vect3d> 
+// $type EfMag store<real> 
+// $type geomFacLeft store<real> 
+// $type geomFacRight store<real> 
+// $type boundaryNormalDistanceMag store<real> 
+
+
+
+// *** variables for momentum.loci ***
+
+// $type faceUGrad store<vect3d> 
+// $type faceVGrad store<vect3d> 
+// $type faceWGrad store<vect3d> 
+
+// $type fluxCfRight store<vect3d> 
+// $type fluxCfLeft store<vect3d> 
+// $type fluxCf store<vect3d> 
+// $type fluxCfVisc store<vect3d> 
+
+// $type sumFluxCf store<vect3d> 
+// $type sumFluxCfFlux store<vect3d>  // reduction of face fluxes only (unit=0); transient added pointwise
+// $type sumFluxCfUR store<vect3d>  //underrelaxed
+// $type fluxFf_vel store<real> 
+// $type fluxFfLeft store<real> 
+// $type fluxFfRight store<real> 
+
+// $type fluxVf store<vect3d> 
+// $type rhsBoundaryMomP store<vect3d> 
+// $type sumFluxVf store<vect3d> 
+
+// $type shear2ndPart store<vect3d> 
+// $type sumShear2ndPart store<vect3d> 
+
+// $type rhsMomP store<vect3d> 
+
+// $type b store<vect3d> 
+// $type bUR store<vect3d>  //underrelaxed
+
+// $type uStar store<real> 
+// $type vStar store<real> 
+// $type wStar store<real> 
+// $type VelocityStar store<vect3d> 
+
+
+
+// *** variables for rhiechow.loci ***
+
+// $type linIntVel store<vect3d> 
+// $type Df store<vect3d> 
+// $type DfU store<real> 
+// $type DfV store<real> 
+// $type DfW store<real> 
+
+// $type firstPresGrad store<vect3d> 
+// $type secondPresGrad store<vect3d> 
+
+// $type rcIntVel store<vect3d> 
+
+// $type mdotfStar store<real> 
+
+
+
+// *** variables for pce.loci ***
+// $type a_F_p store<real> 
+// $type a_F_p2 store<real> 
+// $type a_F_p_out store<real> 
+// $type a_F_p_Left store<real> 
+// $type a_F_p_Right store<real> 
+// $type a_C_p store<real> 
+// $type a_C_p2 store<real> 
+// $type b_C_p store<real> 
+// $type b_C_p2 store<real> 
+// $type pPrime store<real> 
+
+
+
+// *** variables for correction.loci ***
+// $type VelocityPrime store<vect3d> 
+
+// $type mdotfPrime store<real> 
+
+
+
+// *** variables for convergenceCheck.loci ***
+// $type uRes param<real> 
+// $type vRes param<real> 
+// $type wRes param<real> 
+// $type continuityRes param<real> 
+
+// $type sumFluxFf store<vect3d> 
+
+// $type sumResUNom param<real> 
+// $type sumResUDenom param<real> 
+// $type sumResVNom param<real> 
+// $type sumResVDenom param<real> 
+// $type sumResWNom param<real> 
+// $type sumResWDenom param<real> 
+// $type sumResContinuity param<real> 
+// $type sumResContinuityRef param<real> 
+
+// Conditions for termination
+// $type finishMaxIter param<bool> 
+// $type finishURes param<bool> 
+// $type finishVRes param<bool> 
+// $type finishWRes param<bool> 
+// $type finishContinuityRes param<bool> 
+
+// $type solution store<vect3d> 
+
+
+// $type count param<flowPsi::real> 
+
+// $type sumResMom param<flowPsi::vect3d> 
+// $type sumRes_p param<flowPsi::real> 
+// $type uRes param<flowPsi::real> 
+// $type vRes param<flowPsi::real> 
+// $type wRes param<flowPsi::real> 
+// $type pRes param<flowPsi::real> 
+
+
+#line 5 "symmetryBC.loci"
+
+
+
+// Find the distanceVector from facecenter to cellcenter for symmetry boundary cells
+namespace {class file_symmetryBC000_9295m206 : public Loci::pointwise_rule {
+#line 9 "symmetryBC.loci"
+    Loci::const_Map L_ci_ ; 
+#line 9 "symmetryBC.loci"
+    Loci::const_store<Loci::vector3d<Loci::real_t> >  L_cellcenter_ ; 
+#line 9 "symmetryBC.loci"
+    Loci::const_store<Loci::vector3d<Loci::real_t> >  L_facecenter_ ; 
+#line 9 "symmetryBC.loci"
+    Loci::store<vect3d>  L_distanceVec_ ; 
+#line 9 "symmetryBC.loci"
+public:
+#line 9 "symmetryBC.loci"
+    file_symmetryBC000_9295m206() {
+#line 9 "symmetryBC.loci"
+       name_store("ci",L_ci_) ;
+#line 9 "symmetryBC.loci"
+       store_info_id("ci",0) ;
+#line 9 "symmetryBC.loci"
+       name_store("cellcenter",L_cellcenter_) ;
+#line 9 "symmetryBC.loci"
+       store_info_id("cellcenter",1) ;
+#line 9 "symmetryBC.loci"
+       name_store("facecenter",L_facecenter_) ;
+#line 9 "symmetryBC.loci"
+       store_info_id("facecenter",2) ;
+#line 9 "symmetryBC.loci"
+       name_store("distanceVec",L_distanceVec_) ;
+#line 9 "symmetryBC.loci"
+       store_info_id("distanceVec",3) ;
+#line 9 "symmetryBC.loci"
+       input("ci->cellcenter,facecenter") ;
+#line 9 "symmetryBC.loci"
+       output("distanceVec") ;
+#line 9 "symmetryBC.loci"
+       store_info_id("symmetry_BC",4) ;
+#line 9 "symmetryBC.loci"
+       constraint("symmetry_BC") ;
+#line 9 "symmetryBC.loci"
+       setvardoc(docvar_symmetryBC_5740) ;
+       set_file("symmetryBC.loci:9") ;
+#line 9 "symmetryBC.loci"
+    }
+#line 9 "symmetryBC.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 10 "symmetryBC.loci"
+  L_distanceVec_[_e_]= L_facecenter_[_e_]-L_cellcenter_[L_ci_[_e_]];
+}    void compute(const Loci::sequence &seq) { 
+#line 11 "symmetryBC.loci"
+      do_loop(seq,this) ;
+#line 11 "symmetryBC.loci"
+    }
+#line 11 "symmetryBC.loci"
+} ;
+#line 11 "symmetryBC.loci"
+Loci::register_rule<file_symmetryBC000_9295m206> register_file_symmetryBC000_9295m206 ;
+#line 11 "symmetryBC.loci"
+}
+#line 11 "symmetryBC.loci"
+  
+
+// Find the normal distance from the centroid of the boundary cell to the symmetry boundary
+namespace {class file_symmetryBC001_9295m216 : public Loci::pointwise_rule {
+#line 14 "symmetryBC.loci"
+    Loci::const_store<Loci::Area>  L_area_ ; 
+#line 14 "symmetryBC.loci"
+    Loci::const_store<vect3d>  L_distanceVec_ ; 
+#line 14 "symmetryBC.loci"
+    Loci::store<real>  L_boundaryNormalDistanceMag_ ; 
+#line 14 "symmetryBC.loci"
+public:
+#line 14 "symmetryBC.loci"
+    file_symmetryBC001_9295m216() {
+#line 14 "symmetryBC.loci"
+       name_store("area",L_area_) ;
+#line 14 "symmetryBC.loci"
+       store_info_id("area",5) ;
+#line 14 "symmetryBC.loci"
+       name_store("distanceVec",L_distanceVec_) ;
+#line 14 "symmetryBC.loci"
+       store_info_id("distanceVec",3) ;
+#line 14 "symmetryBC.loci"
+       name_store("boundaryNormalDistanceMag",L_boundaryNormalDistanceMag_) ;
+#line 14 "symmetryBC.loci"
+       store_info_id("boundaryNormalDistanceMag",6) ;
+#line 14 "symmetryBC.loci"
+       input("area,distanceVec") ;
+#line 14 "symmetryBC.loci"
+       output("boundaryNormalDistanceMag") ;
+#line 14 "symmetryBC.loci"
+       store_info_id("symmetry_BC",4) ;
+#line 14 "symmetryBC.loci"
+       constraint("symmetry_BC") ;
+#line 14 "symmetryBC.loci"
+       setvardoc(docvar_symmetryBC_5740) ;
+       set_file("symmetryBC.loci:14") ;
+#line 14 "symmetryBC.loci"
+    }
+#line 14 "symmetryBC.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 15 "symmetryBC.loci"
+  const vect3d boundaryNormalDistanceVec = dot (L_distanceVec_[_e_],L_area_[_e_].n )*L_area_[_e_].n ;
+  L_boundaryNormalDistanceMag_[_e_]= norm (boundaryNormalDistanceVec ) ;
+}    void compute(const Loci::sequence &seq) { 
+#line 17 "symmetryBC.loci"
+      do_loop(seq,this) ;
+#line 17 "symmetryBC.loci"
+    }
+#line 17 "symmetryBC.loci"
+} ;
+#line 17 "symmetryBC.loci"
+Loci::register_rule<file_symmetryBC001_9295m216> register_file_symmetryBC001_9295m216 ;
+#line 17 "symmetryBC.loci"
+}
+#line 17 "symmetryBC.loci"
+
+
+namespace {class file_symmetryBC002_9295m225 : public Loci::pointwise_rule {
+#line 19 "symmetryBC.loci"
+    Loci::const_Map L_ci_ ; 
+#line 19 "symmetryBC.loci"
+    Loci::const_store<Loci::Area>  L_area_ ; 
+#line 19 "symmetryBC.loci"
+    Loci::const_store<vect3d>  L_Velocity_ ; 
+#line 19 "symmetryBC.loci"
+    Loci::store<vect3d>  L_Velocity_f_ ; 
+#line 19 "symmetryBC.loci"
+public:
+#line 19 "symmetryBC.loci"
+    file_symmetryBC002_9295m225() {
+#line 19 "symmetryBC.loci"
+       name_store("ci",L_ci_) ;
+#line 19 "symmetryBC.loci"
+       store_info_id("ci",0) ;
+#line 19 "symmetryBC.loci"
+       name_store("area",L_area_) ;
+#line 19 "symmetryBC.loci"
+       store_info_id("area",5) ;
+#line 19 "symmetryBC.loci"
+       name_store("Velocity",L_Velocity_) ;
+#line 19 "symmetryBC.loci"
+       store_info_id("Velocity",7) ;
+#line 19 "symmetryBC.loci"
+       name_store("Velocity_f",L_Velocity_f_) ;
+#line 19 "symmetryBC.loci"
+       store_info_id("Velocity_f",8) ;
+#line 19 "symmetryBC.loci"
+       input("ci->Velocity,area") ;
+#line 19 "symmetryBC.loci"
+       output("Velocity_f") ;
+#line 19 "symmetryBC.loci"
+       store_info_id("symmetry_BC",4) ;
+#line 19 "symmetryBC.loci"
+       constraint("symmetry_BC") ;
+#line 19 "symmetryBC.loci"
+       setvardoc(docvar_symmetryBC_5740) ;
+       set_file("symmetryBC.loci:19") ;
+#line 19 "symmetryBC.loci"
+    }
+#line 19 "symmetryBC.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 20 "symmetryBC.loci"
+  vect3d normCompVel = dot (L_Velocity_[L_ci_[_e_]],L_area_[_e_].n )*L_area_[_e_].n ;
+  L_Velocity_f_[_e_]= L_Velocity_[L_ci_[_e_]]- normCompVel ;
+  //std::cout << "printing Velocity_f for symmetryBC" << std::endl;
+  //std::cout << $Velocity_f << std::endl;
+}    void compute(const Loci::sequence &seq) { 
+#line 24 "symmetryBC.loci"
+      do_loop(seq,this) ;
+#line 24 "symmetryBC.loci"
+    }
+#line 24 "symmetryBC.loci"
+} ;
+#line 24 "symmetryBC.loci"
+Loci::register_rule<file_symmetryBC002_9295m225> register_file_symmetryBC002_9295m225 ;
+#line 24 "symmetryBC.loci"
+}
+#line 24 "symmetryBC.loci"
+
+
+namespace {class file_symmetryBC003_9295m235 : public Loci::pointwise_rule {
+#line 26 "symmetryBC.loci"
+    Loci::const_store<vect3d>  L_Velocity_f_ ; 
+#line 26 "symmetryBC.loci"
+    Loci::store<real>  L_uVel_f_ ; 
+#line 26 "symmetryBC.loci"
+public:
+#line 26 "symmetryBC.loci"
+    file_symmetryBC003_9295m235() {
+#line 26 "symmetryBC.loci"
+       name_store("Velocity_f",L_Velocity_f_) ;
+#line 26 "symmetryBC.loci"
+       store_info_id("Velocity_f",8) ;
+#line 26 "symmetryBC.loci"
+       name_store("uVel_f",L_uVel_f_) ;
+#line 26 "symmetryBC.loci"
+       store_info_id("uVel_f",9) ;
+#line 26 "symmetryBC.loci"
+       input("Velocity_f") ;
+#line 26 "symmetryBC.loci"
+       output("uVel_f") ;
+#line 26 "symmetryBC.loci"
+       store_info_id("symmetry_BC",4) ;
+#line 26 "symmetryBC.loci"
+       constraint("symmetry_BC") ;
+#line 26 "symmetryBC.loci"
+       setvardoc(docvar_symmetryBC_5740) ;
+       set_file("symmetryBC.loci:26") ;
+#line 26 "symmetryBC.loci"
+    }
+#line 26 "symmetryBC.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 27 "symmetryBC.loci"
+  L_uVel_f_[_e_]= L_Velocity_f_[_e_][0];
+}    void compute(const Loci::sequence &seq) { 
+#line 28 "symmetryBC.loci"
+      do_loop(seq,this) ;
+#line 28 "symmetryBC.loci"
+    }
+#line 28 "symmetryBC.loci"
+} ;
+#line 28 "symmetryBC.loci"
+Loci::register_rule<file_symmetryBC003_9295m235> register_file_symmetryBC003_9295m235 ;
+#line 28 "symmetryBC.loci"
+}
+#line 28 "symmetryBC.loci"
+
+namespace {class file_symmetryBC004_9295m243 : public Loci::pointwise_rule {
+#line 29 "symmetryBC.loci"
+    Loci::const_store<vect3d>  L_Velocity_f_ ; 
+#line 29 "symmetryBC.loci"
+    Loci::store<real>  L_vVel_f_ ; 
+#line 29 "symmetryBC.loci"
+public:
+#line 29 "symmetryBC.loci"
+    file_symmetryBC004_9295m243() {
+#line 29 "symmetryBC.loci"
+       name_store("Velocity_f",L_Velocity_f_) ;
+#line 29 "symmetryBC.loci"
+       store_info_id("Velocity_f",8) ;
+#line 29 "symmetryBC.loci"
+       name_store("vVel_f",L_vVel_f_) ;
+#line 29 "symmetryBC.loci"
+       store_info_id("vVel_f",10) ;
+#line 29 "symmetryBC.loci"
+       input("Velocity_f") ;
+#line 29 "symmetryBC.loci"
+       output("vVel_f") ;
+#line 29 "symmetryBC.loci"
+       store_info_id("symmetry_BC",4) ;
+#line 29 "symmetryBC.loci"
+       constraint("symmetry_BC") ;
+#line 29 "symmetryBC.loci"
+       setvardoc(docvar_symmetryBC_5740) ;
+       set_file("symmetryBC.loci:29") ;
+#line 29 "symmetryBC.loci"
+    }
+#line 29 "symmetryBC.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 30 "symmetryBC.loci"
+  L_vVel_f_[_e_]= L_Velocity_f_[_e_][1];
+}    void compute(const Loci::sequence &seq) { 
+#line 31 "symmetryBC.loci"
+      do_loop(seq,this) ;
+#line 31 "symmetryBC.loci"
+    }
+#line 31 "symmetryBC.loci"
+} ;
+#line 31 "symmetryBC.loci"
+Loci::register_rule<file_symmetryBC004_9295m243> register_file_symmetryBC004_9295m243 ;
+#line 31 "symmetryBC.loci"
+}
+#line 31 "symmetryBC.loci"
+
+namespace {class file_symmetryBC005_9295m251 : public Loci::pointwise_rule {
+#line 32 "symmetryBC.loci"
+    Loci::const_store<vect3d>  L_Velocity_f_ ; 
+#line 32 "symmetryBC.loci"
+    Loci::store<real>  L_wVel_f_ ; 
+#line 32 "symmetryBC.loci"
+public:
+#line 32 "symmetryBC.loci"
+    file_symmetryBC005_9295m251() {
+#line 32 "symmetryBC.loci"
+       name_store("Velocity_f",L_Velocity_f_) ;
+#line 32 "symmetryBC.loci"
+       store_info_id("Velocity_f",8) ;
+#line 32 "symmetryBC.loci"
+       name_store("wVel_f",L_wVel_f_) ;
+#line 32 "symmetryBC.loci"
+       store_info_id("wVel_f",11) ;
+#line 32 "symmetryBC.loci"
+       input("Velocity_f") ;
+#line 32 "symmetryBC.loci"
+       output("wVel_f") ;
+#line 32 "symmetryBC.loci"
+       store_info_id("symmetry_BC",4) ;
+#line 32 "symmetryBC.loci"
+       constraint("symmetry_BC") ;
+#line 32 "symmetryBC.loci"
+       setvardoc(docvar_symmetryBC_5740) ;
+       set_file("symmetryBC.loci:32") ;
+#line 32 "symmetryBC.loci"
+    }
+#line 32 "symmetryBC.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 33 "symmetryBC.loci"
+  L_wVel_f_[_e_]= L_Velocity_f_[_e_][2];
+}    void compute(const Loci::sequence &seq) { 
+#line 34 "symmetryBC.loci"
+      do_loop(seq,this) ;
+#line 34 "symmetryBC.loci"
+    }
+#line 34 "symmetryBC.loci"
+} ;
+#line 34 "symmetryBC.loci"
+Loci::register_rule<file_symmetryBC005_9295m251> register_file_symmetryBC005_9295m251 ;
+#line 34 "symmetryBC.loci"
+}
+#line 34 "symmetryBC.loci"
+
+
+
+// *** For Momentum Eqn ***
+// Compute FluxCf for the symmetry boundary faces 
+// All boundary faces have normals pointing out of the domain
+// so cr of a boundary face is not a geom cell
+// u component - (Reference Darwish Page 616, eqn 15.154(i))
+/*
+$rule pointwise(fluxCfVisc<-area, boundaryNormalDistanceMag, mu), constraint(symmetry_BC) {
+  $fluxCfVisc[0] = $mu*$area.sada*(1.0-($area.n[0])*($area.n[0]))/$boundaryNormalDistanceMag ;
+  $fluxCfVisc[1] = $mu*$area.sada*(1.0-($area.n[1])*($area.n[1]))/$boundaryNormalDistanceMag ;
+  $fluxCfVisc[2] = $mu*$area.sada*(1.0-($area.n[2])*($area.n[2]))/$boundaryNormalDistanceMag ;
+    std::cout << "printing fluxCfVisc symmetryBoundary" << std::endl;
+  std::cout << $fluxCfVisc << std::endl;
+  $fluxCfLeft[2] = 0.0;
+  
+  ***************************************************
+  std::cout << "printing fluxCfLeft" << std::endl;
+  std::cout << $fluxCfLeft << std::endl;
+  std::cout << $area.n[2] << std::endl;
+}
+*/
+
+namespace {class file_symmetryBC006_9295m259 : public Loci::pointwise_rule {
+#line 58 "symmetryBC.loci"
+    Loci::const_store<Loci::Area>  L_area_ ; 
+#line 58 "symmetryBC.loci"
+    Loci::const_param<real>  L_mu_ ; 
+#line 58 "symmetryBC.loci"
+    Loci::const_store<real>  L_boundaryNormalDistanceMag_ ; 
+#line 58 "symmetryBC.loci"
+    Loci::store<vect3d>  L_fluxCfVisc_ ; 
+#line 58 "symmetryBC.loci"
+public:
+#line 58 "symmetryBC.loci"
+    file_symmetryBC006_9295m259() {
+#line 58 "symmetryBC.loci"
+       name_store("area",L_area_) ;
+#line 58 "symmetryBC.loci"
+       store_info_id("area",5) ;
+#line 58 "symmetryBC.loci"
+       name_store("mu",L_mu_) ;
+#line 58 "symmetryBC.loci"
+       store_info_id("mu",12) ;
+#line 58 "symmetryBC.loci"
+       name_store("boundaryNormalDistanceMag",L_boundaryNormalDistanceMag_) ;
+#line 58 "symmetryBC.loci"
+       store_info_id("boundaryNormalDistanceMag",6) ;
+#line 58 "symmetryBC.loci"
+       name_store("fluxCfVisc",L_fluxCfVisc_) ;
+#line 58 "symmetryBC.loci"
+       store_info_id("fluxCfVisc",13) ;
+#line 58 "symmetryBC.loci"
+       input("area,boundaryNormalDistanceMag,mu") ;
+#line 58 "symmetryBC.loci"
+       output("fluxCfVisc") ;
+#line 58 "symmetryBC.loci"
+       store_info_id("symmetry_BC",4) ;
+#line 58 "symmetryBC.loci"
+       constraint("symmetry_BC") ;
+#line 58 "symmetryBC.loci"
+       setvardoc(docvar_symmetryBC_5740) ;
+       set_file("symmetryBC.loci:58") ;
+#line 58 "symmetryBC.loci"
+    }
+#line 58 "symmetryBC.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 59 "symmetryBC.loci"
+  L_fluxCfVisc_[_e_][0]= 2*L_mu_[_e_]*L_area_[_e_].sada *(L_area_[_e_].n [0])*(L_area_[_e_].n [0])/L_boundaryNormalDistanceMag_[_e_];
+  L_fluxCfVisc_[_e_][1]= 2*L_mu_[_e_]*L_area_[_e_].sada *(L_area_[_e_].n [1])*(L_area_[_e_].n [1])/L_boundaryNormalDistanceMag_[_e_];
+  L_fluxCfVisc_[_e_][2]= 2*L_mu_[_e_]*L_area_[_e_].sada *(L_area_[_e_].n [2])*(L_area_[_e_].n [2])/L_boundaryNormalDistanceMag_[_e_];
+    // std::cout << "printing fluxCfVisc symmetryBoundary" << std::endl;
+  // std::cout << $fluxCfVisc << std::endl;
+  //$fluxCfLeft[2] = 0.0;
+  
+  //***************************************************
+  //std::cout << "printing fluxCfLeft" << std::endl;
+  //std::cout << $fluxCfLeft << std::endl;
+  //std::cout << $area.n[2] << std::endl;
+}    void compute(const Loci::sequence &seq) { 
+#line 70 "symmetryBC.loci"
+      do_loop(seq,this) ;
+#line 70 "symmetryBC.loci"
+    }
+#line 70 "symmetryBC.loci"
+} ;
+#line 70 "symmetryBC.loci"
+Loci::register_rule<file_symmetryBC006_9295m259> register_file_symmetryBC006_9295m259 ;
+#line 70 "symmetryBC.loci"
+}
+#line 70 "symmetryBC.loci"
+
+
+namespace {class file_symmetryBC007_9295m268 : public Loci::pointwise_rule {
+#line 72 "symmetryBC.loci"
+    Loci::store<vect3d>  L_fluxCf_ ; 
+#line 72 "symmetryBC.loci"
+public:
+#line 72 "symmetryBC.loci"
+    file_symmetryBC007_9295m268() {
+#line 72 "symmetryBC.loci"
+       name_store("fluxCf",L_fluxCf_) ;
+#line 72 "symmetryBC.loci"
+       store_info_id("fluxCf",14) ;
+#line 72 "symmetryBC.loci"
+       output("fluxCf") ;
+#line 72 "symmetryBC.loci"
+       store_info_id("symmetry_BC",4) ;
+#line 72 "symmetryBC.loci"
+       constraint("symmetry_BC") ;
+#line 72 "symmetryBC.loci"
+       setvardoc(docvar_symmetryBC_5740) ;
+       set_file("symmetryBC.loci:72") ;
+#line 72 "symmetryBC.loci"
+    }
+#line 72 "symmetryBC.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 73 "symmetryBC.loci"
+  L_fluxCf_[_e_]= vect3d (0.0, 0.0, 0.0) ;
+    
+}    void compute(const Loci::sequence &seq) { 
+#line 75 "symmetryBC.loci"
+      do_loop(seq,this) ;
+#line 75 "symmetryBC.loci"
+    }
+#line 75 "symmetryBC.loci"
+} ;
+#line 75 "symmetryBC.loci"
+Loci::register_rule<file_symmetryBC007_9295m268> register_file_symmetryBC007_9295m268 ;
+#line 75 "symmetryBC.loci"
+}
+#line 75 "symmetryBC.loci"
+
+
+// For symmetry boundary faces FluxFf is zero (Page 616). So set it zero for the boundary faces 
+// and prioritize them by priority specification
+// $rule pointwise(fluxFfLeft), constraint(symmetry_BC) {
+  // $fluxFfLeft = 0.0;
+// }
+
+// Condition that determines if $n>0
+ namespace {class file_symmetryBC008_9295m275 : public Loci::singleton_rule {
+#line 84 "symmetryBC.loci"
+    Loci::const_param<int> L_n_ ; 
+#line 84 "symmetryBC.loci"
+    Loci::param<bool>  L_nGreaterThanZero_ ; 
+#line 84 "symmetryBC.loci"
+public:
+#line 84 "symmetryBC.loci"
+    file_symmetryBC008_9295m275() {
+#line 84 "symmetryBC.loci"
+       name_store("nGreaterThanZero",L_nGreaterThanZero_) ;
+#line 84 "symmetryBC.loci"
+       store_info_id("nGreaterThanZero",15) ;
+#line 84 "symmetryBC.loci"
+       name_store("$n",L_n_) ;
+#line 84 "symmetryBC.loci"
+       store_info_id("$n",16) ;
+#line 84 "symmetryBC.loci"
+       input("$n") ;
+#line 84 "symmetryBC.loci"
+       output("nGreaterThanZero") ;
+#line 84 "symmetryBC.loci"
+       setvardoc(docvar_symmetryBC_5740) ;
+       set_file("symmetryBC.loci:84") ;
+#line 84 "symmetryBC.loci"
+    }
+#line 84 "symmetryBC.loci"
+    void compute(const Loci::sequence &seq) { 
+   (*L_nGreaterThanZero_)= ((*L_n_)> 0) ;
+ }} ;
+#line 86 "symmetryBC.loci"
+Loci::register_rule<file_symmetryBC008_9295m275> register_file_symmetryBC008_9295m275 ;
+#line 86 "symmetryBC.loci"
+}
+#line 86 "symmetryBC.loci"
+
+
+// $rule pointwise(p_f<-ci->p, ci->cellPresGrad{n-1}, ci->cellcenter, facecenter), constraint(symmetry_BC), conditional($nGreaterThanZero) {
+//   const vect3d distVector = $facecenter - $ci->$cellcenter ;
+//   $p_f = $ci->$p + dot($ci->$cellPresGrad{n-1},distVector) ;
+// }
+
+// Symmetry: zero normal pressure gradient. Extrapolate with the tangential part of the
+// cell gradient only: p_b = p_C + grad(p).(d - (d.n)n)
+namespace {class file_symmetryBC009_9295m281 : public Loci::pointwise_rule {
+#line 95 "symmetryBC.loci"
+    Loci::const_Map L_ci_ ; 
+#line 95 "symmetryBC.loci"
+    Loci::const_store<Loci::vector3d<Loci::real_t> >  L_cellcenter_ ; 
+#line 95 "symmetryBC.loci"
+    Loci::const_store<Loci::vector3d<Loci::real_t> >  L_facecenter_ ; 
+#line 95 "symmetryBC.loci"
+    Loci::const_store<Loci::Area>  L_area_ ; 
+#line 95 "symmetryBC.loci"
+    Loci::const_store<real>  L_p_n_P_1__ ; 
+#line 95 "symmetryBC.loci"
+    Loci::const_store<Loci::vector3d<Loci::real_t> >  L_gradsp_n__ ; 
+#line 95 "symmetryBC.loci"
+    Loci::store<real>  L_p_f_n_P_1__ ; 
+#line 95 "symmetryBC.loci"
+public:
+#line 95 "symmetryBC.loci"
+    file_symmetryBC009_9295m281() {
+#line 95 "symmetryBC.loci"
+       name_store("ci",L_ci_) ;
+#line 95 "symmetryBC.loci"
+       store_info_id("ci",0) ;
+#line 95 "symmetryBC.loci"
+       name_store("cellcenter",L_cellcenter_) ;
+#line 95 "symmetryBC.loci"
+       store_info_id("cellcenter",1) ;
+#line 95 "symmetryBC.loci"
+       name_store("facecenter",L_facecenter_) ;
+#line 95 "symmetryBC.loci"
+       store_info_id("facecenter",2) ;
+#line 95 "symmetryBC.loci"
+       name_store("area",L_area_) ;
+#line 95 "symmetryBC.loci"
+       store_info_id("area",5) ;
+#line 95 "symmetryBC.loci"
+       name_store("p{n+1}",L_p_n_P_1__) ;
+#line 95 "symmetryBC.loci"
+       store_info_id("p{n+1}",17) ;
+#line 95 "symmetryBC.loci"
+       name_store("grads(p){n}",L_gradsp_n__) ;
+#line 95 "symmetryBC.loci"
+       store_info_id("grads(p){n}",18) ;
+#line 95 "symmetryBC.loci"
+       name_store("p_f{n+1}",L_p_f_n_P_1__) ;
+#line 95 "symmetryBC.loci"
+       store_info_id("p_f{n+1}",19) ;
+#line 95 "symmetryBC.loci"
+       input("ci->p{n+1},ci->grads(p){n},area,ci->cellcenter,facecenter") ;
+#line 95 "symmetryBC.loci"
+       output("p_f{n+1}") ;
+#line 95 "symmetryBC.loci"
+       store_info_id("symmetry_BC",4) ;
+#line 95 "symmetryBC.loci"
+       constraint("symmetry_BC") ;
+#line 95 "symmetryBC.loci"
+       setvardoc(docvar_symmetryBC_5740) ;
+       set_file("symmetryBC.loci:95") ;
+#line 95 "symmetryBC.loci"
+    }
+#line 95 "symmetryBC.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 96 "symmetryBC.loci"
+  const vect3d distVector = L_facecenter_[_e_]- L_cellcenter_[L_ci_[_e_]];
+  const vect3d distTangential = distVector - dot (distVector ,L_area_[_e_].n )*L_area_[_e_].n ;
+  L_p_f_n_P_1__[_e_]= L_p_n_P_1__[L_ci_[_e_]]+ dot (L_gradsp_n__[L_ci_[_e_]],distTangential ) ;
+}    void compute(const Loci::sequence &seq) { 
+#line 99 "symmetryBC.loci"
+      do_loop(seq,this) ;
+#line 99 "symmetryBC.loci"
+    }
+#line 99 "symmetryBC.loci"
+} ;
+#line 99 "symmetryBC.loci"
+Loci::register_rule<file_symmetryBC009_9295m281> register_file_symmetryBC009_9295m281 ;
+#line 99 "symmetryBC.loci"
+}
+#line 99 "symmetryBC.loci"
+
+
+namespace {class file_symmetryBC010_9295m295 : public Loci::pointwise_rule {
+#line 101 "symmetryBC.loci"
+    Loci::const_Map L_ci_ ; 
+#line 101 "symmetryBC.loci"
+    Loci::const_store<Loci::vector3d<Loci::real_t> >  L_cellcenter_ ; 
+#line 101 "symmetryBC.loci"
+    Loci::const_store<Loci::vector3d<Loci::real_t> >  L_facecenter_ ; 
+#line 101 "symmetryBC.loci"
+    Loci::const_store<vect3d>  L_Velocity_ ; 
+#line 101 "symmetryBC.loci"
+    Loci::const_param<real>  L_density_ ; 
+#line 101 "symmetryBC.loci"
+    Loci::const_store<real>  L_pPrime_ ; 
+#line 101 "symmetryBC.loci"
+    Loci::store<real>  L_pPrime_f_ ; 
+#line 101 "symmetryBC.loci"
+public:
+#line 101 "symmetryBC.loci"
+    file_symmetryBC010_9295m295() {
+#line 101 "symmetryBC.loci"
+       name_store("ci",L_ci_) ;
+#line 101 "symmetryBC.loci"
+       store_info_id("ci",0) ;
+#line 101 "symmetryBC.loci"
+       name_store("cellcenter",L_cellcenter_) ;
+#line 101 "symmetryBC.loci"
+       store_info_id("cellcenter",1) ;
+#line 101 "symmetryBC.loci"
+       name_store("facecenter",L_facecenter_) ;
+#line 101 "symmetryBC.loci"
+       store_info_id("facecenter",2) ;
+#line 101 "symmetryBC.loci"
+       name_store("Velocity",L_Velocity_) ;
+#line 101 "symmetryBC.loci"
+       store_info_id("Velocity",7) ;
+#line 101 "symmetryBC.loci"
+       name_store("pPrime_f",L_pPrime_f_) ;
+#line 101 "symmetryBC.loci"
+       store_info_id("pPrime_f",20) ;
+#line 101 "symmetryBC.loci"
+       name_store("density",L_density_) ;
+#line 101 "symmetryBC.loci"
+       store_info_id("density",21) ;
+#line 101 "symmetryBC.loci"
+       name_store("pPrime",L_pPrime_) ;
+#line 101 "symmetryBC.loci"
+       store_info_id("pPrime",22) ;
+#line 101 "symmetryBC.loci"
+       input("ci->pPrime,ci->Velocity,density,ci->cellcenter,facecenter") ;
+#line 101 "symmetryBC.loci"
+       output("pPrime_f") ;
+#line 101 "symmetryBC.loci"
+       store_info_id("symmetry_BC",4) ;
+#line 101 "symmetryBC.loci"
+       constraint("symmetry_BC") ;
+#line 101 "symmetryBC.loci"
+       setvardoc(docvar_symmetryBC_5740) ;
+       set_file("symmetryBC.loci:101") ;
+#line 101 "symmetryBC.loci"
+    }
+#line 101 "symmetryBC.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 102 "symmetryBC.loci"
+  const vect3d distVector = L_facecenter_[_e_]- L_cellcenter_[L_ci_[_e_]];
+    L_pPrime_f_[_e_]= L_pPrime_[L_ci_[_e_]]+ 0*0.5*L_density_[_e_]*dot (L_Velocity_[L_ci_[_e_]],distVector )*dot (L_Velocity_[L_ci_[_e_]],distVector );
+}    void compute(const Loci::sequence &seq) { 
+#line 104 "symmetryBC.loci"
+      do_loop(seq,this) ;
+#line 104 "symmetryBC.loci"
+    }
+#line 104 "symmetryBC.loci"
+} ;
+#line 104 "symmetryBC.loci"
+Loci::register_rule<file_symmetryBC010_9295m295> register_file_symmetryBC010_9295m295 ;
+#line 104 "symmetryBC.loci"
+}
+#line 104 "symmetryBC.loci"
+
+/*
+ $rule pointwise(pPrime_f{n+1}<-ci->pPrime{n+1}, ci->grads(pPrime){n}, ci->cellcenter, facecenter), constraint(symmetry_BC), conditional($nGreaterThanZero) {
+  const vect3d distVector = $facecenter - $ci->$cellcenter ;
+  $pPrime_f{n+1} = $ci->$pPrime{n+1} + dot($ci->$grads(pPrime){n},distVector) ;  // Eqn 15.127 page 607
+  std::cout << "printing p_f" << std::endl;
+  std::cout << $p_f{n+1} << std::endl;
+}
+*/
+
+
+// Extrapolate the unknown boundary pressure p_f and calculate the contribution of the boundary
+// (Darwish - Page 606-607, last term of 15.124, 15.125, 15.126 for bc)
+// boundary pressure is calculated using eqn 15.127 at page 607 (truncated Taylor Series)
+// Compute FluxVf for the symmetry boundary faces (Darwish Eqn 15.150/15.154):
+// explicit part of the normal stress, b_C += -2*mu*Sb/dperp*(v_C.n)n with the
+// diagonal (implicit) part removed (it is in fluxCfVisc).
+// NOTE: the boundary pressure force -p_b*Sb is NOT added here; it enters b through
+// rhsMomP = vol*grads(p) since p_f participates in the cell pressure gradient.
+namespace {class file_symmetryBC011_9295m308 : public Loci::pointwise_rule {
+#line 123 "symmetryBC.loci"
+    Loci::const_Map L_ci_ ; 
+#line 123 "symmetryBC.loci"
+    Loci::const_store<Loci::Area>  L_area_ ; 
+#line 123 "symmetryBC.loci"
+    Loci::const_store<vect3d>  L_Velocity_ ; 
+#line 123 "symmetryBC.loci"
+    Loci::const_param<real>  L_mu_ ; 
+#line 123 "symmetryBC.loci"
+    Loci::const_store<real>  L_boundaryNormalDistanceMag_ ; 
+#line 123 "symmetryBC.loci"
+    Loci::store<vect3d>  L_fluxVf_ ; 
+#line 123 "symmetryBC.loci"
+public:
+#line 123 "symmetryBC.loci"
+    file_symmetryBC011_9295m308() {
+#line 123 "symmetryBC.loci"
+       name_store("ci",L_ci_) ;
+#line 123 "symmetryBC.loci"
+       store_info_id("ci",0) ;
+#line 123 "symmetryBC.loci"
+       name_store("area",L_area_) ;
+#line 123 "symmetryBC.loci"
+       store_info_id("area",5) ;
+#line 123 "symmetryBC.loci"
+       name_store("Velocity",L_Velocity_) ;
+#line 123 "symmetryBC.loci"
+       store_info_id("Velocity",7) ;
+#line 123 "symmetryBC.loci"
+       name_store("mu",L_mu_) ;
+#line 123 "symmetryBC.loci"
+       store_info_id("mu",12) ;
+#line 123 "symmetryBC.loci"
+       name_store("boundaryNormalDistanceMag",L_boundaryNormalDistanceMag_) ;
+#line 123 "symmetryBC.loci"
+       store_info_id("boundaryNormalDistanceMag",6) ;
+#line 123 "symmetryBC.loci"
+       name_store("fluxVf",L_fluxVf_) ;
+#line 123 "symmetryBC.loci"
+       store_info_id("fluxVf",23) ;
+#line 123 "symmetryBC.loci"
+       input("area,boundaryNormalDistanceMag,mu,ci->Velocity") ;
+#line 123 "symmetryBC.loci"
+       output("fluxVf") ;
+#line 123 "symmetryBC.loci"
+       store_info_id("symmetry_BC",4) ;
+#line 123 "symmetryBC.loci"
+       constraint("symmetry_BC") ;
+#line 123 "symmetryBC.loci"
+       setvardoc(docvar_symmetryBC_5740) ;
+       set_file("symmetryBC.loci:123") ;
+#line 123 "symmetryBC.loci"
+    }
+#line 123 "symmetryBC.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 124 "symmetryBC.loci"
+  L_fluxVf_[_e_][0]= -L_mu_[_e_]*2.0*L_area_[_e_].sada *(L_Velocity_[L_ci_[_e_]][1]*L_area_[_e_].n [1] + L_Velocity_[L_ci_[_e_]][2]*L_area_[_e_].n [2])*L_area_[_e_].n [0]/L_boundaryNormalDistanceMag_[_e_];
+  L_fluxVf_[_e_][1]= -L_mu_[_e_]*2.0*L_area_[_e_].sada *(L_Velocity_[L_ci_[_e_]][0]*L_area_[_e_].n [0] + L_Velocity_[L_ci_[_e_]][2]*L_area_[_e_].n [2])*L_area_[_e_].n [1]/L_boundaryNormalDistanceMag_[_e_];
+  L_fluxVf_[_e_][2]= -L_mu_[_e_]*2.0*L_area_[_e_].sada *(L_Velocity_[L_ci_[_e_]][0]*L_area_[_e_].n [0] + L_Velocity_[L_ci_[_e_]][1]*L_area_[_e_].n [1])*L_area_[_e_].n [2]/L_boundaryNormalDistanceMag_[_e_];
+}    void compute(const Loci::sequence &seq) { 
+#line 127 "symmetryBC.loci"
+      do_loop(seq,this) ;
+#line 127 "symmetryBC.loci"
+    }
+#line 127 "symmetryBC.loci"
+} ;
+#line 127 "symmetryBC.loci"
+Loci::register_rule<file_symmetryBC011_9295m308> register_file_symmetryBC011_9295m308 ;
+#line 127 "symmetryBC.loci"
+}
+#line 127 "symmetryBC.loci"
+
+
+
+
+namespace {class file_symmetryBC012_9295m321 : public Loci::pointwise_rule {
+#line 131 "symmetryBC.loci"
+    Loci::store<vect3d>  L_shear2ndPart_ ; 
+#line 131 "symmetryBC.loci"
+public:
+#line 131 "symmetryBC.loci"
+    file_symmetryBC012_9295m321() {
+#line 131 "symmetryBC.loci"
+       name_store("shear2ndPart",L_shear2ndPart_) ;
+#line 131 "symmetryBC.loci"
+       store_info_id("shear2ndPart",24) ;
+#line 131 "symmetryBC.loci"
+       output("shear2ndPart") ;
+#line 131 "symmetryBC.loci"
+       store_info_id("symmetry_BC",4) ;
+#line 131 "symmetryBC.loci"
+       constraint("symmetry_BC") ;
+#line 131 "symmetryBC.loci"
+       setvardoc(docvar_symmetryBC_5740) ;
+       set_file("symmetryBC.loci:131") ;
+#line 131 "symmetryBC.loci"
+    }
+#line 131 "symmetryBC.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 132 "symmetryBC.loci"
+  L_shear2ndPart_[_e_]= vect3d (0.,0.,0.) ;
+}    void compute(const Loci::sequence &seq) { 
+#line 133 "symmetryBC.loci"
+      do_loop(seq,this) ;
+#line 133 "symmetryBC.loci"
+    }
+#line 133 "symmetryBC.loci"
+} ;
+#line 133 "symmetryBC.loci"
+Loci::register_rule<file_symmetryBC012_9295m321> register_file_symmetryBC012_9295m321 ;
+#line 133 "symmetryBC.loci"
+}
+#line 133 "symmetryBC.loci"
+
+
+
+// *** for rhiechow ***
+namespace {class file_symmetryBC013_9295m327 : public Loci::pointwise_rule {
+#line 137 "symmetryBC.loci"
+    Loci::store<real>  L_mdotfStar_ ; 
+#line 137 "symmetryBC.loci"
+public:
+#line 137 "symmetryBC.loci"
+    file_symmetryBC013_9295m327() {
+#line 137 "symmetryBC.loci"
+       name_store("mdotfStar",L_mdotfStar_) ;
+#line 137 "symmetryBC.loci"
+       store_info_id("mdotfStar",25) ;
+#line 137 "symmetryBC.loci"
+       output("mdotfStar") ;
+#line 137 "symmetryBC.loci"
+       store_info_id("symmetry_BC",4) ;
+#line 137 "symmetryBC.loci"
+       constraint("symmetry_BC") ;
+#line 137 "symmetryBC.loci"
+       setvardoc(docvar_symmetryBC_5740) ;
+       set_file("symmetryBC.loci:137") ;
+#line 137 "symmetryBC.loci"
+    }
+#line 137 "symmetryBC.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 138 "symmetryBC.loci"
+  L_mdotfStar_[_e_]= 0.0;
+}    void compute(const Loci::sequence &seq) { 
+#line 139 "symmetryBC.loci"
+      do_loop(seq,this) ;
+#line 139 "symmetryBC.loci"
+    }
+#line 139 "symmetryBC.loci"
+} ;
+#line 139 "symmetryBC.loci"
+Loci::register_rule<file_symmetryBC013_9295m327> register_file_symmetryBC013_9295m327 ;
+#line 139 "symmetryBC.loci"
+}
+#line 139 "symmetryBC.loci"
+
+
+
+// *** for pressure correction equation ***
+// Set a_F_p to "0" for boundary faces
+// $rule pointwise(a_F_p), constraint(symmetry_BC) {
+  // $a_F_p = 0.0 ;
+// }
+
+
+// *** for correction ***
+namespace {class file_symmetryBC014_9295m334 : public Loci::pointwise_rule {
+#line 150 "symmetryBC.loci"
+    Loci::store<real>  L_mdotfPrime_ ; 
+#line 150 "symmetryBC.loci"
+public:
+#line 150 "symmetryBC.loci"
+    file_symmetryBC014_9295m334() {
+#line 150 "symmetryBC.loci"
+       name_store("mdotfPrime",L_mdotfPrime_) ;
+#line 150 "symmetryBC.loci"
+       store_info_id("mdotfPrime",26) ;
+#line 150 "symmetryBC.loci"
+       output("mdotfPrime") ;
+#line 150 "symmetryBC.loci"
+       store_info_id("symmetry_BC",4) ;
+#line 150 "symmetryBC.loci"
+       constraint("symmetry_BC") ;
+#line 150 "symmetryBC.loci"
+       setvardoc(docvar_symmetryBC_5740) ;
+       set_file("symmetryBC.loci:150") ;
+#line 150 "symmetryBC.loci"
+    }
+#line 150 "symmetryBC.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 151 "symmetryBC.loci"
+  L_mdotfPrime_[_e_]= 0.0;
+}    void compute(const Loci::sequence &seq) { 
+#line 152 "symmetryBC.loci"
+      do_loop(seq,this) ;
+#line 152 "symmetryBC.loci"
+    }
+#line 152 "symmetryBC.loci"
+} ;
+#line 152 "symmetryBC.loci"
+Loci::register_rule<file_symmetryBC014_9295m334> register_file_symmetryBC014_9295m334 ;
+#line 152 "symmetryBC.loci"
+}
+#line 152 "symmetryBC.loci"
+
+// $type DfGradPprimef store<vect3d> 
+namespace {class file_symmetryBC015_9295m341 : public Loci::pointwise_rule {
+#line 154 "symmetryBC.loci"
+    Loci::store<vect3d>  L_DfGradPprimef_ ; 
+#line 154 "symmetryBC.loci"
+public:
+#line 154 "symmetryBC.loci"
+    file_symmetryBC015_9295m341() {
+#line 154 "symmetryBC.loci"
+       name_store("DfGradPprimef",L_DfGradPprimef_) ;
+#line 154 "symmetryBC.loci"
+       store_info_id("DfGradPprimef",27) ;
+#line 154 "symmetryBC.loci"
+       output("DfGradPprimef") ;
+#line 154 "symmetryBC.loci"
+       store_info_id("symmetry_BC",4) ;
+#line 154 "symmetryBC.loci"
+       constraint("symmetry_BC") ;
+#line 154 "symmetryBC.loci"
+       setvardoc(docvar_symmetryBC_5740) ;
+       set_file("symmetryBC.loci:154") ;
+#line 154 "symmetryBC.loci"
+    }
+#line 154 "symmetryBC.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 155 "symmetryBC.loci"
+  L_DfGradPprimef_[_e_]= vect3d (0.,0.,0.);
+}    void compute(const Loci::sequence &seq) { 
+#line 156 "symmetryBC.loci"
+      do_loop(seq,this) ;
+#line 156 "symmetryBC.loci"
+    }
+#line 156 "symmetryBC.loci"
+} ;
+#line 156 "symmetryBC.loci"
+Loci::register_rule<file_symmetryBC015_9295m341> register_file_symmetryBC015_9295m341 ;
+#line 156 "symmetryBC.loci"
+}
+#line 156 "symmetryBC.loci"
+
+
+
+const char *docvar_symmetryBC_5740[] = {
+"FVM.lh:35\000ci\000Map\000Map from boundary faces to adjacent geom_cells ",
+"FVM.lh:91\000cellcenter\000store<Loci::vector3d<Loci::real_t> > \000Cell centroid ",
+"FVM.lh:94\000facecenter\000store<Loci::vector3d<Loci::real_t> > \000Face centroid ",
+"lid.lh:72\000distanceVec\000store<vect3d> \000",
+"lid.lh:66\000symmetry_BC\000Constraint\000",
+"FVM.lh:97\000area\000store<Loci::Area> \000Face area and normal ",
+"lid.lh:80\000boundaryNormalDistanceMag\000store<real> \000",
+"lid.lh:7\000Velocity\000store<vect3d> \000",
+"lid.lh:19\000Velocity_f\000store<vect3d> \000",
+"lid.lh:20\000uVel_f\000store<real> \000",
+"lid.lh:21\000vVel_f\000store<real> \000",
+"lid.lh:22\000wVel_f\000store<real> \000",
+"lid.lh:31\000mu\000param<real> \000",
+"lid.lh:93\000fluxCfVisc\000store<vect3d> \000",
+"lid.lh:92\000fluxCf\000store<vect3d> \000",
+"lid.lh:5\000nGreaterThanZero\000param<bool> \000",
+":-1\000$n\000param<int>\000",
+"lid.lh:11\000p\000store<real> \000",
+"FVM.lh:112\000grads(Y)\000store<Loci::vector3d<Loci::real_t> > \000Scalar Gradient (must provide cell and boundary face values) ",
+"lid.lh:23\000p_f\000store<real> \000",
+"lid.lh:24\000pPrime_f\000store<real> \000",
+"lid.lh:32\000density\000param<real> \000",
+"lid.lh:148\000pPrime\000store<real> \000",
+"lid.lh:102\000fluxVf\000store<vect3d> \000",
+"lid.lh:106\000shear2ndPart\000store<vect3d> \000",
+"lid.lh:134\000mdotfStar\000store<real> \000",
+"lid.lh:155\000mdotfPrime\000store<real> \000",
+"symmetryBC.loci:153\000DfGradPprimef\000store<vect3d> \000",
+"\000\000\000" } ;
+
+//DEPEND: /home/merdemli/local/loci/include/FVM.lh lid.lh

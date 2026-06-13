@@ -1,0 +1,228 @@
+mpi processes per host = 8
+reading modules in from file '/home/merdemli/local/loci/lib/fvm_m.so'
+ boundaries identified as: BC_4 BC_3 BC_2 BC_1
+Using SFC partition
+wavg=1, wmax=1, wmin=1
+processor weights = 602 602 602 601 602 602 602 601
+processor cells = 602 602 602 601 602 602 602 601
+balanced face sizes: 1254 1269 1262 1231 1230 1249 1263 1263
+nodes = ([0,662]), size= 663
+faces = ([5074,6327]), size = 1254
+cells = ([15095,15401]), size = 307
+Time to read in file 'lid.vog, is 0.0212236
+geom_cells = ([15095,15401])
+ghost_cells = ([17594,18239])
+cells = ([15095,15401][17594,18239])
+boundary BC_4(BC_4) = ([5682,5988])
+boundary BC_3(BC_3) = ([5989,6295])
+boundary BC_2(BC_2) = ()
+boundary BC_1(BC_1) = ([6296,6327])
+boundary_faces = ([5682,6327])
+ci_faces = ([5682,6327])
+Unable to instantiate parametric rules for variable volumeTag(Main)
+Unable to instantiate parametric rules for variable plotSwitchNodes(p)
+Unable to instantiate parametric rules for variable plotSwitchNodes(pPrime)
+Unable to instantiate parametric rules for variable plotSwitchNodes(Velocity)
+Unable to instantiate parametric rules for variable LSGSConnectivity(uInt)
+Unable to instantiate parametric rules for variable LSGSConnectivity(vInt)
+Unable to instantiate parametric rules for variable LSGSConnectivity(wInt)
+Unable to instantiate parametric rules for variable LSGSConnectivity(pCor)
+  Time taken for creating clone info =  0.00843435
+finding categories time = 0.00139719
+iv[0] size before expand = 0
+iv[0] size after expand = 0
+iv[1] size before expand = 1
+iv[1] size after expand = 1
+iv[2] size before expand = 0
+iv[2] size after expand = 1
+iv[3] size before expand = 0
+iv[3] size after expand = 0
+iv[4] size before expand = 0
+iv[4] size after expand = 0
+iv[5] size before expand = 0
+iv[5] size after expand = 0
+iv[6] size before expand = 0
+iv[6] size after expand = 0
+iv[7] size before expand = 1
+iv[7] size after expand = 5
+iv[8] size before expand = 0
+iv[8] size after expand = 1
+iv[9] size before expand = 0
+iv[9] size after expand = 0
+iv[10] size before expand = 0
+iv[10] size after expand = 0
+iv[11] size before expand = 1
+iv[11] size after expand = 4
+iv[12] size before expand = 1
+iv[12] size after expand = 1
+iv[13] size before expand = 1
+iv[13] size after expand = 5
+iv[14] size before expand = 1
+iv[14] size after expand = 5
+iv[15] size before expand = 1
+iv[15] size after expand = 5
+iv[16] size before expand = 0
+iv[16] size after expand = 2
+iv[17] size before expand = 1
+iv[17] size after expand = 4
+time expanding categories = 0.0090677
+ initial_categories =  18
+finding categories time = 8.6532e-05
+time expanding categories = 8.5e-07
+ initial_categories =  0
+time setting up l2g = 0.000109775time setting up send and recieve info = 0.000183691
+  Time taken for creating initial info =  0.0125234
+  Time taken for reordering =  0.00211392
+unused variables = ()
+iteration_variables = ()
+time to execute internal query 0.248013
+  Time taken for creating clone info =  0.00692451
+finding categories time = 0.00146184
+iv[0] size before expand = 0
+iv[0] size after expand = 0
+iv[1] size before expand = 1
+iv[1] size after expand = 1
+iv[2] size before expand = 0
+iv[2] size after expand = 1
+iv[3] size before expand = 0
+iv[3] size after expand = 0
+iv[4] size before expand = 0
+iv[4] size after expand = 0
+iv[5] size before expand = 0
+iv[5] size after expand = 0
+iv[6] size before expand = 0
+iv[6] size after expand = 0
+iv[7] size before expand = 1
+iv[7] size after expand = 5
+iv[8] size before expand = 0
+iv[8] size after expand = 1
+iv[9] size before expand = 0
+iv[9] size after expand = 0
+iv[10] size before expand = 0
+iv[10] size after expand = 0
+iv[11] size before expand = 1
+iv[11] size after expand = 4
+iv[12] size before expand = 1
+iv[12] size after expand = 1
+iv[13] size before expand = 1
+iv[13] size after expand = 5
+iv[14] size before expand = 1
+iv[14] size after expand = 5
+iv[15] size before expand = 1
+iv[15] size after expand = 5
+iv[16] size before expand = 0
+iv[16] size after expand = 2
+iv[17] size before expand = 1
+iv[17] size after expand = 4
+time expanding categories = 0.00894296
+ initial_categories =  18
+finding categories time = 0.000109008
+time expanding categories = 2.622e-06
+ initial_categories =  0
+time setting up l2g = 7.5958e-05time setting up send and recieve info = 0.000142545
+  Time taken for creating initial info =  0.0128288
+  Time taken for reordering =  0.00259836
+unused variables = ()
+iteration_variables = $n{n}
+ initial_vars = (BC_options,boundary_names,boundary_tags,pos)
+Time taken for dmm graph decoration = 0.0208908 seconds 
+Time taken for chomping subgraph searching = 0.0247188 seconds 
+Time taken for graph scheduling = 0.00969327 sceonds 
+Time taken for graph processing  = 0.379725  seconds 
+Time taken for existential_analysis  = 0.0233271  seconds 
+Time taken for create execution schedule = 0.0168178 seconds 
+time to create schedule 1.16302
+balanceAnalysis: event comm: (Wf_l,Wf_r) is duplicate!
+------------------------------------------------------------------------------
+Timing Categories:
+ -- Computation:   15.4831
+ -- Communication: 0.484379
+ -- Control:       0.288052
+ -- totalTime:     16.2555
+
+------------------------------------------------------------------------------
+Top 10 Most Expensive Steps:
+0- rule: FSGSScalarSolve(pCor){n}<-FSGSmatrixTopology{n},FSGSscalarMatrix(pCor){n},gauss_seidel_iter{n}
+ --- Group iteration(n)
+ --- Local Time: 3.19857 19.7% of total, time per entity: 1.02145e-05
+ === max 3.19938, mean = 3.19829, imbalance = 0.0342521%
+ === partition imbalance =3.88778%, mean time per entity = 1.00539e-05
+ --- Type: Computation
+------------------------------------------------------------------------------
+1- rule: FSGSScalarSolve(uInt){n}<-FSGSmatrixTopology{n},FSGSscalarMatrix(uInt){n},gauss_seidel_iter{n}
+ --- Group iteration(n)
+ --- Local Time: 3.1942 19.7% of total, time per entity: 1.02005e-05
+ === max 3.19515, mean = 3.1941, imbalance = 0.0328153%
+ === partition imbalance =3.88778%, mean time per entity = 1.00408e-05
+ --- Type: Computation
+------------------------------------------------------------------------------
+2- rule: FSGSScalarSolve(vInt){n}<-FSGSmatrixTopology{n},FSGSscalarMatrix(vInt){n},gauss_seidel_iter{n}
+ --- Group iteration(n)
+ --- Local Time: 3.18729 19.7% of total, time per entity: 1.01785e-05
+ === max 3.18802, mean = 3.1876, imbalance = 0.0130852%
+ === partition imbalance =3.88778%, mean time per entity = 1.00204e-05
+ --- Type: Computation
+------------------------------------------------------------------------------
+3- rule: FSGSScalarSolve(wInt){n}<-FSGSmatrixTopology{n},FSGSscalarMatrix(wInt){n},gauss_seidel_iter{n}
+ --- Group iteration(n)
+ --- Local Time: 3.18572 19.6% of total, time per entity: 1.01735e-05
+ === max 3.18651, mean = 3.18526, imbalance = 0.0390234%
+ === partition imbalance =3.88778%, mean time per entity = 1.0013e-05
+ --- Type: Computation
+------------------------------------------------------------------------------
+4- rule: OUTPUT{n}<-(boundary_map{n},lower{n},upper{n})->face2node{n}->pos{n},boundary_map{n}->ref{n}->boundary_names{n},modelName{n},plot_postfix{n},CONDITIONAL(doPlot{n})
+ --- Group iteration(n):conditional(doPlot{n})
+ --- Local Time: 0.404962 2.5% of total, time per entity: 0.000109925
+ === max 0.404962, mean = 0.357239, imbalance = 13.3589%
+ === partition imbalance =3.88778%, mean time per entity = 9.54546e-05
+ --- Type: Computation
+------------------------------------------------------------------------------
+5- rule: OUTPUT{n}<-modelName{n},plot_postfix{n},pos{n},CONSTRAINT(pos{n}),CONDITIONAL(doPlot{n})
+ --- Group iteration(n):conditional(doPlot{n})
+ --- Local Time: 0.263862 1.7% of total, time per entity: 3.31652e-05
+ === max 0.271645, mean = 0.23769, imbalance = 14.2854%
+ === partition imbalance =4.53291%, mean time per entity = 3.12298e-05
+ --- Type: Computation
+------------------------------------------------------------------------------
+6- rule: OUTPUT{n}<-cell2node_v3d(Velocity){n},modelName{n},plot_postfix{n},CONSTRAINT(pos{n}),CONDITIONAL(doPlot{n})
+ --- Group iteration(n):conditional(doPlot{n})
+ --- Local Time: 0.211241 1.3% of total, time per entity: 2.65512e-05
+ === max 0.212785, mean = 0.205078, imbalance = 3.75821%
+ === partition imbalance =4.53291%, mean time per entity = 2.69449e-05
+ --- Type: Computation
+------------------------------------------------------------------------------
+7- rule: OUTPUT{n}<-cell2node_v3d(VelocityPrime){n},modelName{n},plot_postfix{n},CONSTRAINT(pos{n}),CONDITIONAL(doPlot{n})
+ --- Group iteration(n):conditional(doPlot{n})
+ --- Local Time: 0.200786 1.3% of total, time per entity: 2.52371e-05
+ === max 0.204487, mean = 0.202762, imbalance = 0.850972%
+ === partition imbalance =4.53291%, mean time per entity = 2.66406e-05
+ --- Type: Computation
+------------------------------------------------------------------------------
+8- rule: OUTPUT{n}<-cell2node(p){n},modelName{n},plot_postfix{n},CONSTRAINT(pos{n}),CONDITIONAL(doPlot{n})
+ --- Group iteration(n):conditional(doPlot{n})
+ --- Local Time: 0.191429 1.2% of total, time per entity: 2.4061e-05
+ === max 0.191429, mean = 0.188413, imbalance = 1.60103%
+ === partition imbalance =4.53291%, mean time per entity = 2.47553e-05
+ --- Type: Computation
+------------------------------------------------------------------------------
+9- rule: OUTPUT{n}<-cell2node(momImbV){n},modelName{n},plot_postfix{n},CONSTRAINT(pos{n}),CONDITIONAL(doPlot{n})
+ --- Group iteration(n):conditional(doPlot{n})
+ --- Local Time: 0.186267 1.2% of total, time per entity: 2.34121e-05
+ === max 0.186267, mean = 0.141037, imbalance = 32.069%
+ === partition imbalance =4.53291%, mean time per entity = 1.85307e-05
+ --- Type: Computation
+------------------------------------------------------------------------------
+----- Time per category:
+Group chomp time = 0.0957853, 0.6% of total
+Group chomp-overhead time = 0.0330692, 0.3% of total
+Group conditional(doPlot{n}) time = 2.39505, 14.8% of total
+Group conditional(finishSolution{n}) time = 0.000167407, 0.1% of total
+Group conditional(printFreq3{n}) time = 0.000110397, 0.1% of total
+Group conditional(printFreq{n}) time = 0.0791619, 0.5% of total
+Group iteration(n) time = 16.2542, 100% of total
+------------------------------------------------------------------------------
+Total scheduler bean-counting memory: 0 bytes
+Top 10 Steps with Most Scheduler Memory:
+Time taken for execution of the schedule = 16.3225 seconds 
+Global max time taken for execution of the schedule = 16.3229 seconds 
+Time to execute query for 'solution' is 17.5176

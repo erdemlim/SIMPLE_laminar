@@ -1,0 +1,62 @@
+#include <Loci.h>
+#include <math.h>  // for using sqrt
+#include <iostream>
+
+$include "FVM.lh"
+$include "lid.lh"
+
+// This file contains the rules for computing necessary geometric info regarding the grid
+
+// Find the distance vector between cell centroids of neighboring cells for inner cell faces
+$rule pointwise(distanceVec<-(cr,cl)->cellcenter), constraint((cl,cr)->geom_cells) {
+  $distanceVec = ($cr->$cellcenter-$cl->$cellcenter) ; 
+}
+
+// Find the distance (magnitude) between cell centroids for inner cell faces
+$rule pointwise(distanceMag<-distanceVec), constraint((cl,cr)->geom_cells) {
+  $distanceMag = norm($distanceVec) ;
+}
+
+// Find the unit distance vector between cell centroids for inner cell faces
+$rule pointwise(distanceUnitVec<-distanceVec,distanceMag), constraint((cl,cr)->geom_cells) {
+  $distanceUnitVec = $distanceVec / $distanceMag ;   
+}
+ 
+// Find the surface vector's component along CF (centroids of two neighboring cells) direction
+// for iner cell faces
+
+$rule pointwise(Ef<-area, distanceUnitVec), constraint((cl,cr)->geom_cells) {
+  $Ef = $distanceUnitVec*(dot($area.sada*$area.n,$area.sada*$area.n)/dot($distanceUnitVec,$area.sada*$area.n)) ;
+}
+
+// $rule pointwise(Ef<-Df, distanceVec, area, distanceMag), constraint((cl,cr)->geom_cells) {
+//      const vect3d Sf = $area.sada * $area.n ;
+//      
+//      $Ef=(($distanceVec[0]*$Df[0]*Sf[0]+$distanceVec[1]*$Df[1]*Sf[1]+$distanceVec[2]*$Df[2]*Sf[2])/($distanceMag*$distanceMag))*$distanceVec;
+//     
+// }
+
+
+
+// Find its magnitude
+$rule pointwise(EfMag<-Ef), constraint((cl,cr)->geom_cells) {
+  $EfMag = norm($Ef);
+}
+
+// Find the surface vector's component along cross diffusion direction
+$rule pointwise(Tf<-area, Ef), constraint((cl,cr)->geom_cells) {
+  // Surface vector along CF direction
+  $Tf = $area.sada*$area.n - $Ef ;
+}
+
+$rule pointwise(geomFacLeft<-cr->cellcenter, facecenter), constraint(cr->geom_cells) {
+  const vect3d tempDistLeft = $facecenter-$cr->$cellcenter ;
+  $geomFacLeft = norm(tempDistLeft) ;
+}
+// for the right cells
+$rule pointwise(geomFacRight<-cl->cellcenter, facecenter), constraint(cl->geom_cells) {
+  const vect3d tempDistRight = $facecenter-$cl->$cellcenter ;
+  $geomFacRight = norm(tempDistRight) ;
+}
+
+  

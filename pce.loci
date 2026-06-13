@@ -1,0 +1,150 @@
+#include <Loci.h>
+#include <algorithm>    // for std::max
+#include <cmath>
+
+// Get Finite Volume Data structures
+// finite-volume module provides facilities for computing cell and face 
+// centroids, finding gradients, performing integrations, interpolating 
+// from cell to nodal values, and solving linear systems. The types for 
+// these rules are defined in the Loci include file “FVM.lh” which can be included
+$include "FVM.lh"
+$include "lid.lh"
+/*
+$rule pointwise(a_F_p<-density, Df, distanceVec, area,EfMag,distanceMag), constraint((cl,cr)->geom_cells) {
+  $a_F_p = -dot($Df,$area.n);
+}
+*/
+$rule pointwise(a_F_p<-density, Df, distanceVec, area,EfMag,distanceMag), constraint((cl,cr)->geom_cells) {
+     const vect3d Sf = $area.sada * $area.n ;
+     const real Efp=(std::pow($Df[0]*Sf[0],2.0)+std::pow($Df[1]*Sf[1],2.0)+std::pow($Df[2]*Sf[2],2.0))/($distanceVec[0]*$Df[0]*Sf[0]+$distanceVec[1]*$Df[1]*Sf[1]+$distanceVec[2]*$Df[2]*Sf[2]) ;
+   $a_F_p = -$density*Efp;
+//       std::cout << "area.n" << std::endl;
+//    std::cout << $area.n << std::endl;
+
+}
+
+
+// Calculate the coefficient for the central cell (a_C_p). For this we need the 
+// summation of a_F_p's on faces of each cell
+
+// For summation start with a unit rule and initialize with value "0"
+$rule unit(a_C_p),constraint(geom_cells) {
+  $a_C_p = 0.0 ;
+}
+
+
+// Add to the left cell
+$rule apply((cl)->a_C_p<-a_F_p)[Loci::Summation],
+  constraint((cl,cr)->geom_cells) {
+  join($cl->$a_C_p,  -1*$a_F_p) ;
+  }
+
+// Add to the right cell
+  $rule apply(cr->a_C_p<-a_F_p)[Loci::Summation],
+  constraint((cl,cr)->geom_cells) {
+  join($cr->$a_C_p,  -1*$a_F_p) ;
+	  
+  }
+
+
+
+// Calculate the value of the right hand side (b_C_p). For this we need the 
+// summation of mass flow rates on faces of each cell
+
+// For summation start with a unit rule and initialize with value "0"
+$rule unit(b_C_p),constraint(geom_cells) {
+  $b_C_p = 0.0 ;
+}
+
+// Add to the left cell
+$rule apply(cl->b_C_p<-mdotfStar,density,area)[Loci::Summation],
+  constraint((cl)->geom_cells) {
+  join($cl->$b_C_p,  -1.*$mdotfStar) ;
+}
+// Add to the right cell
+// multiplying -$mdotfStar with - yields +
+ $rule apply(cr->b_C_p<-mdotfStar,density,area)[Loci::Summation],
+   constraint((cr)->geom_cells) {
+   join($cr->$b_C_p, $mdotfStar) ;
+ }
+
+ 
+ 
+
+
+// Assemble the linear system (L+D+U)x = B for the pressure correction equation
+// in order to obtain the pressure correction field
+
+// x-momentum system - system name pPrime_....
+$type pCor_B store<real> ;
+$type pCor_D store<real> ;
+$type pCor_L store<real> ;
+$type pCor_U store<real> ;
+$type counter store<int> ;
+
+
+$rule pointwise(pCor_B<-b_C_p,cellcenter) {
+	$pCor_B = $b_C_p;
+}
+
+$rule pointwise(pCor_D<-a_C_p,cellcenter) {
+    $pCor_D = $a_C_p;
+}
+
+$rule pointwise(pCor_U<-a_F_p,facecenter) {
+	$pCor_U = $a_F_p;
+}
+
+
+
+
+
+$rule pointwise(pCor_L<-a_F_p,facecenter) {
+  $pCor_L = $a_F_p;
+}
+
+
+$type fluidLinearSolverFSGS Constraint ;
+$type fluidLinearSolverLSGS Constraint ;
+$type fluidLinearSolverSGS Constraint ;
+
+// pCor back on FSGS when fsgs is selected: needed to isolate the parallel
+// interface-kink problem (petsc-pCor was the common piece in both failing
+// parallel configurations; pRes->0 does NOT certify petsc-pCor health since
+// the system becomes homogeneous at convergence).
+$type FSGSScalarSolve(pCor) store<real> ;
+$rule pointwise(pPrime<-FSGSScalarSolve(pCor)),constraint(geom_cells,fluidLinearSolverFSGS) {
+  $pPrime = $FSGSScalarSolve(pCor) ;
+}
+
+$type LSGSScalarSolve(pCor) store<real> ;
+// Solve linear system described by uStar_...
+$rule pointwise(pPrime<-LSGSScalarSolve(pCor)),constraint(geom_cells,fluidLinearSolverLSGS) {
+  $pPrime = $LSGSScalarSolve(pCor) ;
+
+}
+// NOTE: SGS for the pressure-correction system fails to schedule: the wall
+// pPrime_f rule depends on the solution (ci->pPrime), so Loci tries to pull
+// it into the {igs} loop and cannot type viscousWall_BC{n,igs}.  Use petsc
+// for pCor when momentum uses SGS instead.
+$type SGSScalarSolve(pCor) store<real> ;
+$rule pointwise(pPrime<-petscScalarSolve(pCor)),constraint(geom_cells,fluidLinearSolverSGS) {
+  $pPrime = $petscScalarSolve(pCor) ;
+}
+$type petscScalarSolve(pCor) store<real> ;
+$rule pointwise(pPrime<-petscScalarSolve(pCor)),constraint(geom_cells,fluidLinearSolverpetsc) {
+  $pPrime = $petscScalarSolve(pCor) ;
+//       std::cout << "printing $pPrime PetSC" << std::endl;
+//     std::cout << $pPrime << std::endl;
+
+    
+}
+
+
+
+
+
+
+
+
+

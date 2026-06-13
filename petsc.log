@@ -1,0 +1,59 @@
+creating rule database
+creating rule database
+creating rule database
+creating rule database
+Loading  in rules from  fvm_m.so
+setting boundary condition symmetry_BC
+setting boundary condition viscousWall_BC
+Quering facts: solution
+Stationary Relation Generation...
+[Internal] Quering facts: (axisymmetricCoordinateModel,cartesianCoordinateModel,centroid_select_exact,centroid_select_wireframe,faceGradStencil_select_centered,faceGradStencil_select_limited,faceGradStencil_select_nishikawa,faceGradStencil_select_positive,fluidLinearSolverFSGS,fluidLinearSolverLSGS,fluidLinearSolverSGS,fluidLinearSolverpetsc,gradStencil_select_green,gradStencil_select_standard,gradType_select_directionalDerivative,gradType_select_nishikawaUpwind,gradType_select_standard,limiter_select_barth,limiter_select_nishikawac,limiter_select_nishikawaf,limiter_select_nodalbarth,limiter_select_none,limiter_select_venkatakrishnan,limiter_select_venkatakrishnan2,limiter_select_zero,minv3dLimit,standardv3dLimit,usePetscAssembly,usePetscCOOAssembly)
+generating dependency graph...
+setting up variable types...
+decomposing graph...
+USING DYNAMIC MEMORY MANAGEMENT
+USING CHOMPING (chomping size: 128KB)
+graph scheduling... (memory greedy)
+existential analysis...
+creating execution schedule...
+begin execution
+(MPI rank 0) Adding petsc option -pCor_ksp_max_it 5000
+(MPI rank 0) Adding petsc option -pCor_ksp_rtol 1e-08
+(MPI rank 0) Adding petsc option -pCor_ksp_type cg
+(MPI rank 0) Adding petsc option -pCor_pc_type bjacobi
+(MPI rank 0) Adding petsc option -wInt_ksp_max_it 5000
+(MPI rank 0) Adding petsc option -wInt_ksp_rtol 1e-08
+(MPI rank 0) Adding petsc option -wInt_ksp_type gmres
+(MPI rank 0) Adding petsc option -wInt_pc_type bjacobi
+(MPI rank 0) Adding petsc option -vInt_ksp_converged_reason true
+(MPI rank 0) Adding petsc option -vInt_ksp_max_it 5000
+(MPI rank 0) Adding petsc option -vInt_ksp_rtol 1e-08
+(MPI rank 0) Adding petsc option -vInt_ksp_type gmres
+(MPI rank 0) Adding petsc option -vInt_pc_type bjacobi
+(MPI rank 0) Adding petsc option -uInt_ksp_converged_reason true
+(MPI rank 0) Adding petsc option -uInt_ksp_max_it 5000
+(MPI rank 0) Adding petsc option -uInt_ksp_rtol 1e-08
+(MPI rank 0) Adding petsc option -uInt_ksp_type gmres
+(MPI rank 0) Adding petsc option -uInt_pc_type bjacobi
+Convergence criterion (epsilon): 0.0001
+Iteration	uRes	vRes	wRes	pRes
+program failed on processor 2
+crash occured in rule petscScalarSolveBB(vInt){n}<-petscScalarSystem(vInt){n},petscScalarSystemInit(vInt){n},CONSTRAINT(geom_cells{n})
+Error in PETSc scalar solve: 56
+program failed on processor 0
+crash occured in rule petscScalarSolveBB(vInt){n}<-petscScalarSystem(vInt){n},petscScalarSystemInit(vInt){n},CONSTRAINT(geom_cells{n})
+program failed on processor 3
+crash occured in rule petscScalarSolveBB(vInt){n}<-petscScalarSystem(vInt){n},petscScalarSystemInit(vInt){n},CONSTRAINT(geom_cells{n})
+program failed on processor 1
+crash occured in rule petscScalarSolveBB(vInt){n}<-petscScalarSystem(vInt){n},petscScalarSystemInit(vInt){n},CONSTRAINT(geom_cells{n})
+--------------------------------------------------------------------------
+MPI_ABORT was invoked on rank 1 in communicator MPI_COMM_WORLD
+with errorcode -1.
+
+NOTE: invoking MPI_ABORT causes Open MPI to kill all MPI processes.
+You may or may not see output from other processes, depending on
+exactly when Open MPI kills them.
+--------------------------------------------------------------------------
+Processor 0 recieved a terminate signal
+[DESKTOP-IRCHLQB:06720] 4 more processes have sent help message help-mpi-api.txt / mpi-abort
+[DESKTOP-IRCHLQB:06720] Set MCA parameter "orte_base_help_aggregate" to 0 to see all help / error messages

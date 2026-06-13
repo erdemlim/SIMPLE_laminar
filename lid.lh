@@ -1,0 +1,194 @@
+
+typedef Loci::real_t real ;
+typedef vector3d<Loci::real_t> vect3d ;
+
+$type nGreaterThanZero param<bool> ;
+
+$type Velocity store<vect3d> ;
+$type uVel store<real> ;
+$type vVel store<real> ;
+$type wVel store<real> ;
+$type p store<real> ;
+$type p_interior store<real> ;
+$type mdotf store<real> ;
+
+$type Velocity_face_Prime store<vect3d> ;
+$type VelocityFace store<vect3d> ;
+  $type gradient_p store<vect3d> ;
+ 
+$type Velocity_f store<vect3d> ;
+$type uVel_f store<real> ;
+$type vVel_f store<real> ;
+$type wVel_f store<real> ;
+$type p_f store<real> ;
+$type pPrime_f store<real> ;
+
+$type pPrimeFaceGrad store<vect3d> ;
+
+$type cellPresGrad store<vect3d> ;
+$type DfGradPprimef store<vect3d> ;
+
+$type mu param<real> ;
+$type density param<real> ;
+$type dt param<real> ;
+
+$type stop_iter param<int> ;
+$type print_freq param<int> ;
+$type plot_freq param<int> ;
+$type plot_modulo param<int> ;
+$type epsilon param<real> ;
+
+$type mdotf_initial param<real> ;
+$type p_initial param<real> ;
+$type u_init param<real> ;
+$type v_init param<real> ;
+$type w_init param<real> ;
+$type Velocity_initial store<vect3d> ;
+$type linIntVel_initial param<vect3d> ;
+$type rcIntVel_initial param<vect3d> ;
+
+$type uRelax param<real> ;
+$type pRelax param<real> ;
+
+$type pOut store<real> ;  // to be read from the given BCs
+$type Uin store<vect3d> ;  // to be read from the given BCs
+$type Uwall store<vect3d> ;  // to be read from the given BCs
+
+$type Uwall_BCoption Constraint ;
+$type Uin_BCoption Constraint ;
+$type pOut_BCoption Constraint ;
+
+$type viscousWall_BC Constraint ;
+$type velInlet_BC Constraint ;
+$type farfield_BC Constraint ;
+$type pOutlet_BC Constraint ;
+$type bottomWall_BC Constraint ;
+$type symmetry_BC Constraint ;
+
+
+
+// *** variables for geom.loci ***
+
+$type distanceVec store<vect3d> ;
+$type distanceMag store<real> ;
+$type distanceUnitVec store<vect3d> ;
+$type Ef store<vect3d> ;
+$type Tf store<vect3d> ;
+$type EfMag store<real> ;
+$type geomFacLeft store<real> ;
+$type geomFacRight store<real> ;
+$type boundaryNormalDistanceMag store<real> ;
+
+
+
+// *** variables for momentum.loci ***
+
+$type faceUGrad store<vect3d> ;
+$type faceVGrad store<vect3d> ;
+$type faceWGrad store<vect3d> ;
+
+$type fluxCfRight store<vect3d> ;
+$type fluxCfLeft store<vect3d> ;
+$type fluxCf store<vect3d> ;
+$type fluxCfVisc store<vect3d> ;
+
+$type sumFluxCf store<vect3d> ;
+$type sumFluxCfFlux store<vect3d> ; // reduction of face fluxes only (unit=0); transient added pointwise
+$type sumFluxCfUR store<vect3d> ; //underrelaxed
+$type fluxFf_vel store<real> ;
+$type fluxFfLeft store<real> ;
+$type fluxFfRight store<real> ;
+
+$type fluxVf store<vect3d> ;
+$type rhsBoundaryMomP store<vect3d> ;
+$type sumFluxVf store<vect3d> ;
+
+$type shear2ndPart store<vect3d> ;
+$type sumShear2ndPart store<vect3d> ;
+
+$type rhsMomP store<vect3d> ;
+
+$type b store<vect3d> ;
+$type bUR store<vect3d> ; //underrelaxed
+
+$type uStar store<real> ;
+$type vStar store<real> ;
+$type wStar store<real> ;
+$type VelocityStar store<vect3d> ;
+
+
+
+// *** variables for rhiechow.loci ***
+
+$type linIntVel store<vect3d> ;
+$type Df store<vect3d> ;
+$type DfU store<real> ;
+$type DfV store<real> ;
+$type DfW store<real> ;
+
+$type firstPresGrad store<vect3d> ;
+$type secondPresGrad store<vect3d>  ;
+
+$type rcIntVel store<vect3d> ;
+
+$type mdotfStar store<real> ;
+
+
+
+// *** variables for pce.loci ***
+$type a_F_p store<real> ;
+$type a_F_p2 store<real> ;
+$type a_F_p_out store<real> ;
+$type a_F_p_Left store<real> ;
+$type a_F_p_Right store<real> ;
+$type a_C_p store<real> ;
+$type a_C_p2 store<real> ;
+$type b_C_p store<real> ;
+$type b_C_p2 store<real> ;
+$type pPrime store<real> ;
+
+
+
+// *** variables for correction.loci ***
+$type VelocityPrime store<vect3d> ;
+
+$type mdotfPrime store<real> ;
+
+
+
+// *** variables for convergenceCheck.loci ***
+$type uRes param<real> ;
+$type vRes param<real> ;
+$type wRes param<real> ;
+$type continuityRes param<real> ;
+
+$type sumFluxFf store<vect3d> ;
+
+$type sumResUNom param<real> ;
+$type sumResUDenom param<real> ;
+$type sumResVNom param<real> ;
+$type sumResVDenom param<real> ;
+$type sumResWNom param<real> ;
+$type sumResWDenom param<real> ;
+$type sumResContinuity param<real> ;
+$type sumResContinuityRef param<real> ;
+
+// Conditions for termination
+$type finishMaxIter param<bool> ;
+$type finishURes param<bool> ;
+$type finishVRes param<bool> ;
+$type finishWRes param<bool> ;
+$type finishContinuityRes param<bool> ;
+
+$type solution store<vect3d> ;
+
+
+$type count param<flowPsi::real> ;
+
+$type sumResMom param<flowPsi::vect3d> ;
+$type sumRes_p param<flowPsi::real> ;
+$type uRes param<flowPsi::real> ;
+$type vRes param<flowPsi::real> ;
+$type wRes param<flowPsi::real> ;
+$type pRes param<flowPsi::real> ;
+

@@ -1,0 +1,175 @@
+#include <Loci.h>
+#include <math.h>  
+#include <iostream>
+
+$include "FVM.lh"
+$include "lid.lh"
+
+
+
+
+// Find the distanceVector from facecenter to cellcenter for wall boundary cells
+$rule pointwise(distanceVec<-ci->cellcenter, facecenter),constraint(pOutlet_BC) {
+  $distanceVec = $facecenter-$ci->$cellcenter ;
+  //std::cout << "printing distanceVec for wallBC" << std::endl;
+  //std::cout << $distanceVec << std::endl;
+}
+
+$rule pointwise(boundaryNormalDistanceMag<-area, distanceVec),constraint(pOutlet_BC) {
+  //const vect3d boundaryNormalDistanceVec = dot($distanceVec,$area.n)*$area.n ;
+  $boundaryNormalDistanceMag = dot($distanceVec,$area.n) ;
+  //std::cout << "printing boundaryNormalDistanceMag for symmetryBC" << std::endl;
+  //std::cout << $boundaryNormalDistanceMag << std::endl;
+  // page 605 eqn 15.120
+}
+$rule pointwise(Ef<-area, distanceVec,boundaryNormalDistanceMag), constraint(pOutlet_BC) {
+  // Surface vector along CF direction
+  const vect3d boundary_distunitvec = $distanceVec/norm($distanceVec) ;
+  $Ef = boundary_distunitvec*(norm($area.sada*$area.n)/dot(boundary_distunitvec,$area.sada*$area.n)) ;
+  //std::cout << $area.n << std::endl;
+  //std::cout << $Ef << std::endl;
+  // page 244 eqn 8.70, over-relaxed approach
+}
+
+// Find its magnitude
+$rule pointwise(EfMag<-Ef), constraint(pOutlet_BC) {
+  $EfMag = norm($Ef);
+  // std::cout << "Efmag" << std::endl;
+  // std::cout << $EfMag << std::endl;
+}
+
+
+
+$rule pointwise(pOut<-BC_options),constraint(pOut_BCoption) {
+  $BC_options.getOptionUnits("pOut","Pa",$pOut) ;
+  //std::cout << "printing Uwall" << std::endl;
+  //std::cout << $Uwall << std::endl;
+}
+
+$rule pointwise(p_f<-ref->pOut),constraint(pOutlet_BC) {
+  $p_f = $ref->$pOut ;
+  //std::cout << "printing Velocity_f" << std::endl;
+  //std::cout << $Velocity_f << std::endl;
+}
+
+
+// Outlet velocity extrapolation (Darwish Eqns 15.140-15.141):
+// grad(v)_b = grad(v)_C - (grad(v)_C . n)n  (zero gradient along the surface vector),
+// then v_b = v_C + grad(v)_b . d_Cb
+$rule pointwise(Velocity_f{n+1}<-ci->Velocity{n+1}, ci->gradv3d(Velocity){n}, area, ci->cellcenter, facecenter),constraint(pOutlet_BC) {
+  const vect3d distVector = $facecenter - $ci->$cellcenter ;
+  const vect3d gu = $ci->$gradv3d(Velocity){n}.x - dot($ci->$gradv3d(Velocity){n}.x,$area.n)*$area.n ;
+  const vect3d gv = $ci->$gradv3d(Velocity){n}.y - dot($ci->$gradv3d(Velocity){n}.y,$area.n)*$area.n ;
+  const vect3d gw = $ci->$gradv3d(Velocity){n}.z - dot($ci->$gradv3d(Velocity){n}.z,$area.n)*$area.n ;
+  $Velocity_f{n+1} = $ci->$Velocity{n+1} + vect3d(dot(gu,distVector),dot(gv,distVector),dot(gw,distVector)) ;
+}
+
+$rule pointwise(uVel_f<-Velocity_f),constraint(pOutlet_BC) {
+  $uVel_f = $Velocity_f[0] ;
+  //std::cout << "printing uVel_f" << std::endl;
+  //std::cout << $uVel_f << std::endl;
+}
+$rule pointwise(vVel_f<-Velocity_f),constraint(pOutlet_BC) {
+  $vVel_f = $Velocity_f[1] ;
+  //std::cout << "printing vVel_f" << std::endl;
+  //std::cout << $vVel_f << std::endl;
+}
+$rule pointwise(wVel_f<-Velocity_f),constraint(pOutlet_BC) {
+  $wVel_f = $Velocity_f[2] ;
+  //std::cout << "printing wVel_f" << std::endl;
+  //std::cout << $wVel_f << std::endl;
+}
+
+
+
+$rule pointwise(fluxCfVisc), constraint(pOutlet_BC) {
+  $fluxCfVisc = vect3d(0.0, 0.0, 0.0) ;
+    
+}
+$rule pointwise(fluxCf<-mdotf), constraint(pOutlet_BC) {
+  $fluxCf = vect3d($mdotf, $mdotf, $mdotf) ;
+    
+}
+
+  $rule apply(ci->sumFluxCfFlux<-fluxCf)[Loci::Summation],
+  constraint(pOutlet_BC) {
+  join($ci->$sumFluxCfFlux,  $fluxCf) ;
+  }
+
+// For wall boundary faces FluxFf is zero (Page 606). So set it zero for the boundary faces 
+// and prioritize them by priority specification
+
+// $rule pointwise(fluxFfLeft<-mu,EfMag,boundaryNormalDistanceMag), constraint(pOutlet_BC) {
+  // $fluxFfLeft = 0.0;
+  // std::cout << "printing fluxFfLeft" << std::endl;
+  // std::cout << $fluxFfLeft << std::endl;
+// }
+
+
+ $rule pointwise(pPrime_f<-ci->pPrime, ci->Velocity, density, ci->cellcenter, facecenter),constraint(pOutlet_BC) {
+     $pPrime_f= 0*$ci->$pPrime;
+ }
+
+// Extrapolate the unknown boundary pressure p_f and calculate the contribution of the boundary
+// (Darwish - Page 606-607, last term of 15.124, 15.125, 15.126 for bc)
+// boundary pressure is calculated using eqn 15.127 at page 607 (truncated Taylor Series)
+
+
+ // Outlet momentum source (Darwish Eqn 15.142): b_C += -mdot_b*(grad(v)_b . d_Cb)
+ // using the surface-normal-free gradient of Eqn 15.140.
+ // The pressure force -p_b*Sb is NOT added here: p_f = pOut (Dirichlet) already
+ // enters b through rhsMomP = vol*grads(p).
+ $rule pointwise(fluxVf<-area, ci->(cellcenter,gradv3d(Velocity)), facecenter, mdotf), constraint(pOutlet_BC) {
+  const vect3d distVector = $facecenter - $ci->$cellcenter ;
+  const vect3d gu = $ci->$gradv3d(Velocity).x - dot($ci->$gradv3d(Velocity).x,$area.n)*$area.n ;
+  const vect3d gv = $ci->$gradv3d(Velocity).y - dot($ci->$gradv3d(Velocity).y,$area.n)*$area.n ;
+  const vect3d gw = $ci->$gradv3d(Velocity).z - dot($ci->$gradv3d(Velocity).z,$area.n)*$area.n ;
+  $fluxVf = -$mdotf*vect3d(dot(gu,distVector),dot(gv,distVector),dot(gw,distVector)) ;
+}
+
+$rule pointwise(shear2ndPart), constraint(pOutlet_BC) {
+  $shear2ndPart = vect3d(0.,0.,0.) ;
+}
+
+
+// *** for rhiechow ***
+$rule pointwise(mdotfStar<-Velocity_f, area,density,ci->(grads(p),VelocityStar,vol,sumFluxCfUR),grads_f(p)), constraint(pOutlet_BC) {
+    const vect3d Dfb = vect3d($ci->$vol/$ci->$sumFluxCfUR[0],$ci->$vol/$ci->$sumFluxCfUR[1],$ci->$vol/$ci->$sumFluxCfUR[2]);
+    const vect3d presGradDiff = $grads_f(p)-$ci->$grads(p) ;
+    const vect3d secondTerm = vect3d(Dfb[0]*presGradDiff[0], Dfb[1]*presGradDiff[1], Dfb[2]*presGradDiff[2]) ;
+    const vect3d VelocityStarf = $ci->$VelocityStar-secondTerm ;
+  $mdotfStar = $density*dot(VelocityStarf,$area.n)*$area.sada;
+  //$mdotfStar = $density*dot($Velocity_f,$area.n)*$area.sada;
+  
+}
+$rule pointwise(mdotfPrime<-density, ci->(vol,pPrime,sumFluxCfUR),distanceVec,area ), constraint(pOutlet_BC) {
+    const vect3d Dfb = vect3d($ci->$vol/$ci->$sumFluxCfUR[0],$ci->$vol/$ci->$sumFluxCfUR[1],$ci->$vol/$ci->$sumFluxCfUR[2]);
+    const vect3d Sf = $area.sada * $area.n ;
+    const real Efp=(std::pow(Dfb[0]*Sf[0],2.0)+std::pow(Dfb[1]*Sf[1],2.0)+std::pow(Dfb[2]*Sf[2],2.0))/($distanceVec[0]*Dfb[0]*Sf[0]+$distanceVec[1]*Dfb[1]*Sf[1]+$distanceVec[2]*Dfb[2]*Sf[2]) ;
+     
+  $mdotfPrime = $density*$ci->$pPrime*Efp;
+}
+
+
+
+$rule pointwise(a_F_p_out<-density, ci->(vol,sumFluxCfUR),distanceVec,area ), constraint(pOutlet_BC) {
+    const vect3d Dfb = vect3d($ci->$vol/$ci->$sumFluxCfUR[0],$ci->$vol/$ci->$sumFluxCfUR[1],$ci->$vol/$ci->$sumFluxCfUR[2]);
+    const vect3d Sf = $area.sada * $area.n ;
+    const real Efp=(std::pow(Dfb[0]*Sf[0],2.0)+std::pow(Dfb[1]*Sf[1],2.0)+std::pow(Dfb[2]*Sf[2],2.0))/($distanceVec[0]*Dfb[0]*Sf[0]+$distanceVec[1]*Dfb[1]*Sf[1]+$distanceVec[2]*Dfb[2]*Sf[2]) ;
+     $a_F_p_out = $density*Efp;
+}
+
+
+// $rule pointwise(a_F_p_out<-density,EfMag,boundaryNormalDistanceMag), constraint(pOutlet_BC) {
+//   $a_F_p_out = 0.5*$density*$EfMag/$boundaryNormalDistanceMag ;
+// }
+// 
+$rule apply(ci->a_C_p<-a_F_p_out)[Loci::Summation],
+  constraint(pOutlet_BC) {
+  join($ci->$a_C_p,  $a_F_p_out) ;
+  }
+
+
+$rule pointwise(DfGradPprimef), constraint(pOutlet_BC) {
+  $DfGradPprimef = vect3d(0.,0.,0.);
+}

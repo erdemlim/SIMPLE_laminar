@@ -1,0 +1,105 @@
+#include <Loci.h>
+
+using std::cerr ;
+using std::endl ;
+
+$include "FVM.lh"
+$include "lid.lh"
+
+// This file has rules for default and optional variable
+// First it sets the default values for the data provided with lid.vars file
+// Then it sets the initial conditions.
+
+// Rules for default values
+$rule default (density) {
+  $density = 1.0;
+}
+
+$rule default (mu) {
+  $mu = 0.001;
+}
+
+$rule default (pRelax) {
+  $pRelax = 0.3;
+}
+
+$rule default (uRelax) {
+  $uRelax = 0.7;
+}
+
+$rule default (epsilon) {
+  $epsilon = 0.0001;
+}
+
+$rule default (dt) {
+  $dt = 0.0001;
+}
+
+$rule default(stop_iter) {
+  $stop_iter = 1000 ;
+}
+
+$rule default(plot_freq) {
+  $plot_freq = 100 ;
+}
+
+$rule default(plot_modulo) {
+  $plot_modulo = 100 ;
+}
+
+$rule default(print_freq) {
+  $print_freq = 100 ;
+}
+
+/*
+$rule pointwise(Uwall_BC),constraint(BC_options) {
+  $Uwall_BC = vect3d(0.,0.,0.) ;
+}
+*/
+
+// Rules for default initial conditions
+$rule default(mdotf_initial) {
+  $mdotf_initial = 0.0 ;
+}
+
+$rule default(p_initial) {
+  $p_initial = 0.0 ;
+}
+
+$rule default(u_init) {
+  $u_init = 0.0 ;
+}
+$rule default(v_init) {
+  $v_init = 0.0 ;
+}
+$rule default(w_init) {
+  $w_init = 0.0 ;
+}
+
+$rule pointwise(Velocity_initial<-u_init,v_init,w_init) {
+  $Velocity_initial = vect3d($u_init,$v_init,$w_init) ;
+}
+$rule default(linIntVel_initial) {
+  $linIntVel_initial = vect3d(0.,0.,0.) ;
+}
+
+$rule default(rcIntVel_initial) {
+  $rcIntVel_initial = vect3d(0.,0.,0.) ;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

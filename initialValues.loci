@@ -1,0 +1,141 @@
+#include <Loci.h>
+#include <math.h>
+#include <iostream>
+
+$include "FVM.lh"
+$include "lid.lh"
+
+
+// Sets the initial values for the variables at iteration {n=0}
+
+$rule pointwise(mdotf{n=0}<-mdotf_initial), constraint((cl,cr)->geom_cells) {
+  $mdotf{n=0} = $mdotf_initial ;
+  //std::cout << "printing initial mdotf" << std::endl;
+  //std::cout << $mdotf{n=0} << std::endl;
+}
+
+$rule pointwise(mdotf{n=0}<-mdotf_initial), constraint(viscousWall_BC) {
+  $mdotf{n=0} = $mdotf_initial ;
+  //std::cout << "printing initial wall mdotf" << std::endl;
+  //std::cout << $mdotf{n=0} << std::endl;
+}
+
+$rule pointwise(mdotf{n=0}<-mdotf_initial), constraint(velInlet_BC) {
+  $mdotf{n=0} = $mdotf_initial ;
+  //std::cout << "printing initial wall mdotf" << std::endl;
+  //std::cout << $mdotf{n=0} << std::endl;
+}
+
+$rule pointwise(mdotf{n=0}<-mdotf_initial), constraint(farfield_BC) {
+  $mdotf{n=0} = $mdotf_initial ;
+  //std::cout << "printing initial wall mdotf" << std::endl;
+  //std::cout << $mdotf{n=0} << std::endl;
+}
+
+
+$rule pointwise(mdotf{n=0}<-mdotf_initial), constraint(pOutlet_BC) {
+  $mdotf{n=0} = $mdotf_initial ;
+  //std::cout << "printing initial wall mdotf" << std::endl;
+  //std::cout << $mdotf{n=0} << std::endl;
+}
+
+$rule pointwise(mdotf{n=0}<-mdotf_initial), constraint(symmetry_BC) {
+  $mdotf{n=0} = $mdotf_initial ;
+  //std::cout << "printing initial symmetry mdotf" << std::endl;
+  //std::cout << $mdotf{n=0} << std::endl;
+}
+
+$rule pointwise(mdotf{n=0}<-mdotf_initial), constraint(bottomWall_BC) {
+  $mdotf{n=0} = $mdotf_initial ;
+  //std::cout << "printing initial symmetry mdotf" << std::endl;
+  //std::cout << $mdotf{n=0} << std::endl;
+}
+
+$rule pointwise(p{n=0}<-p_initial), constraint(geom_cells) {
+  $p{n=0} = $p_initial ;
+  //std::cout << "printing initial p" << std::endl;
+  //std::cout << $p{n=0} << std::endl;
+}
+
+
+
+$rule pointwise(Velocity{n=0}<-Velocity_initial), constraint(geom_cells) {
+  $Velocity{n=0} = $Velocity_initial ;
+  //std::cout << "printing initial cell Velocity" << std::endl;
+  //std::cout << $Velocity{n=0} << std::endl;
+}
+
+
+// REMOVED (parallel-correctness bug): this defined p{n=0} (a CELL store) over a
+// FACE domain constraint (cl,cr)->geom_cells, writing p at face entities and
+// polluting p's existential set with cells U interior-faces.  In serial the
+// phantom face entries are unread/harmless; in parallel LOCI derives p's clone
+// communication set from this polluted set, corrupting p's clone/boundary region
+// -> garbage grads(p) at partition seams.  The correct cell-domain build is the
+// rule above: pointwise(p{n=0}<-p_initial), constraint(geom_cells).
+//$rule pointwise(p{n=0}<-p_initial), constraint((cl,cr)->geom_cells) {
+//  $p{n=0} = $p_initial ;
+//}
+
+// Assign initial face and boundary pressures
+$rule pointwise(p_f{n=0}<-p_initial), constraint(viscousWall_BC) {
+  $p_f{n=0} = $p_initial ;
+//   std::cout << "printing initial wall p_f" << std::endl;
+//   std::cout << $p_f{n=0} << std::endl;
+}
+
+$rule pointwise(p_f{n=0}<-p_initial), constraint(symmetry_BC) {
+  $p_f{n=0} = $p_initial ;
+  //std::cout << "printing initial symmetry p_f" << std::endl;
+  //std::cout << $p_f{n=0} << std::endl;
+}
+
+$rule pointwise(p_f{n=0}<-p_initial), constraint(velInlet_BC) {
+  $p_f{n=0} = $p_initial ;
+  //std::cout << "printing initial wall mdotf" << std::endl;
+  //std::cout << $mdotf{n=0} << std::endl;
+}
+
+
+
+$rule pointwise(Velocity_f{n=0}<-Velocity_initial), constraint(pOutlet_BC) {
+  $Velocity_f{n=0} = $Velocity_initial ;
+  //std::cout << "printing initial wall mdotf" << std::endl;
+  //std::cout << $mdotf{n=0} << std::endl;
+}
+
+// (VelocityFace iteration removed - it was dead code: its advance rule depended on
+//  Velocity_face_Prime which was never computed, and no other rule consumed it.)
+
+/*
+$rule pointwise(rcIntVel{n=0}<-rcIntVel_initial) {
+  $rcIntVel{n=0} = $rcIntVel_initial ;
+}
+
+$rule pointwise(linIntVel{n=0}<-linIntVel_initial) {
+  $linIntVel{n=0} = $linIntVel_initial ;
+}
+
+$rule pointwise(mdotfStar{n=0}<-mdotf_initial) {
+  $mdotfStar{n=0} = $mdotf_initial ;
+}
+*/
+
+/*
+$rule pointwise(pPrime_f{n=0}<-p_initial), constraint(viscousWall_BC) {
+  $pPrime_f{n=0} = $p_initial ;
+}
+
+$rule pointwise(pPrime_f{n=0}<-p_initial), constraint(symmetry_BC) {
+  $pPrime_f{n=0} = $p_initial ;
+}
+
+ 
+$rule pointwise(pPrime_f{n=0}<-p_initial), constraint(velInlet_BC) {
+  $pPrime_f{n=0} = $p_initial ;
+}
+
+$rule pointwise(pPrime_f{n=0}<-p_initial), constraint(pOutlet_BC) {
+  $pPrime_f{n=0} = $p_initial ;
+}*/
+

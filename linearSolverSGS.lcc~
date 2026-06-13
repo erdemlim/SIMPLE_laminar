@@ -1,0 +1,2009 @@
+extern const char *docvar_linearSolverSGS_847[] ;
+#line 1 "linearSolverSGS.loci"
+//#############################################################################
+//#
+//# Copyright 2015-2019, Mississippi State University
+//#
+//# This file is part of the flowPsi computational fluid dynamics solver.
+//#
+//# The flowPsi solver is free software: you can redistribute it and/or modify
+//# it under the terms of the GNU General Public License as published by
+//# the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The flowPsi solver is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License
+//# along with the flowPsi solver.  If not, see <http://www.gnu.org/licenses>
+//#
+//#############################################################################
+
+#include <Loci.h>
+#include "flowTypes.h"
+#line 1 "flowPsi.lh"
+//#############################################################################
+//#
+//# Copyright 2015-2019, Mississippi State University
+//#
+//# This file is part of the flowPsi computational fluid dynamics solver.
+//#
+//# The flowPsi solver is free software: you can redistribute it and/or modify
+//# it under the terms of the GNU General Public License as published by
+//# the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The flowPsi solver is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# GNU General Public License for more details.
+//#
+//# You should have received a copy of the GNU General Public License
+//# along with the flowPsi solver.  If not, see <http://www.gnu.org/licenses>
+//#
+//#############################################################################
+#include <Loci>
+#include <flowTypes.h>
+
+#line 1 "FVM.lh"
+//#############################################################################
+//#
+//# Copyright 2008-2025, Mississippi State University
+//#
+//# This file is part of the Loci Framework.
+//#
+//# The Loci Framework is free software: you can redistribute it and/or modify
+//# it under the terms of the Lesser GNU General Public License as published by
+//# the Free Software Foundation, either version 3 of the License, or
+//# (at your option) any later version.
+//#
+//# The Loci Framework is distributed in the hope that it will be useful,
+//# but WITHOUT ANY WARRANTY; without even the implied warranty of
+//# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+//# Lesser GNU General Public License for more details.
+//#
+//# You should have received a copy of the Lesser GNU General Public License
+//# along with the Loci Framework.  If not, see <http://www.gnu.org/licenses>
+//#
+//#############################################################################
+
+/** Geometric Cells of the Mesh (not including ghost cells) */
+// $type geom_cells Constraint
+
+/** Nodal Positions */
+// $type pos store<Loci::vector3d<Loci::real_t> > 
+
+/** Map from faces to left cells */
+// $type cl Map
+
+/** Map from faces to right cells */
+// $type cr Map
+
+/** Map from boundary faces to adjacent geom_cells */
+// $type ci Map
+
+/** Map from boundary faces to reference surface */
+// $type ref Map
+
+/** Mapping from periodic boundary faces to periodic face pair */
+// $type pmap Map
+
+/** The transformation that maps periodic faces */
+// $type periodicTransform store<Loci::rigid_transform> 
+
+/** Mapping from face to nodes that define the face */
+// $type face2node multiMap
+
+/** Mapping from cell to faces that form upper matrix entries */
+// $type upper multiMap
+
+/** Mapping from cell to faces that form lower matrix entries */
+// $type lower multiMap
+
+/** Mapping from cell to boundary faces */
+// $type boundary_map multiMap
+
+
+/**
+ * This sets the coordinate system for the grid metric computations.  May be
+ * set to either 'cartesian' or 'axisymmetric'.  Use axisymmetric for
+ * two dimensional axisymmetric computations
+ */
+// $type gridCoordinates param<std::string> 
+
+/** Vars file selector for type of centroid calculation */
+// $type centroid param<std::string> 
+
+/** Compute thickness of extrusion (for axisymmetric case) */
+// $type cell_thickness store<real_t> 
+
+/** Maximum Grid Thickness (used to check validity of 2-D axisymmetric mesh */
+// $type gridThickMax param<real_t> 
+
+/** Minimum Grid Thickness (used to check validity of 2-D axisymmetric mesh */
+// $type gridThickMin param<real_t> 
+
+/** Thickness of z axis extrusion in 2-D mesh */
+// $type gridThickness param<real_t> 
+
+/**
+ * The minimum allowable volume which can be used to override negative volume
+ * calculations
+ */
+// $type minVolume param<real_t> 
+
+/** maximum number of faces per cell for grid */
+// $type max_fpc param<int> 
+
+/** Cell centroid */
+// $type cellcenter store<Loci::vector3d<Loci::real_t> > 
+
+/** Face centroid */
+// $type facecenter store<Loci::vector3d<Loci::real_t> > 
+
+/** Face area and normal */
+// $type area store<Loci::Area> 
+
+/**  Cell volume */
+// $type vol store<Loci::real_t> 
+
+/** Total grid volume */
+// $type grid_vol param<Loci::real_t> 
+
+/** vector orthogonal to face normal */
+// $type mn store<Loci::vector3d<Loci::real_t> > 
+
+/** vector orthogonal to face normal and mn */
+// $type ln store<Loci::vector3d<Loci::real_t> > 
+
+/** Scalar Gradient (must provide cell and boundary face values) */
+// $type grads(Y) store<Loci::vector3d<Loci::real_t> > 
+
+/** General Vector Gradient (must provide cell and boundary face values) */
+// $type gradv(Y) storeVec<Loci::vector3d<Loci::real_t> > 
+
+/** 3-D vector gradient (must provide cell and boundary face values) */
+// $type gradv3d(Y) store<Loci::tensor3d<Loci::real_t> > 
+
+/** Face scalar gradient (uses cell gradients and boundary face values) */
+// $type grads_f(Y) store<Loci::vector3d<Loci::real_t> > 
+
+/** Face general vector gradient (uses cell gradients and boundary face values) */
+// $type gradv_f(Y) storeVec<Loci::vector3d<Loci::real_t> > 
+
+/** 3-D vector gradient (must provide cell and boundary face values) */
+// $type gradv3d_f(Y) store<Loci::tensor3d<Loci::real_t> > 
+
+/** Scalar variable monotone limiters */
+// $type limiters(X) store<Loci::real_t> 
+
+/** General vector monotone limiters */
+// $type limiterv(X) storeVec<Loci::real_t> 
+
+/** 3-D vector monotone limiter */
+// $type limiterv3d(X) store<Loci::vector3d<Loci::real_t> > 
+
+/** MUSCL extrapolation to left side of face */
+// $type lefts(X) store<Loci::real_t> 
+
+/** MUSCL extrapolation to right side of face */
+// $type rights(X) store<Loci::real_t> 
+
+/** MUSCL scalar extrapolation for positive values to left side of face */
+// $type leftsP(X,M) store<Loci::real_t> 
+
+/** MUSCL scalar extrapolation for positive values to right side of face */
+// $type rightsP(X,M) store<Loci::real_t> 
+
+/** MUSCL general vector extrapolation for left side of face */
+// $type leftvM(X) storeVec<Loci::real_t> 
+
+/** MUSCL general vector extrapolation for right side of face */
+// $type rightvM(X) storeVec<Loci::real_t> 
+
+/** MUSCL 3-D vector extrapolation for left side of face */
+// $type leftv3d(X) store<Loci::vector3d<Loci::real_t> > 
+
+/** MUSCL 3-D vector extrapolation for right side of face */
+// $type rightv3d(X) store<Loci::vector3d<Loci::real_t> > 
+
+
+/** Simple scalar interpolation from geom_cells and boundary faces to nodes */
+// $type cell2node(X) store<float> 
+
+/**
+ * Simple general vector interpolation from geom_cells and
+ * boundary faces to nodes
+ */
+// $type cell2node_v(X) storeVec<float> 
+
+/** Simple 3-D vector interpolation from geom_cells and boundary faces to
+ * nodes
+ */
+// $type cell2node_v3d(X) store<Loci::vector3d<float> > 
+
+/** Nodal maximum value of neighboring cell scalars */
+// $type cell2nodeMax(X) store<float> 
+
+/** Nodal minimum value of neighboring cell scalars */
+// $type cell2nodeMin(X) store<float> 
+
+/** Nodal maximum magnitude value of neighboring cells scalars */
+// $type cell2nodeMaxMag(X) store<float> 
+
+/** Nodal Maximum of fields of 3-D vector of neighboring cell vectors */
+// $type cell2nodeMaxv3d(X) store<vector3d<float> > 
+
+/** All boundary faces that are not marked as a symmetry boundary */
+// $type no_symmetry_BC Constraint
+
+/** All boundary faces */
+// $type boundary_faces Constraint
+
+/**
+ * boundary reference surfaces that are marked as utilizing
+ * first-order extrapolation
+ */
+// $type firstOrder_BCoption Constraint
+
+/** boundary reference surface options specified in boundary conditions */
+// $type BC_options store<Loci::options_list> 
+
+/** Integrate a scalar over the boundary surfaces of a cell */
+// $type integrateSurface(X) store<Loci::real_t> 
+
+/** Integrate a vector valued function dotted with surface vectors over cell */
+// $type integrateFlux(X) store<Loci::real_t> 
+
+/** Helper utility for interfacing with the PETSc solver for scalar equations */
+// $type petscScalarSolve(X) store<Loci::real_t> 
+
+/**
+ * Helper utility for interfacing with the PETSc solver for storeVec
+ * equations with double precision jacobians
+ */
+// $type petscBlockedSolve(X) storeVec<Loci::real_t> 
+
+/**
+ * Helper utility for interfacing with the PETSc solver for storeVec
+ * equations with single precision jacobians
+ */
+// $type petscBlockedSSolve(X) storeVec<Loci::real_t> 
+
+/** L-2 Norm of scalar over geom_cells */
+// $type L2Norm(X) param<Loci::real_t> 
+
+/** L-1 Norm of scalar over geom_cells */
+// $type L1Norm(X) param<Loci::real_t> 
+
+/** L-Infinity Norm of Scalar of geom_cells */
+// $type LinfNorm(X) param<Loci::real_t> 
+
+/** Get file number of entity */
+// $type fileNumber(X) store<int> 
+
+/// Convert argument into a string that is the name of the substitution used
+/// in parametricName(X)
+// $type parametricName(X) param<std::string> 
+
+/// Dummy type to facilitate adding selector generators using parametric rules
+// $type selector(SELECT,SELECTION,ABBREV) param<bool> 
+
+/// Dummy type to facilitate adding selector generators using parametric rules
+// $type selector(SELECT,SELECTION) param<bool> 
+
+/// get vector size of storeVec<real_t>
+// $type vecSize(M) param<int> 
+
+/** Used to store the volume tag name for tagged vog file regions */
+// $type volumeTag(X) param<string> 
+
+/** All boundary faces that are participating in periodic boundary conditions */
+// $type periodicFaces Constraint
+
+/** Tell grid metrics to use standard cartesian metrics */
+// $type cartesianCoordinateModel Constraint
+
+/** Tell grid metrics that grid represents a 2-D axisymmetric region */
+// $type axisymmetricCoordinateModel Constraint
+
+/** cell-based scalar quantity used in the adaptive gradient stencil
+    selection. It can be a volume-fraction, pressure, or any other
+    field of interest, and it is used to adapt the stencil of
+    full,stable,symm,symmF,symmC methods around large
+    "stencil_bias" jumps. This variable must
+    be provided by the simulation tool, otherwise setting
+    gradStencilBias: on
+    will result in an incomplete schedule.
+*/
+// $type stencil_bias store<Loci::real_t> 
+
+/**
+   Variable used to select between standard 1-step cell gradient
+   operators (standard) and the n-step iterative methods
+   (iterative1,iterative2).
+*/
+// $type gradType param<string> 
+
+/**
+   Number of iteration steps for the cell gradient n-step iterative methods
+   (iterative1,iterative2).
+*/
+// $type gradSteps param<int> 
+
+#line 24 "flowPsi.lh"
+
+
+// $type plot_output param<flowPsi::list_input> 
+// $type plot_output_exclusive param<flowPsi::list_input> 
+
+// $type modelName param<std::string> 
+// Transform for periodic bc's (should this be in FVM.lh?)
+// $type periodicTransform store<Loci::rigid_transform> 
+
+
+// EoS settings
+// $type molecularMass param<flowPsi::real> 
+// $type Rtilde param<flowPsi::real> 
+// $type gamma param<flowPsi::real> 
+// $type Cp param<flowPsi::real> 
+
+// $type p0 param<PressureValue> 
+
+// Initial Conditions
+// $type temperature_ic store<flowPsi::real> 
+// $type gagePressure_ic store<flowPsi::real> 
+// $type u_ic store<flowPsi::vect3d> 
+// Previous timestep values for BDF2
+// $type temperature_ico store<flowPsi::real> 
+// $type gagePressure_ico store<flowPsi::real> 
+// $type u_ico store<flowPsi::vect3d> 
+
+// Ambient Pressure used to define gage pressure
+// $type Pambient param<flowPsi::real> 
+// $type temperature store<flowPsi::real> 
+// cell density
+// $type rho store<flowPsi::real> 
+// cell pressure
+// $type pressure store<flowPsi::real> 
+// $type e_internal store<flowPsi::real> 
+// cell speed of sound
+
+// $type soundSpeed store<flowPsi::real> 
+// $type gagePressure store<flowPsi::real> 
+
+// fluid velocity at a cell
+// $type u store<flowPsi::vect3d> 
+// grid velocity at face
+// $type us_n store<flowPsi::real> 
+// $type us store<flowPsi::vect3d> 
+// $type gcl_sum store<flowPsi::real> 
+
+// $type mu store<flowPsi::real>  // fluid viscosity cell
+// $type mu_f store<flowPsi::real>  // fluid viscosity face
+// $type mu(T) store<flowPsi::real> 
+// $type tmu store<flowPsi::real>  // turbulent viscosity cell
+// $type tmu_f store<flowPsi::real>  // turbulent viscosity face
+// $type muTotal store<flowPsi::real> 
+// $type muTotal_f store<flowPsi::real> 
+
+// $type kconduct store<flowPsi::real>  // fluid conductivity cell
+// $type kconduct_f store<flowPsi::real>  // fluid conductivity face
+// $type kconduct(T) store<flowPsi::real> 
+// $type turbulentPrandtlNumber param<flowPsi::real>  // Turbulent Prandtl number
+// Contributions from fluxes to cell
+// $type src store<Loci::Array<flowPsi::real,5> > 
+// Right hand side of Newton method
+// $type rhs store<Loci::Array<flowPsi::real,5> > 
+// Inviscid Flux
+// $type iflux store<Loci::Array<flowPsi::real,5> > 
+// Viscous Flux
+// $type vflux store<Loci::Array<flowPsi::real,4> > 
+
+// Low Speed Preconditioning Work
+// $type Mref store<flowPsi::real>  // Reference Mach number used for preconditioning
+// $type PLimPC param<flowPsi::real> // Pressure jump limit on preconditioning
+// $type Minf param<flowPsi::real>  // Free stream Mach number
+// $type etaT param<flowPsi::real>  // Stagnation point limit factor
+// $type Eta_p store<flowPsi::real>  // Eta factor used in preconditioning
+// $type Eta_pf store<flowPsi::real>  // Eta factor used in preconditioning
+// $type Eta_bc store<flowPsi::real>  // used for boundary conditions, only includes viscous terms
+// Jacobian Assembly
+// $type fjp storeMat<flowPsi::real_fj> 
+// $type fjm storeMat<flowPsi::real_fj> 
+// $type srcJ storeMat<flowPsi::real_fj> 
+
+// Fluid Matrix, lower, upper, and diagonal components
+// $type fluid_U storeMat<flowPsi::real_fj> 
+// $type fluid_L storeMat<flowPsi::real_fj> 
+// $type fluid_D storeMat<flowPsi::real_fj> 
+// $type fluid_B storeVec<flowPsi::real_fj> 
+// $type fluid_D_inv storeMat<flowPsi::real_fj> 
+// $type fluid_pivot storeVec<pivot_type> 
+// Face values
+// $type gagePressure_f store<flowPsi::real> 
+// $type pressure_f store<flowPsi::real> 
+// $type temperature_f store<flowPsi::real> 
+// $type rho_f store<flowPsi::real> 
+// $type soundSpeed_f store<flowPsi::real> 
+// $type u_f store<flowPsi::vect3d> 
+
+// $type bc_total_area store<flowPsi::real> 
+// $type bc_total_force store<flowPsi::real> 
+// $type bc_average_pressure store<flowPsi::real> 
+
+// $type flow_direction store<flowPsi::vect3d> 
+// $type rigid_u store<flowPsi::vect3d> 
+// $type p0Ref store<flowPsi::real> 
+// $type T0Ref store<flowPsi::real> 
+// $type massFluxRef store<flowPsi::real> 
+// $type temperatureRef store<flowPsi::real> 
+// $type gagePressureRef store<flowPsi::real> 
+// $type uRef store<flowPsi::vect3d> 
+// Solution Clipping
+// $type TclipMin param<TemperatureValue> 
+// $type TclipMax param<TemperatureValue> 
+// $type PclipMin param<PressureValue> 
+// Fluid Stress
+// $type tau store<flowPsi::symmetricTensor> 
+// Boundary Condition Parameters
+// $type Uwall_BC store<flowPsi::vect3d> 
+// $type T_BC store<flowPsi::real> 
+// $type T0_BC store<flowPsi::real> 
+// $type p0_BC store<flowPsi::real> 
+// $type rho_BC store<flowPsi::real> 
+// $type Twall_BC store<flowPsi::real> 
+// $type qwall_BC store<flowPsi::real> 
+// $type massFlux_BC store<flowPsi::real> 
+// $type mdot_BC store<flowPsi::real> 
+// $type swirlAngle_BC store<flowPsi::real> 
+// $type swirlCenter_BC store<flowPsi::vect3d> 
+// $type momentCenter_BC store<flowPsi::vect3d> 
+// $type M_BC store<flowPsi::vect3d> 
+// $type u_BC store<flowPsi::vect3d> 
+// $type p_BC store<flowPsi::real> 
+// $type pMean_BC store<flowPsi::real> 
+// $type BC_inflow_type store<int> 
+// $type temperatureRef_BC store<flowPsi::real> 
+// $type gagePressureRef_BC store<flowPsi::real> 
+// $type uRef_BC store<flowPsi::vect3d> 
+
+// $type angVel_BC store<flowPsi::vect3d> 
+// $type rotAxis_BC store<flowPsi::vect3d> 
+// $type rotCenter_BC store<flowPsi::vect3d> 
+// $type swirlAxis_BC store<flowPsi::vect3d> 
+// $type flowDir_BC store<flowPsi::vect3d> 
+// $type boundary_area store<flowPsi::real> 
+
+// $type Twall store<flowPsi::real> 
+// $type Twall_prescribed store<flowPsi::real> 
+// $type T_interface store<flowPsi::real> 
+// $type qwall store<flowPsi::real> 
+// $type qwall_prescribed store<flowPsi::real> 
+// $type wallVelocity store<flowPsi::vect3d> 
+// $type heatf store<flowPsi::real> 
+// $type wall_stress store<flowPsi::vect3d> 
+// $type yplus_w store<flowPsi::real> 
+
+// $type stime param<flowPsi::real>  // simulation time
+// $type ncycle param<int>  // simulation iteration number
+// $type newtonMaxIter param<int> 
+// $type newtonFinished param<bool> 
+// $type lastNewton param<bool> 
+// $type urelax param<flowPsi::real> 
+// $type dtmax param<flowPsi::TimeValue> 
+// $type timeStepSize param<flowPsi::real> 
+// $type cflmax param<flowPsi::real> 
+// $type cflpdt store<flowPsi::real>  // Multiply this by dt to get cfl
+// $type cfl param<std::pair<flowPsi::real,flowPsi::real> > 
+
+// $type dtau store<flowPsi::real> 
+// $type iblank store<flowPsi::byte_t> 
+
+// General Turbulence Model
+// Map from cell to nearest viscous wall
+// $type min_cell2noslip Map
+// $type multi_scale param<std::string> 
+
+// $type divu store<flowPsi::real> 
+
+// vorticity
+// $type vortMag store<flowPsi::real> 
+// $type vort store<flowPsi::vect3d> 
+// $type vort_f store<flowPsi::vect3d> 
+
+// strain rate
+// $type strainRate store<flowPsi::real> 
+
+// helicity
+// $type helicity store<flowPsi::real> 
+// $type helicity_f store<flowPsi::real> 
+
+// distance to nearest viscous wall
+// $type dist_noslip store<flowPsi::real> 
+// $type dist_noslip_f store<flowPsi::real> 
+
+// $type initialConditions param<Loci::options_list> 
+// $type initialConditionRegions param<Loci::options_list> 
+// $type icRegionInfo blackbox<std::vector<flowPsi::ICstate_info> > 
+// $type icRegionId store<int> 
+
+// $type print_freq param<int> 
+// $type plot_freq param<int> 
+// $type plot_modulo param<int> 
+// $type do_plot param<bool> 
+// $type plot_postfix param<std::string> 
+// $type do_boundary_plot param<bool> 
+
+// $type plot_status param<int> 
+// $type restart_freq param<int> 
+// $type restart_modulo param<int> 
+// $type restart_directory param<std::string> 
+// $type restart_postfix param<std::string> 
+// $type do_restart param<bool> 
+// $type icfile param<std::string> 
+
+// $type maximumRunTime param<flowPsi::TimeValue> 
+
+
+// $type grid_vol_iblank param<flowPsi::real> 
+// $type integratedOutputFileManager blackbox<flowPsi::integratedFileDBManager> 
+// $type do_output_integrate param<bool> 
+
+// $type localPBias store<realF> 
+// $type localPBias_next store<realF> 
+// $type timeSteppingMode param<int> 
+
+// $type gravityAccel param<flowPsi::vect3d> 
+
+// Solver averaging types
+// $type meanFreq param<int> 
+// $type meanCount param<flowPsi::real> 
+// $type meanCountReset param<flowPsi::real> 
+// $type meanCount_ic param<pair<int,flowPsi::real> > 
+// $type scalarMean(X) store<flowPsi::real> 
+// $type scalarMean_f(X) store<flowPsi::real> 
+// $type scalarMeanAll_f(X) store<flowPsi::real> 
+// $type scalarMeanFaceAll_X_ic store<flowPsi::real> 
+// $type scalarM2(X) store<flowPsi::real> 
+// $type scalarVariance(X) store<flowPsi::real> 
+// $type scalarM2_f(X) store<flowPsi::real> 
+// $type scalarVariance_f(X) store<flowPsi::real> 
+// $type vect3dMean(X) store<flowPsi::vect3d> 
+// $type vect3dMean_f(X) store<flowPsi::vect3d> 
+// $type vect3dM2(X) store<flowPsi::vect3d> 
+// $type vect3dVariance(X) store<flowPsi::vect3d> 
+// $type vect3dM2_f(X) store<flowPsi::vect3d> 
+// $type vect3dVariance_f(X) store<flowPsi::vect3d> 
+// $type vect3dMX2(X) store<flowPsi::vect3d> 
+// $type vect3dCoVariance(X) store<flowPsi::vect3d> 
+// $type vect3dMX2_f(X) store<flowPsi::vect3d> 
+// $type vect3dCoVariance_f(X) store<flowPsi::vect3d> 
+// $type scalarFavreMean(X) store<flowPsi::real> 
+// $type scalarFavreMeanBase(X) store<flowPsi::real> 
+// $type scalarFavreMean_f(X) store<flowPsi::real> 
+// $type scalarFavreMeanBase_f(X) store<flowPsi::real> 
+// $type scalarFavreVar(X) store<flowPsi::real> 
+// $type scalarFavreVarBase(X) store<flowPsi::real> 
+// $type scalarFavreVar_f(X) store<flowPsi::real> 
+// $type scalarFavreVarBase_f(X) store<flowPsi::real> 
+// $type vect3dFavreMean(X) store<flowPsi::vect3d> 
+// $type vect3dFavreMeanBase(X) store<flowPsi::vect3d> 
+// $type vect3dFavreMean_f(X) store<flowPsi::vect3d> 
+// $type vect3dFavreMeanBase_f(X) store<flowPsi::vect3d> 
+// $type vect3dFavreVar(X) store<flowPsi::vect3d> 
+// $type vect3dFavreVarBase(X) store<flowPsi::vect3d> 
+// $type vect3dFavreVar_f(X) store<flowPsi::vect3d> 
+// $type vect3dFavreVarBase_f(X) store<flowPsi::vect3d> 
+// $type vect3dFavreCoVar(X) store<flowPsi::vect3d> 
+// $type vect3dFavreCoVarBase(X) store<flowPsi::vect3d> 
+// $type vect3dFavreCoVar_f(X) store<flowPsi::vect3d> 
+// $type vect3dFavreCoVarBase_f(X) store<flowPsi::vect3d> 
+
+// $type scalarTransportP(X,C) store<flowPsi::real> 
+// $type scalarTransport(X,C) store<flowPsi::real> 
+
+// $type timeStepSteadyState Constraint
+// $type timeStepAccurate Constraint
+
+// $type timeStepImplicit Constraint
+// $type timeStepExplicit Constraint
+
+// $type timeStepSchemeBDF2 Constraint
+// $type timeStepSchemeKEC Constraint
+
+// $type LaminarSimulation Constraint
+// $type TurbulentSimulation Constraint
+// $type ViscousSimulation Constraint
+
+
+// $type fluidLinearSolverSGS Constraint
+// $type fluidLinearSolverFSGS Constraint
+// $type fluidLinearSolverLSGS Constraint
+// $type fluidLinearSolverPETSC Constraint
+
+// $type wallLaw_BC Constraint
+// $type viscousWall_BC Constraint
+// $type symmetry_BC Constraint
+// $type impermeable_BC Constraint
+// $type reflecting_BC Constraint
+// $type interface_BC Constraint
+// $type turboInterface_BC Constraint
+// $type fixedMass_BC Constraint
+// $type fixedMassOutflow_BC Constraint
+// $type isentropicInflow_BC Constraint
+// $type extrapolate_BC Constraint
+// $type supersonicOutflow_BC Constraint
+// $type outflow_BC Constraint
+// $type supersonicInflow_BC Constraint
+// $type farfield_BC Constraint
+// $type inflow_BC Constraint
+
+// $type plotFreq_BCoption Constraint
+// $type qwall_BCoption Constraint
+// $type prescribed_qwall_BCoption Constraint
+// $type Twall_BCoption Constraint
+// $type adiabatic_BCoption Constraint
+// $type Uwall_BCoption Constraint
+// $type stationary_BCoption Constraint
+// $type absoluteFrame_BCoption Constraint
+// $type normal_BCoption Constraint
+// $type angVel_BCoption Constraint
+// $type rotAxis_BCoption Constraint
+// $type rotCenter_BCoption Constraint
+// $type rotSpeed_BCoption Constraint
+// $type flowDir_BCoption Constraint
+// $type prescribed_BCoption Constraint
+// $type T_BCoption Constraint
+// $type T0_BCoption Constraint
+// $type p_BCoption Constraint
+// $type pMean_BCoption Constraint
+// $type p0_BCoption Constraint
+// $type rho_BCoption Constraint
+// $type massFlux_BCoption Constraint
+// $type mdot_BCoption Constraint
+// $type swirlAngle_BCoption Constraint
+// $type swirlCenter_BCoption Constraint
+// $type swirlAxis_BCoption Constraint
+// $type momentCenter_BCoption Constraint
+// $type M_BCoption Constraint
+// $type u_BCoption Constraint
+// $type v_BCoption Constraint
+// $type name_BCoption Constraint
+
+// $type AllViscousBCs store<bool> 
+// $type AllWallBCs store<bool> 
+
+// $type componentMotion param<options_list> 
+// $type componentHierarchy param<options_list> 
+// $type componentGeometry param<options_list> 
+// $type componentPriority param<options_list> 
+// $type componentNodes_X store<bool> 
+
+// $type movingMesh store<bool> 
+// $type coriolis param<coriolis_options> 
+// $type gauss_seidel_iter param<int> 
+  
+
+
+
+
+
+
+#line 24 "linearSolverSGS.loci"
+
+
+//The followings define the implementation of gauss seidel iteration.
+namespace flowPsi {
+  // $type X_B storeVec<real_fj> 
+  // $type X_D storeMat<real_fj> 
+  // $type X_L storeMat<real_fj> 
+  // $type X_U storeMat<real_fj> 
+  // $type SGSBlockedSSolve(X) storeVec<real> 
+  // $type SGSBlockedSSolve_forward(X) storeVec<real> 
+  // $type SGSBlockedSSolve_backward(X) storeVec<real> 
+  // $type gseidel_finished(X) param<bool> 
+  // $type SGSDinv(X) storeMat<real_fj> 
+  // $type X_pivot storeVec<pivot_type> 
+
+  namespace {class file_linearSolverSGS000_2030m3 : public Loci::default_rule {
+#line 39 "linearSolverSGS.loci"
+    Loci::param<int>  L_gauss_seidel_iter_ ; 
+#line 39 "linearSolverSGS.loci"
+public:
+#line 39 "linearSolverSGS.loci"
+    file_linearSolverSGS000_2030m3() {
+#line 39 "linearSolverSGS.loci"
+       name_store("gauss_seidel_iter",L_gauss_seidel_iter_) ;
+#line 39 "linearSolverSGS.loci"
+       store_info_id("gauss_seidel_iter",0) ;
+#line 39 "linearSolverSGS.loci"
+       output("gauss_seidel_iter") ;
+#line 39 "linearSolverSGS.loci"
+       comments("") ;
+#line 39 "linearSolverSGS.loci"
+       setvardoc(docvar_linearSolverSGS_847) ;
+       set_file("linearSolverSGS.loci:39") ;
+#line 39 "linearSolverSGS.loci"
+    }
+#line 39 "linearSolverSGS.loci"
+    void compute(const Loci::sequence &seq) { 
+    (*L_gauss_seidel_iter_)= 6 ;
+  }} ;
+#line 41 "linearSolverSGS.loci"
+Loci::register_rule<file_linearSolverSGS000_2030m3> register_file_linearSolverSGS000_2030m3 ;
+#line 41 "linearSolverSGS.loci"
+}
+#line 41 "linearSolverSGS.loci"
+
+
+  namespace {class file_linearSolverSGS001_2030m9 : public Loci::pointwise_rule {
+#line 45 "linearSolverSGS.loci"
+    Loci::storeMat<real_fj>  L_X_D_ ; 
+#line 45 "linearSolverSGS.loci"
+    Loci::storeVec<pivot_type>  L_X_pivot_ ; 
+#line 45 "linearSolverSGS.loci"
+public:
+#line 45 "linearSolverSGS.loci"
+    file_linearSolverSGS001_2030m9() {
+#line 45 "linearSolverSGS.loci"
+       name_store("X_D",L_X_D_) ;
+#line 45 "linearSolverSGS.loci"
+       store_info_id("X_D",1) ;
+#line 45 "linearSolverSGS.loci"
+       name_store("X_pivot",L_X_pivot_) ;
+#line 45 "linearSolverSGS.loci"
+       store_info_id("X_pivot",3) ;
+#line 45 "linearSolverSGS.loci"
+       input("X_D") ;
+#line 45 "linearSolverSGS.loci"
+       output("SGSDinv(X)=X_D") ;
+#line 45 "linearSolverSGS.loci"
+       output("X_pivot") ;
+#line 45 "linearSolverSGS.loci"
+       store_info_id("geom_cells",4) ;
+#line 45 "linearSolverSGS.loci"
+       store_info_id("fluidLinearSolverSGS",5) ;
+#line 45 "linearSolverSGS.loci"
+       constraint("geom_cells,fluidLinearSolverSGS") ;
+#line 45 "linearSolverSGS.loci"
+       set_parametric_variable("SGSDinv(X)") ;
+#line 45 "linearSolverSGS.loci"
+       setvardoc(docvar_linearSolverSGS_847) ;
+       set_file("linearSolverSGS.loci:45") ;
+#line 45 "linearSolverSGS.loci"
+    }
+#line 45 "linearSolverSGS.loci"
+    virtual void prelude(const Loci::sequence &seq) { 
+#line 45 "linearSolverSGS.loci"
+
+    L_X_pivot_.setVecSize(L_X_D_.vecSize()) ;
+  }    void calculate(Loci::Entity _e_) { 
+#line 48 "linearSolverSGS.loci"
+    // Perform LU Decomposition on D block
+    L_X_D_[_e_].decompose_lu_pivot (L_X_pivot_[_e_]) ;
+  }    void compute(const Loci::sequence &seq) { 
+#line 50 "linearSolverSGS.loci"
+      do_loop(seq,this) ;
+#line 50 "linearSolverSGS.loci"
+    }
+#line 50 "linearSolverSGS.loci"
+} ;
+#line 50 "linearSolverSGS.loci"
+Loci::register_rule<file_linearSolverSGS001_2030m9> register_file_linearSolverSGS001_2030m9 ;
+#line 50 "linearSolverSGS.loci"
+}
+#line 50 "linearSolverSGS.loci"
+
+
+  //the build rule in gauss seidel iteration.
+  //Note: in gauss seidel iteration, we are solving X vector for M*X=B,
+  //where M consists of diagonal block D and off-diagonal parts. For the
+  //first gauss seidel iteration (n,it,igs=0), we apply Jacobi iteration
+  //by solving D*X=B to get initial X as our estimation.
+  namespace {class file_linearSolverSGS002_2030m22 : public Loci::pointwise_rule {
+#line 58 "linearSolverSGS.loci"
+    Loci::const_storeVec<real_fj>  L_X_B_ ; 
+#line 58 "linearSolverSGS.loci"
+    Loci::const_storeMat<real_fj>  L_SGSDinvX_ ; 
+#line 58 "linearSolverSGS.loci"
+    Loci::const_storeVec<pivot_type>  L_X_pivot_ ; 
+#line 58 "linearSolverSGS.loci"
+    Loci::storeVec<real>  L_SGSBlockedSSolveX_igs_EQ_0__ ; 
+#line 58 "linearSolverSGS.loci"
+public:
+#line 58 "linearSolverSGS.loci"
+    file_linearSolverSGS002_2030m22() {
+#line 58 "linearSolverSGS.loci"
+       name_store("X_B",L_X_B_) ;
+#line 58 "linearSolverSGS.loci"
+       store_info_id("X_B",6) ;
+#line 58 "linearSolverSGS.loci"
+       name_store("SGSDinv(X)",L_SGSDinvX_) ;
+#line 58 "linearSolverSGS.loci"
+       store_info_id("SGSDinv(X)",2) ;
+#line 58 "linearSolverSGS.loci"
+       name_store("X_pivot",L_X_pivot_) ;
+#line 58 "linearSolverSGS.loci"
+       store_info_id("X_pivot",3) ;
+#line 58 "linearSolverSGS.loci"
+       name_store("SGSBlockedSSolve(X){igs=0}",L_SGSBlockedSSolveX_igs_EQ_0__) ;
+#line 58 "linearSolverSGS.loci"
+       store_info_id("SGSBlockedSSolve(X){igs=0}",7) ;
+#line 58 "linearSolverSGS.loci"
+       input("X_B,SGSDinv(X),X_pivot") ;
+#line 58 "linearSolverSGS.loci"
+       output("SGSBlockedSSolve(X){igs=0}") ;
+#line 58 "linearSolverSGS.loci"
+       store_info_id("geom_cells",4) ;
+#line 58 "linearSolverSGS.loci"
+       constraint("geom_cells") ;
+#line 58 "linearSolverSGS.loci"
+       setvardoc(docvar_linearSolverSGS_847) ;
+       set_file("linearSolverSGS.loci:58") ;
+#line 58 "linearSolverSGS.loci"
+    }
+#line 58 "linearSolverSGS.loci"
+    virtual void prelude(const Loci::sequence &seq) { 
+#line 58 "linearSolverSGS.loci"
+
+    L_SGSBlockedSSolveX_igs_EQ_0__.setVecSize(L_X_B_.vecSize()) ;
+    entitySet dom = L_SGSBlockedSSolveX_igs_EQ_0__.domain() ;
+    dom -= entitySet(seq) ;
+    int vs = L_SGSBlockedSSolveX_igs_EQ_0__.vecSize() ;
+    FORALL(dom,ii) {
+      for(int k=0;k<vs;++k)
+        L_SGSBlockedSSolveX_igs_EQ_0__[ii][k] = 0 ;
+    } ENDFORALL ;
+  }    void calculate(Loci::Entity _e_) { 
+#line 68 "linearSolverSGS.loci"
+    L_SGSDinvX_[_e_].solve_lu_pivot (L_X_B_[_e_],L_SGSBlockedSSolveX_igs_EQ_0__[_e_],L_X_pivot_[_e_]) ;  //D*X=B --->X
+  }    void compute(const Loci::sequence &seq) { 
+#line 69 "linearSolverSGS.loci"
+      do_loop(seq,this) ;
+#line 69 "linearSolverSGS.loci"
+    }
+#line 69 "linearSolverSGS.loci"
+} ;
+#line 69 "linearSolverSGS.loci"
+Loci::register_rule<file_linearSolverSGS002_2030m22> register_file_linearSolverSGS002_2030m22 ;
+#line 69 "linearSolverSGS.loci"
+}
+#line 69 "linearSolverSGS.loci"
+
+
+  //In gauss seidel iteration, we are solving M*X=B and M=L+D+U, where L and
+  //U are lower and upper off-diagonal parts composed of L and U
+  //respectively, D is the diagonal block. We solve M*X by two steps.
+  //First, forward gauss seidel, solving Xf:
+  //      (L+D)Xf = B-UX  //X is from last gauss seidel iteration
+  //so    Xf=(L+D)_{-1}(B-UX)
+  //-->   Xf=D_{-1}(B-UX-LXf)
+  //-->Xf_{i}=(B_{i}-sum_{k:U}(U_{ik}X_{k})-sum_{k:L}(L_{ik}Xf_{k}))/D_{ii}
+  //in this procedure, Xf is updated from the lower, left corner, sweeping
+  //diagonally to the upper, right corner, using updated Xf values at lower,
+  //left sides and old X values at upper, right sides.
+
+  //Second, backward gauss seidel, solving Xb:
+  //     (U+D)Xb = B-LXf    //Xf is obtained from the above forward sweep
+  //so   Xb=(U+D)_{-1}(B-LXf)
+  //-->  Xb=D_{-1}(B-LXf-UXb)
+  //-->Xb_{i}=(B_{i}-sum_{k:L}(L_{ik}Xf_{k})-sum_{k:U}(U_{ik}Xb{k}))/D_{ii}
+  //in this procedure, Xb is updated from the upper, right corner, sweeping
+  //diagonally to the lower, left corner, using updated Xb values at upper,
+  //right sides and old Xf values at lower, left sides
+
+  //after this, X{n,it,igs+1}<---Xb{n,it,igs}
+  //
+  //
+  //          ---  upper  ---
+  //         | D |------>| U |
+  //         |   |<------|   |
+  //          ------- cl  ---
+  //           ^ | D |     |
+  //           | |   |     |
+  //         cl|  -------  |cr
+  //           |     | D | |
+  //           |     |   | V
+  //          ---  cr -------   upper  ---
+  //         | L |------>| D | ------>| U |
+  //         |   |<------| * |        |   |
+  //          ---  lower  ---          ---
+  //                          .         |
+  //                            .       |cr
+  //                              .     |
+  //                                .   V
+  //                                   ---
+  //                                  | D |
+  //                                  |   |
+  //                                   ---
+  //When looking at the following forward and backward gauss seidel
+  //implementation, it will be very clear if refering to the above diagram.
+
+  //The sweeping sequence is generated by the recursive rule. e.g.
+  // Xf <--- lower-->cl--->Xf
+  //this rule is repeatedly applied until it can not be applied anymore.
+  // (no more new Xf's are generated)
+
+  namespace {class file_linearSolverSGS003_2030m37 : public Loci::pointwise_rule {
+#line 125 "linearSolverSGS.loci"
+    Loci::const_Map L_cl_ ; 
+#line 125 "linearSolverSGS.loci"
+    Loci::const_Map L_cr_ ; 
+#line 125 "linearSolverSGS.loci"
+    Loci::const_Map L_pmap_ ; 
+#line 125 "linearSolverSGS.loci"
+    Loci::storeVec<real>  L_SGSBlockedSSolveX_ ; 
+#line 125 "linearSolverSGS.loci"
+public:
+#line 125 "linearSolverSGS.loci"
+    file_linearSolverSGS003_2030m37() {
+#line 125 "linearSolverSGS.loci"
+       name_store("cl",L_cl_) ;
+#line 125 "linearSolverSGS.loci"
+       store_info_id("cl",8) ;
+#line 125 "linearSolverSGS.loci"
+       name_store("cr",L_cr_) ;
+#line 125 "linearSolverSGS.loci"
+       store_info_id("cr",9) ;
+#line 125 "linearSolverSGS.loci"
+       name_store("pmap",L_pmap_) ;
+#line 125 "linearSolverSGS.loci"
+       store_info_id("pmap",10) ;
+#line 125 "linearSolverSGS.loci"
+       name_store("SGSBlockedSSolve(X)",L_SGSBlockedSSolveX_) ;
+#line 125 "linearSolverSGS.loci"
+       store_info_id("SGSBlockedSSolve(X)",7) ;
+#line 125 "linearSolverSGS.loci"
+       input("pmap->cl->SGSBlockedSSolve(X)") ;
+#line 125 "linearSolverSGS.loci"
+       output("cr->SGSBlockedSSolve(X)") ;
+#line 125 "linearSolverSGS.loci"
+       store_info_id("periodicFaces",11) ;
+#line 125 "linearSolverSGS.loci"
+       constraint("periodicFaces") ;
+#line 125 "linearSolverSGS.loci"
+       setvardoc(docvar_linearSolverSGS_847) ;
+       set_file("linearSolverSGS.loci:125") ;
+#line 125 "linearSolverSGS.loci"
+    }
+#line 125 "linearSolverSGS.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 126 "linearSolverSGS.loci"
+    L_SGSBlockedSSolveX_[L_cr_[_e_]]= L_SGSBlockedSSolveX_[L_cl_[L_pmap_[_e_]]];
+  }    void compute(const Loci::sequence &seq) { 
+#line 127 "linearSolverSGS.loci"
+      do_loop(seq,this) ;
+#line 127 "linearSolverSGS.loci"
+    }
+#line 127 "linearSolverSGS.loci"
+} ;
+#line 127 "linearSolverSGS.loci"
+Loci::register_rule<file_linearSolverSGS003_2030m37> register_file_linearSolverSGS003_2030m37 ;
+#line 127 "linearSolverSGS.loci"
+}
+#line 127 "linearSolverSGS.loci"
+
+
+  //The following is the forward sweep of gauss seidel
+  //   $rule pointwise(SGSBlockedSSolve_forward(X)<-X_B,SGSDinv(X),X_pivot,
+  // 		lower->cl->SGSBlockedSSolve_forward(X),upper->cr->SGSBlockedSSolve(X),
+  // 		  upper->X_U,lower->X_L){
+  //     //inplace(SGSBlockedSSolve_forward(X) | SGSBlockedSSolve(X)) {
+  //     //method of employing forward sweep (refer to explanation in the beginning)
+  //     const int vs = $*SGSBlockedSSolve(X).vecSize() ;
+  //     tmp_array<real> t(vs),v(vs) ;
+  //     for(int i=0;i<vs;++i)
+  //       t[i] = -$X_B[i] ;
+  //     //sum_{k:U}(U_{ik}X_{k})--->t
+  //     for(const int *ui = $upper.begin();ui!=$upper.end();++ui)
+  //       ui->$X_U.dotprod_accum(ui->$cr->$SGSBlockedSSolve(X),static_cast<real *>(t)) ;
+  //     //sum_{k:L}(L_{ik}Xf_{k})--->v
+  //     for(const int *li = $lower.begin();li!=$lower.end();++li)
+  //       li->$X_L.dotprod_accum(li->$cl->$SGSBlockedSSolve_forward(X),static_cast<real *>(t)) ;
+  //     for(int i=0;i<vs;++i)
+  //       v[i] = -t[i] ;
+  //     //D*X=v -->X -->Xf
+  //     $SGSDinv(X).solve_lu_pivot(static_cast<real *>(v),$SGSBlockedSSolve_forward(X),$X_pivot) ;
+  //   }
+  class gseidel_forward : public pointwise_rule {
+    const_storeMat<real_fj> L,U ;
+    const_storeMat<real_fj> D ;
+    const_storeVec<pivot_type> pivot ;
+    const_multiMap upper, lower ;
+    const_Map cl,cr ;
+    const_storeVec<real_fj> B ;
+    const_storeVec<real> Xf ;
+    storeVec<real> X ;
+  public:
+    gseidel_forward() ;
+    void calculate(Entity cc);
+    virtual void compute(const sequence &seq);
+  } ;
+
+  gseidel_forward::gseidel_forward() {
+    set_relaxed_recursion() ;
+    name_store("X_L",L) ;
+    name_store("X_U",U) ;
+    name_store("SGSDinv(X)",D) ;
+    name_store("X_pivot",pivot) ;
+    name_store("X_B",B) ;
+    name_store("SGSBlockedSSolve(X)",X) ;
+    name_store("SGSBlockedSSolve_forward(X)",Xf) ; //X_forward
+    name_store("upper",upper) ;
+    name_store("lower",lower) ;
+    name_store("cl",cl) ;
+    name_store("cr",cr) ;
+    input("upper->X_U,lower->X_L") ;
+    input("upper->cr->SGSBlockedSSolve(X)") ;
+    input("lower->cl->SGSBlockedSSolve_forward(X)") ;
+    input("X_B,SGSDinv(X),X_pivot") ;
+    output("SGSBlockedSSolve_forward(X)=SGSBlockedSSolve(X)") ;
+  }
+
+  //method of employing forward sweep (refer to explanation in the beginning)
+  inline void gseidel_forward::calculate(Entity cc) {
+    const int vs = X.vecSize() ;
+
+    tmp_array<real> t(vs),v(vs) ;
+    for(int i=0;i<vs;++i) {
+      t[i] = -B[cc][i] ;
+    }
+
+    //sum_{k:U}(U_{ik}X_{k})--->t
+    for(const int *ui = upper.begin(cc);ui!=upper.end(cc);++ui)
+      U[*ui].dotprod_accum(X[cr[*ui]],static_cast<real *>(t)) ;
+    //sum_{k:L}(L_{ik}Xf_{k})--->v
+    for(const int *li = lower.begin(cc);li!=lower.end(cc);++li)
+      L[*li].dotprod_accum(Xf[cl[*li]],static_cast<real *>(t)) ;
+
+    for(int i=0;i<vs;++i) {
+      v[i] = -t[i] ;
+    }
+
+    //D*X=v -->X -->Xf
+    D[cc].solve_lu_pivot(static_cast<real *>(v),X[cc],pivot[cc]) ;
+
+  }
+
+
+  void gseidel_forward::compute(const sequence &seq) {
+    do_loop(seq,this) ;
+  }
+
+  namespace {class file_linearSolverSGS004_2030m64 : public Loci::pointwise_rule {
+#line 217 "linearSolverSGS.loci"
+    Loci::const_Map L_cl_ ; 
+#line 217 "linearSolverSGS.loci"
+    Loci::const_Map L_cr_ ; 
+#line 217 "linearSolverSGS.loci"
+    Loci::const_Map L_pmap_ ; 
+#line 217 "linearSolverSGS.loci"
+    Loci::storeVec<real>  L_SGSBlockedSSolve_forwardX_ ; 
+#line 217 "linearSolverSGS.loci"
+public:
+#line 217 "linearSolverSGS.loci"
+    file_linearSolverSGS004_2030m64() {
+#line 217 "linearSolverSGS.loci"
+       name_store("cl",L_cl_) ;
+#line 217 "linearSolverSGS.loci"
+       store_info_id("cl",8) ;
+#line 217 "linearSolverSGS.loci"
+       name_store("cr",L_cr_) ;
+#line 217 "linearSolverSGS.loci"
+       store_info_id("cr",9) ;
+#line 217 "linearSolverSGS.loci"
+       name_store("pmap",L_pmap_) ;
+#line 217 "linearSolverSGS.loci"
+       store_info_id("pmap",10) ;
+#line 217 "linearSolverSGS.loci"
+       name_store("SGSBlockedSSolve_forward(X)",L_SGSBlockedSSolve_forwardX_) ;
+#line 217 "linearSolverSGS.loci"
+       store_info_id("SGSBlockedSSolve_forward(X)",12) ;
+#line 217 "linearSolverSGS.loci"
+       input("pmap->cl->SGSBlockedSSolve_forward(X)") ;
+#line 217 "linearSolverSGS.loci"
+       output("cr->(SGSBlockedSSolve_backward(X)=SGSBlockedSSolve_forward(X))") ;
+#line 217 "linearSolverSGS.loci"
+       store_info_id("periodicFaces",11) ;
+#line 217 "linearSolverSGS.loci"
+       constraint("periodicFaces") ;
+#line 217 "linearSolverSGS.loci"
+       setvardoc(docvar_linearSolverSGS_847) ;
+       set_file("linearSolverSGS.loci:217") ;
+#line 217 "linearSolverSGS.loci"
+    }
+#line 217 "linearSolverSGS.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 218 "linearSolverSGS.loci"
+    L_SGSBlockedSSolve_forwardX_[L_cr_[_e_]]= L_SGSBlockedSSolve_forwardX_[L_cl_[L_pmap_[_e_]]];
+  }    void compute(const Loci::sequence &seq) { 
+#line 219 "linearSolverSGS.loci"
+      do_loop(seq,this) ;
+#line 219 "linearSolverSGS.loci"
+    }
+#line 219 "linearSolverSGS.loci"
+} ;
+#line 219 "linearSolverSGS.loci"
+Loci::register_rule<file_linearSolverSGS004_2030m64> register_file_linearSolverSGS004_2030m64 ;
+#line 219 "linearSolverSGS.loci"
+}
+#line 219 "linearSolverSGS.loci"
+
+
+  //The following is the backward sweep of gauss seidel
+  //   $rule pointwise(SGSBlockedSSolve_backward(X)<-X_B,SGSDinv(X),X_pivot,
+  // 		lower->cl->SGSBlockedSSolve_forward(X),upper->cr->SGSBlockedSSolve_backward(X),
+  // 		upper->X_U,lower->X_L){
+  //     // inplace(SGSBlockedSSolve_backward(X)|SGSBlockedSSolve_forward(X)) {
+  //     //method of employing backward sweep (refer to explanation in the beginning)
+  //     const int vs = $*SGSBlockedSSolve_forward(X).vecSize() ;
+  //     tmp_array<real> t(vs),v(vs) ;
+  //     for(int i=0;i<vs;++i)
+  //       t[i] = -$X_B[i] ;
+  //     // sum_{k:U}(U_{ik}Xb{k})
+  //     for(const int *ui = $upper.begin();ui!=$upper.end();++ui)
+  //       ui->$X_U.dotprod_accum(ui->$cr->$SGSBlockedSSolve_backward(X),static_cast<real *>(t)) ;
+  //     //sum_{k:L}(L_{ik}Xf_{k})
+  //     for(const int *li = $lower.begin();li!=$lower.end();++li)
+  //       li->$X_L.dotprod_accum(li->$cl->$SGSBlockedSSolve_forward(X),static_cast<real *>(t)) ;
+  //     for(int i=0;i<vs;++i)
+  //       v[i] = -t[i] ;
+  //     //D*Xf=v ---> Xf-->Xb
+  //     $SGSDinv(X).solve_lu_pivot(static_cast<real *>(v),$SGSBlockedSSolve_backward(X),$X_pivot) ;
+  //   }
+  class gseidel_backward : public pointwise_rule {
+    const_storeMat<real_fj> L,U,D ;
+    const_storeVec<pivot_type> pivot ;
+    const_multiMap upper, lower ;
+    const_Map cl,cr ;
+    const_storeVec<real_fj> B ;
+    const_storeVec<real> Xb ;
+    storeVec<real> Xf ;
+  public:
+    gseidel_backward() ;
+    void calculate(Entity cc);
+    virtual void compute(const sequence &seq);
+  } ;
+
+  gseidel_backward::gseidel_backward() {
+    set_relaxed_recursion() ;
+    name_store("X_L",L) ;
+    name_store("X_U",U) ;
+    name_store("SGSDinv(X)",D) ;
+    name_store("X_pivot",pivot) ;
+    name_store("X_B",B) ;
+    name_store("SGSBlockedSSolve_forward(X)",Xf) ;
+    name_store("SGSBlockedSSolve_backward(X)",Xb) ;  //X_backward
+    name_store("upper",upper) ;
+    name_store("lower",lower) ;
+    name_store("cl",cl) ;
+    name_store("cr",cr) ;
+    input("upper->X_U,lower->X_L") ;
+    input("upper->cr->SGSBlockedSSolve_backward(X)") ;
+    input("lower->cl->SGSBlockedSSolve_forward(X)") ;
+    input("X_B,SGSDinv(X),X_pivot") ;
+    output("SGSBlockedSSolve_backward(X)=SGSBlockedSSolve_forward(X)") ;
+  }
+
+  //method of employing backward sweep (refer to explanation in the beginning)
+  inline void gseidel_backward::calculate(Entity cc) {
+    const int vs = Xf.vecSize() ;
+
+    tmp_array<real> t(vs),v(vs) ;
+    for(int i=0;i<vs;++i) {
+      t[i] = -B[cc][i] ;
+    }
+
+    // sum_{k:U}(U_{ik}Xb{k})
+    for(const int *ui = upper.begin(cc);ui!=upper.end(cc);++ui)
+      U[*ui].dotprod_accum(Xb[cr[*ui]],static_cast<real *>(t)) ;
+    //sum_{k:L}(L_{ik}Xf_{k})
+    for(const int *li = lower.begin(cc);li!=lower.end(cc);++li)
+      L[*li].dotprod_accum(Xf[cl[*li]],static_cast<real *>(t)) ;
+
+    for(int i=0;i<vs;++i) {
+      v[i] = -t[i] ;
+    }
+
+    //D*Xf=v ---> Xf-->Xb
+    D[cc].solve_lu_pivot(static_cast<real *>(v),Xf[cc],pivot[cc]) ;
+
+
+  }
+
+  void gseidel_backward::compute(const sequence &seq) {
+    do_loop(seq,this) ;
+  }
+
+
+  //advance rule in gauss seidel iteration
+  namespace {class file_linearSolverSGS005_2030m91 : public Loci::pointwise_rule {
+#line 310 "linearSolverSGS.loci"
+    Loci::storeVec<real>  L_SGSBlockedSSolve_backwardX_igs__ ; 
+#line 310 "linearSolverSGS.loci"
+public:
+#line 310 "linearSolverSGS.loci"
+    file_linearSolverSGS005_2030m91() {
+#line 310 "linearSolverSGS.loci"
+       name_store("SGSBlockedSSolve_backward(X){igs}",L_SGSBlockedSSolve_backwardX_igs__) ;
+#line 310 "linearSolverSGS.loci"
+       store_info_id("SGSBlockedSSolve_backward(X){igs}",13) ;
+#line 310 "linearSolverSGS.loci"
+       input("SGSBlockedSSolve_backward(X){igs}") ;
+#line 310 "linearSolverSGS.loci"
+       output("SGSBlockedSSolve(X){igs+1}=SGSBlockedSSolve_backward(X){igs}") ;
+#line 310 "linearSolverSGS.loci"
+       store_info_id("geom_cells",4) ;
+#line 310 "linearSolverSGS.loci"
+       constraint("geom_cells") ;
+#line 310 "linearSolverSGS.loci"
+       setvardoc(docvar_linearSolverSGS_847) ;
+       set_file("linearSolverSGS.loci:310") ;
+#line 310 "linearSolverSGS.loci"
+    }
+#line 310 "linearSolverSGS.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 310 "linearSolverSGS.loci"
+}    void compute(const Loci::sequence &seq) { 
+#line 310 "linearSolverSGS.loci"
+      do_loop(seq,this) ;
+#line 310 "linearSolverSGS.loci"
+    }
+#line 310 "linearSolverSGS.loci"
+} ;
+#line 310 "linearSolverSGS.loci"
+Loci::register_rule<file_linearSolverSGS005_2030m91> register_file_linearSolverSGS005_2030m91 ;
+#line 310 "linearSolverSGS.loci"
+}
+#line 310 "linearSolverSGS.loci"
+
+
+  // $type $igs param<int> 
+  // provides the condition under which gauss seidel
+  // iteration is terminated
+  namespace {class file_linearSolverSGS006_2030m101 : public Loci::singleton_rule {
+#line 316 "linearSolverSGS.loci"
+    Loci::const_param<int>  L_gauss_seidel_iter_ ; 
+#line 316 "linearSolverSGS.loci"
+    Loci::const_param<int>  L_igs_ ; 
+#line 316 "linearSolverSGS.loci"
+    Loci::param<bool>  L_gseidel_finishedX_ ; 
+#line 316 "linearSolverSGS.loci"
+public:
+#line 316 "linearSolverSGS.loci"
+    file_linearSolverSGS006_2030m101() {
+#line 316 "linearSolverSGS.loci"
+       name_store("gauss_seidel_iter",L_gauss_seidel_iter_) ;
+#line 316 "linearSolverSGS.loci"
+       store_info_id("gauss_seidel_iter",0) ;
+#line 316 "linearSolverSGS.loci"
+       name_store("gseidel_finished(X)",L_gseidel_finishedX_) ;
+#line 316 "linearSolverSGS.loci"
+       store_info_id("gseidel_finished(X)",14) ;
+#line 316 "linearSolverSGS.loci"
+       name_store("$igs",L_igs_) ;
+#line 316 "linearSolverSGS.loci"
+       store_info_id("$igs",15) ;
+#line 316 "linearSolverSGS.loci"
+       input("$igs,gauss_seidel_iter") ;
+#line 316 "linearSolverSGS.loci"
+       output("gseidel_finished(X)") ;
+#line 316 "linearSolverSGS.loci"
+       constraint("$igs,gauss_seidel_iter") ;
+#line 316 "linearSolverSGS.loci"
+       setvardoc(docvar_linearSolverSGS_847) ;
+       set_file("linearSolverSGS.loci:316") ;
+#line 316 "linearSolverSGS.loci"
+    }
+#line 316 "linearSolverSGS.loci"
+    void compute(const Loci::sequence &seq) { 
+    (*L_gseidel_finishedX_)= ((*L_igs_)== (*L_gauss_seidel_iter_)) ;
+  }} ;
+#line 318 "linearSolverSGS.loci"
+Loci::register_rule<file_linearSolverSGS006_2030m101> register_file_linearSolverSGS006_2030m101 ;
+#line 318 "linearSolverSGS.loci"
+}
+#line 318 "linearSolverSGS.loci"
+
+
+  //collapse rule for gauss seidel iteration
+  //under the constraint of geom_cells, and if the termination condition
+  //is satisfied, then X{n,it} <-- X{n,it,igs}; otherwise X{n,it,igs+1} is
+  //computed and then shift to X{n,it,igs} to start another gauss seidel
+  //iteration
+  namespace {class file_linearSolverSGS007_2030m111 : public Loci::pointwise_rule {
+#line 328 "linearSolverSGS.loci"
+    Loci::storeVec<real>  L_SGSBlockedSSolveX_igs__ ; 
+#line 328 "linearSolverSGS.loci"
+public:
+#line 328 "linearSolverSGS.loci"
+    file_linearSolverSGS007_2030m111() {
+#line 328 "linearSolverSGS.loci"
+       name_store("SGSBlockedSSolve(X){igs}",L_SGSBlockedSSolveX_igs__) ;
+#line 328 "linearSolverSGS.loci"
+       store_info_id("SGSBlockedSSolve(X){igs}",7) ;
+#line 328 "linearSolverSGS.loci"
+       input("SGSBlockedSSolve(X){igs}") ;
+#line 328 "linearSolverSGS.loci"
+       output("SGSBlockedSSolve(X)=SGSBlockedSSolve(X){igs}") ;
+#line 328 "linearSolverSGS.loci"
+       store_info_id("geom_cells{igs}",4) ;
+#line 328 "linearSolverSGS.loci"
+       constraint("geom_cells{igs}") ;
+#line 328 "linearSolverSGS.loci"
+       conditional("gseidel_finished(X){igs}") ;
+#line 328 "linearSolverSGS.loci"
+       setvardoc(docvar_linearSolverSGS_847) ;
+       set_file("linearSolverSGS.loci:328") ;
+#line 328 "linearSolverSGS.loci"
+    }
+#line 328 "linearSolverSGS.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 328 "linearSolverSGS.loci"
+}    void compute(const Loci::sequence &seq) { 
+#line 328 "linearSolverSGS.loci"
+      do_loop(seq,this) ;
+#line 328 "linearSolverSGS.loci"
+    }
+#line 328 "linearSolverSGS.loci"
+} ;
+#line 328 "linearSolverSGS.loci"
+Loci::register_rule<file_linearSolverSGS007_2030m111> register_file_linearSolverSGS007_2030m111 ;
+#line 328 "linearSolverSGS.loci"
+}
+#line 328 "linearSolverSGS.loci"
+
+
+  register_rule<gseidel_backward>    register_gseidel_backward ;
+  register_rule<gseidel_forward>     register_gseidel_forward ;
+
+  // Scalar solve
+  // $type X_B store<real> 
+  // $type X_D store<real> 
+  // $type X_L store<real> 
+  // $type X_U store<real> 
+  // $type SGSScalarDinv(X) store<real> 
+  // $type SGSScalarSolve(X) store<real> 
+  // $type SGSScalarSolve_forward(X) store<real> 
+  // $type SGSScalarSolve_backward(X) store<real> 
+
+  namespace {class file_linearSolverSGS008_2030m122 : public Loci::pointwise_rule {
+#line 344 "linearSolverSGS.loci"
+    Loci::const_store<real>  L_X_D_ ; 
+#line 344 "linearSolverSGS.loci"
+    Loci::store<real>  L_SGSScalarDinvX_ ; 
+#line 344 "linearSolverSGS.loci"
+public:
+#line 344 "linearSolverSGS.loci"
+    file_linearSolverSGS008_2030m122() {
+#line 344 "linearSolverSGS.loci"
+       name_store("X_D",L_X_D_) ;
+#line 344 "linearSolverSGS.loci"
+       store_info_id("X_D",16) ;
+#line 344 "linearSolverSGS.loci"
+       name_store("SGSScalarDinv(X)",L_SGSScalarDinvX_) ;
+#line 344 "linearSolverSGS.loci"
+       store_info_id("SGSScalarDinv(X)",17) ;
+#line 344 "linearSolverSGS.loci"
+       input("X_D") ;
+#line 344 "linearSolverSGS.loci"
+       output("SGSScalarDinv(X)") ;
+#line 344 "linearSolverSGS.loci"
+       store_info_id("geom_cells",4) ;
+#line 344 "linearSolverSGS.loci"
+       store_info_id("fluidLinearSolverSGS",5) ;
+#line 344 "linearSolverSGS.loci"
+       constraint("geom_cells,fluidLinearSolverSGS") ;
+#line 344 "linearSolverSGS.loci"
+       setvardoc(docvar_linearSolverSGS_847) ;
+       set_file("linearSolverSGS.loci:344") ;
+#line 344 "linearSolverSGS.loci"
+    }
+#line 344 "linearSolverSGS.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 345 "linearSolverSGS.loci"
+    L_SGSScalarDinvX_[_e_]=1./L_X_D_[_e_];
+  }    void compute(const Loci::sequence &seq) { 
+#line 346 "linearSolverSGS.loci"
+      do_loop(seq,this) ;
+#line 346 "linearSolverSGS.loci"
+    }
+#line 346 "linearSolverSGS.loci"
+} ;
+#line 346 "linearSolverSGS.loci"
+Loci::register_rule<file_linearSolverSGS008_2030m122> register_file_linearSolverSGS008_2030m122 ;
+#line 346 "linearSolverSGS.loci"
+}
+#line 346 "linearSolverSGS.loci"
+
+
+  namespace {class file_linearSolverSGS009_2030m133 : public Loci::pointwise_rule {
+#line 349 "linearSolverSGS.loci"
+    Loci::const_store<real>  L_X_B_ ; 
+#line 349 "linearSolverSGS.loci"
+    Loci::const_store<real>  L_SGSScalarDinvX_ ; 
+#line 349 "linearSolverSGS.loci"
+    Loci::store<real>  L_SGSScalarSolveX_igs_EQ_0__ ; 
+#line 349 "linearSolverSGS.loci"
+public:
+#line 349 "linearSolverSGS.loci"
+    file_linearSolverSGS009_2030m133() {
+#line 349 "linearSolverSGS.loci"
+       name_store("X_B",L_X_B_) ;
+#line 349 "linearSolverSGS.loci"
+       store_info_id("X_B",18) ;
+#line 349 "linearSolverSGS.loci"
+       name_store("SGSScalarDinv(X)",L_SGSScalarDinvX_) ;
+#line 349 "linearSolverSGS.loci"
+       store_info_id("SGSScalarDinv(X)",17) ;
+#line 349 "linearSolverSGS.loci"
+       name_store("SGSScalarSolve(X){igs=0}",L_SGSScalarSolveX_igs_EQ_0__) ;
+#line 349 "linearSolverSGS.loci"
+       store_info_id("SGSScalarSolve(X){igs=0}",19) ;
+#line 349 "linearSolverSGS.loci"
+       input("SGSScalarDinv(X),X_B") ;
+#line 349 "linearSolverSGS.loci"
+       output("SGSScalarSolve(X){igs=0}") ;
+#line 349 "linearSolverSGS.loci"
+       store_info_id("geom_cells",4) ;
+#line 349 "linearSolverSGS.loci"
+       constraint("geom_cells") ;
+#line 349 "linearSolverSGS.loci"
+       setvardoc(docvar_linearSolverSGS_847) ;
+       set_file("linearSolverSGS.loci:349") ;
+#line 349 "linearSolverSGS.loci"
+    }
+#line 349 "linearSolverSGS.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 350 "linearSolverSGS.loci"
+    L_SGSScalarSolveX_igs_EQ_0__[_e_]=L_SGSScalarDinvX_[_e_]* L_X_B_[_e_];
+  }    void compute(const Loci::sequence &seq) { 
+#line 351 "linearSolverSGS.loci"
+      do_loop(seq,this) ;
+#line 351 "linearSolverSGS.loci"
+    }
+#line 351 "linearSolverSGS.loci"
+} ;
+#line 351 "linearSolverSGS.loci"
+Loci::register_rule<file_linearSolverSGS009_2030m133> register_file_linearSolverSGS009_2030m133 ;
+#line 351 "linearSolverSGS.loci"
+}
+#line 351 "linearSolverSGS.loci"
+
+
+  namespace {class file_linearSolverSGS010_2030m146 : public Loci::pointwise_rule {
+#line 354 "linearSolverSGS.loci"
+    Loci::const_Map L_cl_ ; 
+#line 354 "linearSolverSGS.loci"
+    Loci::const_Map L_cr_ ; 
+#line 354 "linearSolverSGS.loci"
+    Loci::const_Map L_pmap_ ; 
+#line 354 "linearSolverSGS.loci"
+    Loci::store<real>  L_SGSScalarSolveX_ ; 
+#line 354 "linearSolverSGS.loci"
+public:
+#line 354 "linearSolverSGS.loci"
+    file_linearSolverSGS010_2030m146() {
+#line 354 "linearSolverSGS.loci"
+       name_store("cl",L_cl_) ;
+#line 354 "linearSolverSGS.loci"
+       store_info_id("cl",8) ;
+#line 354 "linearSolverSGS.loci"
+       name_store("cr",L_cr_) ;
+#line 354 "linearSolverSGS.loci"
+       store_info_id("cr",9) ;
+#line 354 "linearSolverSGS.loci"
+       name_store("pmap",L_pmap_) ;
+#line 354 "linearSolverSGS.loci"
+       store_info_id("pmap",10) ;
+#line 354 "linearSolverSGS.loci"
+       name_store("SGSScalarSolve(X)",L_SGSScalarSolveX_) ;
+#line 354 "linearSolverSGS.loci"
+       store_info_id("SGSScalarSolve(X)",19) ;
+#line 354 "linearSolverSGS.loci"
+       input("pmap->cl->SGSScalarSolve(X)") ;
+#line 354 "linearSolverSGS.loci"
+       output("cr->SGSScalarSolve(X)") ;
+#line 354 "linearSolverSGS.loci"
+       store_info_id("periodicFaces",11) ;
+#line 354 "linearSolverSGS.loci"
+       constraint("periodicFaces") ;
+#line 354 "linearSolverSGS.loci"
+       setvardoc(docvar_linearSolverSGS_847) ;
+       set_file("linearSolverSGS.loci:354") ;
+#line 354 "linearSolverSGS.loci"
+    }
+#line 354 "linearSolverSGS.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 355 "linearSolverSGS.loci"
+    L_SGSScalarSolveX_[L_cr_[_e_]]= L_SGSScalarSolveX_[L_cl_[L_pmap_[_e_]]];
+  }    void compute(const Loci::sequence &seq) { 
+#line 356 "linearSolverSGS.loci"
+      do_loop(seq,this) ;
+#line 356 "linearSolverSGS.loci"
+    }
+#line 356 "linearSolverSGS.loci"
+} ;
+#line 356 "linearSolverSGS.loci"
+Loci::register_rule<file_linearSolverSGS010_2030m146> register_file_linearSolverSGS010_2030m146 ;
+#line 356 "linearSolverSGS.loci"
+}
+#line 356 "linearSolverSGS.loci"
+
+
+  namespace {class file_linearSolverSGS011_2030m160 : public Loci::pointwise_rule {
+#line 360 "linearSolverSGS.loci"
+    Loci::const_Map L_cl_ ; 
+#line 360 "linearSolverSGS.loci"
+    Loci::const_Map L_cr_ ; 
+#line 360 "linearSolverSGS.loci"
+    Loci::const_Map L_pmap_ ; 
+#line 360 "linearSolverSGS.loci"
+    Loci::store<real>  L_SGSScalarSolve_forwardX_ ; 
+#line 360 "linearSolverSGS.loci"
+public:
+#line 360 "linearSolverSGS.loci"
+    file_linearSolverSGS011_2030m160() {
+#line 360 "linearSolverSGS.loci"
+       name_store("cl",L_cl_) ;
+#line 360 "linearSolverSGS.loci"
+       store_info_id("cl",8) ;
+#line 360 "linearSolverSGS.loci"
+       name_store("cr",L_cr_) ;
+#line 360 "linearSolverSGS.loci"
+       store_info_id("cr",9) ;
+#line 360 "linearSolverSGS.loci"
+       name_store("pmap",L_pmap_) ;
+#line 360 "linearSolverSGS.loci"
+       store_info_id("pmap",10) ;
+#line 360 "linearSolverSGS.loci"
+       name_store("SGSScalarSolve_forward(X)",L_SGSScalarSolve_forwardX_) ;
+#line 360 "linearSolverSGS.loci"
+       store_info_id("SGSScalarSolve_forward(X)",20) ;
+#line 360 "linearSolverSGS.loci"
+       input("pmap->cl->SGSScalarSolve_forward(X)") ;
+#line 360 "linearSolverSGS.loci"
+       output("cr->(SGSScalarSolve_backward(X)=SGSScalarSolve_forward(X))") ;
+#line 360 "linearSolverSGS.loci"
+       store_info_id("periodicFaces",11) ;
+#line 360 "linearSolverSGS.loci"
+       constraint("periodicFaces") ;
+#line 360 "linearSolverSGS.loci"
+       setvardoc(docvar_linearSolverSGS_847) ;
+       set_file("linearSolverSGS.loci:360") ;
+#line 360 "linearSolverSGS.loci"
+    }
+#line 360 "linearSolverSGS.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 361 "linearSolverSGS.loci"
+    L_SGSScalarSolve_forwardX_[L_cr_[_e_]]= L_SGSScalarSolve_forwardX_[L_cl_[L_pmap_[_e_]]];
+  }    void compute(const Loci::sequence &seq) { 
+#line 362 "linearSolverSGS.loci"
+      do_loop(seq,this) ;
+#line 362 "linearSolverSGS.loci"
+    }
+#line 362 "linearSolverSGS.loci"
+} ;
+#line 362 "linearSolverSGS.loci"
+Loci::register_rule<file_linearSolverSGS011_2030m160> register_file_linearSolverSGS011_2030m160 ;
+#line 362 "linearSolverSGS.loci"
+}
+#line 362 "linearSolverSGS.loci"
+
+
+
+    class gsi_scalar_backward_X : public Loci::pointwise_rule {
+    const_Map cl ; 
+    const_Map cr ; 
+    const_multiMap upper ; 
+    const_multiMap lower ; 
+    const_store<real>  X_B ; 
+    const_store<real>  X_L ; 
+    const_store<real>  X_U ; 
+    const_store<real>  SGSScalarDinvX ; 
+    const_store<real>  SGSScalarSolveXf ; 
+    store<real>  SGSScalarSolveX ; 
+public:
+    gsi_scalar_backward_X() {
+       name_store("cl",cl) ;
+       name_store("cr",cr) ;
+       name_store("upper",upper) ;
+       name_store("lower",lower) ;
+       name_store("X_B",X_B) ;
+       name_store("X_L",X_L) ;
+       name_store("X_U",X_U) ;
+       name_store("SGSScalarDinv(X)",SGSScalarDinvX) ;
+       name_store("SGSScalarSolve(X)",SGSScalarSolveX) ;
+       name_store("SGSScalarSolve_forward(X)",SGSScalarSolveXf) ;
+       input("SGSScalarDinv(X),X_B,upper->X_U,lower->X_L,                  upper->cr->SGSScalarSolve(X),lower->cl->SGSScalarSolve_forward(X)") ;
+       output("SGSScalarSolve_forward(X)=SGSScalarSolve(X)") ;
+       set_relaxed_recursion() ;
+    }
+    void calculate(Entity e) { 
+    real t ,v ;
+    t = -X_B[e];
+    //sum_{k:U}(U_{ik}X_{k})--->t
+    for (const Entity *ui = upper[e].begin ();ui !=upper[e].end ();++ui )
+      t +=SGSScalarSolveX[cr[*ui]]* X_U[*ui];
+    //sum_{k:L}(L_{ik}Xf_{k})--->v
+    for (const Entity *li = lower[e].begin ();li !=lower[e].end ();++li )
+      t +=SGSScalarSolveX[cl[*li]]* X_L[*li];
+    v = -t ;
+    SGSScalarSolveX[e]= SGSScalarDinvX[e]* v ;
+  }    void compute(const Loci::sequence &seq) { 
+      do_loop(seq,this) ;
+    }
+} ;
+  register_rule<gsi_scalar_backward_X> register_gsi_scalar_backward_X ;
+
+
+  //The following is the backward sweep of gauss seidel
+  class gsi_scalar_forward_X_ : public Loci::pointwise_rule {
+    const_Map cl ; 
+    const_Map cr ; 
+    const_multiMap upper ; 
+    const_multiMap lower ; 
+    const_store<real>  X_B ; 
+    const_store<real>  X_L ; 
+    const_store<real>  X_U ; 
+    const_store<real>  SGSScalarDinvX ; 
+    const_store<real>  SGSScalarSolve_forwardXb ; 
+    store<real>  SGSScalarSolve_forwardX ; 
+public:
+    gsi_scalar_forward_X_() {
+       name_store("cl",cl) ;
+       name_store("cr",cr) ;
+       name_store("upper",upper) ;
+       name_store("lower",lower) ;
+       name_store("X_B",X_B) ;
+       name_store("X_L",X_L) ;
+       name_store("X_U",X_U) ;
+       name_store("SGSScalarDinv(X)",SGSScalarDinvX) ;
+       name_store("SGSScalarSolve_forward(X)",SGSScalarSolve_forwardX) ;
+       name_store("SGSScalarSolve_backward(X)",SGSScalarSolve_forwardXb) ;
+       input("SGSScalarDinv(X),X_B,upper->X_U,lower->X_L,                  upper->cr->SGSScalarSolve_backward(X),lower->cl->SGSScalarSolve_forward(X)") ;
+       output("SGSScalarSolve_backward(X)=SGSScalarSolve_forward(X)") ;
+       set_relaxed_recursion() ;
+    }
+    void calculate(Entity e) { 
+      real t ,v ;
+    t = -X_B[e];
+    //sum_{k:U}(U_{ik}X_{k})--->t
+    for (const Entity *ui = upper[e].begin ();ui !=upper[e].end ();++ui )
+      t +=SGSScalarSolve_forwardX[cr[*ui]]* X_U[*ui];
+    //sum_{k:L}(L_{ik}Xf_{k})--->v
+    for (const Entity *li = lower[e].begin ();li !=lower[e].end ();++li )
+      t +=SGSScalarSolve_forwardX[cl[*li]]* X_L[*li];
+    v = -t ;
+    SGSScalarSolve_forwardX[e]= SGSScalarDinvX[e]* v ;
+  }    void compute(const Loci::sequence &seq) { 
+      do_loop(seq,this) ;
+    }
+} ;
+  register_rule<gsi_scalar_forward_X_> register_gsi_scalar_forward_X_ ;
+
+
+
+#ifdef HASBUG
+  //The following is the forward sweep of gauss seidel
+  namespace {class file_linearSolverSGS012_2030m193 : public Loci::pointwise_rule {
+#line 461 "linearSolverSGS.loci"
+    Loci::const_Map L_cl_ ; 
+#line 461 "linearSolverSGS.loci"
+    Loci::const_Map L_cr_ ; 
+#line 461 "linearSolverSGS.loci"
+    Loci::const_multiMap L_upper_ ; 
+#line 461 "linearSolverSGS.loci"
+    Loci::const_multiMap L_lower_ ; 
+#line 461 "linearSolverSGS.loci"
+    Loci::const_store<real>  L_X_B_ ; 
+#line 461 "linearSolverSGS.loci"
+    Loci::const_store<real>  L_X_L_ ; 
+#line 461 "linearSolverSGS.loci"
+    Loci::const_store<real>  L_X_U_ ; 
+#line 461 "linearSolverSGS.loci"
+    Loci::const_store<real>  L_SGSScalarDinvX_ ; 
+#line 461 "linearSolverSGS.loci"
+    Loci::const_store<real>  L_SGSScalarSolveX_ ; 
+#line 461 "linearSolverSGS.loci"
+    Loci::store<real>  L_SGSScalarSolveX_ ; 
+#line 461 "linearSolverSGS.loci"
+public:
+#line 461 "linearSolverSGS.loci"
+    file_linearSolverSGS012_2030m193() {
+#line 461 "linearSolverSGS.loci"
+       name_store("cl",L_cl_) ;
+#line 461 "linearSolverSGS.loci"
+       store_info_id("cl",8) ;
+#line 461 "linearSolverSGS.loci"
+       name_store("cr",L_cr_) ;
+#line 461 "linearSolverSGS.loci"
+       store_info_id("cr",9) ;
+#line 461 "linearSolverSGS.loci"
+       name_store("upper",L_upper_) ;
+#line 461 "linearSolverSGS.loci"
+       store_info_id("upper",22) ;
+#line 461 "linearSolverSGS.loci"
+       name_store("lower",L_lower_) ;
+#line 461 "linearSolverSGS.loci"
+       store_info_id("lower",23) ;
+#line 461 "linearSolverSGS.loci"
+       name_store("X_B",L_X_B_) ;
+#line 461 "linearSolverSGS.loci"
+       store_info_id("X_B",18) ;
+#line 461 "linearSolverSGS.loci"
+       name_store("X_L",L_X_L_) ;
+#line 461 "linearSolverSGS.loci"
+       store_info_id("X_L",24) ;
+#line 461 "linearSolverSGS.loci"
+       name_store("X_U",L_X_U_) ;
+#line 461 "linearSolverSGS.loci"
+       store_info_id("X_U",25) ;
+#line 461 "linearSolverSGS.loci"
+       name_store("SGSScalarDinv(X)",L_SGSScalarDinvX_) ;
+#line 461 "linearSolverSGS.loci"
+       store_info_id("SGSScalarDinv(X)",17) ;
+#line 461 "linearSolverSGS.loci"
+       name_store("SGSScalarSolve(X)",L_SGSScalarSolveX_) ;
+#line 461 "linearSolverSGS.loci"
+       store_info_id("SGSScalarSolve(X)",19) ;
+#line 461 "linearSolverSGS.loci"
+       input("SGSScalarDinv(X),X_B,upper->X_U,lower->X_L,upper->cr->SGSScalarSolve(X),lower->cl->SGSScalarSolve_forward(X)") ;
+#line 461 "linearSolverSGS.loci"
+       output("SGSScalarSolve_forward(X)=SGSScalarSolve(X)") ;
+#line 461 "linearSolverSGS.loci"
+       set_relaxed_recursion() ;
+#line 461 "linearSolverSGS.loci"
+       setvardoc(docvar_linearSolverSGS_847) ;
+       set_file("linearSolverSGS.loci:461") ;
+#line 461 "linearSolverSGS.loci"
+    }
+#line 461 "linearSolverSGS.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 462 "linearSolverSGS.loci"
+    real t ,v ;
+    t = -L_X_B_[_e_];
+    //sum_{k:U}(U_{ik}X_{k})--->t
+    for (const Entity *ui = L_upper_[_e_].begin ();ui !=L_upper_[_e_].end ();++ui )
+      t +=L_SGSScalarSolveX_[L_cr_[*ui]]* L_X_U_[*ui];
+    //sum_{k:L}(L_{ik}Xf_{k})--->v
+    for (const Entity *li = L_lower_[_e_].begin ();li !=L_lower_[_e_].end ();++li )
+      t +=L_SGSScalarSolveX_[L_cl_[*li]]* L_X_L_[*li];
+    v = -t ;
+    L_SGSScalarSolveX_[_e_]= L_SGSScalarDinvX_[_e_]* v ;
+  }    void compute(const Loci::sequence &seq) { 
+#line 472 "linearSolverSGS.loci"
+      do_loop(seq,this) ;
+#line 472 "linearSolverSGS.loci"
+    }
+#line 472 "linearSolverSGS.loci"
+} ;
+#line 472 "linearSolverSGS.loci"
+Loci::register_rule<file_linearSolverSGS012_2030m193> register_file_linearSolverSGS012_2030m193 ;
+#line 472 "linearSolverSGS.loci"
+}
+#line 472 "linearSolverSGS.loci"
+
+
+  //The following is the backward sweep of gauss seidel
+  namespace {class file_linearSolverSGS013_2030m214 : public Loci::pointwise_rule {
+#line 477 "linearSolverSGS.loci"
+    Loci::const_Map L_cl_ ; 
+#line 477 "linearSolverSGS.loci"
+    Loci::const_Map L_cr_ ; 
+#line 477 "linearSolverSGS.loci"
+    Loci::const_multiMap L_upper_ ; 
+#line 477 "linearSolverSGS.loci"
+    Loci::const_multiMap L_lower_ ; 
+#line 477 "linearSolverSGS.loci"
+    Loci::const_store<real>  L_X_B_ ; 
+#line 477 "linearSolverSGS.loci"
+    Loci::const_store<real>  L_X_L_ ; 
+#line 477 "linearSolverSGS.loci"
+    Loci::const_store<real>  L_X_U_ ; 
+#line 477 "linearSolverSGS.loci"
+    Loci::const_store<real>  L_SGSScalarDinvX_ ; 
+#line 477 "linearSolverSGS.loci"
+    Loci::const_store<real>  L_SGSScalarSolve_forwardX_ ; 
+#line 477 "linearSolverSGS.loci"
+    Loci::store<real>  L_SGSScalarSolve_forwardX_ ; 
+#line 477 "linearSolverSGS.loci"
+public:
+#line 477 "linearSolverSGS.loci"
+    file_linearSolverSGS013_2030m214() {
+#line 477 "linearSolverSGS.loci"
+       name_store("cl",L_cl_) ;
+#line 477 "linearSolverSGS.loci"
+       store_info_id("cl",8) ;
+#line 477 "linearSolverSGS.loci"
+       name_store("cr",L_cr_) ;
+#line 477 "linearSolverSGS.loci"
+       store_info_id("cr",9) ;
+#line 477 "linearSolverSGS.loci"
+       name_store("upper",L_upper_) ;
+#line 477 "linearSolverSGS.loci"
+       store_info_id("upper",22) ;
+#line 477 "linearSolverSGS.loci"
+       name_store("lower",L_lower_) ;
+#line 477 "linearSolverSGS.loci"
+       store_info_id("lower",23) ;
+#line 477 "linearSolverSGS.loci"
+       name_store("X_B",L_X_B_) ;
+#line 477 "linearSolverSGS.loci"
+       store_info_id("X_B",18) ;
+#line 477 "linearSolverSGS.loci"
+       name_store("X_L",L_X_L_) ;
+#line 477 "linearSolverSGS.loci"
+       store_info_id("X_L",24) ;
+#line 477 "linearSolverSGS.loci"
+       name_store("X_U",L_X_U_) ;
+#line 477 "linearSolverSGS.loci"
+       store_info_id("X_U",25) ;
+#line 477 "linearSolverSGS.loci"
+       name_store("SGSScalarDinv(X)",L_SGSScalarDinvX_) ;
+#line 477 "linearSolverSGS.loci"
+       store_info_id("SGSScalarDinv(X)",17) ;
+#line 477 "linearSolverSGS.loci"
+       name_store("SGSScalarSolve_forward(X)",L_SGSScalarSolve_forwardX_) ;
+#line 477 "linearSolverSGS.loci"
+       store_info_id("SGSScalarSolve_forward(X)",20) ;
+#line 477 "linearSolverSGS.loci"
+       input("SGSScalarDinv(X),X_B,upper->X_U,lower->X_L,upper->cr->SGSScalarSolve_backward(X),lower->cl->SGSScalarSolve_forward(X)") ;
+#line 477 "linearSolverSGS.loci"
+       output("SGSScalarSolve_backward(X)=SGSScalarSolve_forward(X)") ;
+#line 477 "linearSolverSGS.loci"
+       set_relaxed_recursion() ;
+#line 477 "linearSolverSGS.loci"
+       setvardoc(docvar_linearSolverSGS_847) ;
+       set_file("linearSolverSGS.loci:477") ;
+#line 477 "linearSolverSGS.loci"
+    }
+#line 477 "linearSolverSGS.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 477 "linearSolverSGS.loci"
+a real t ,v ;
+    t = -L_X_B_[_e_];
+    //sum_{k:U}(U_{ik}X_{k})--->t
+    for (const Entity *ui = L_upper_[_e_].begin ();ui !=L_upper_[_e_].end ();++ui )
+      t +=L_SGSScalarSolve_forwardX_[L_cr_[*ui]]* L_X_U_[*ui];
+    //sum_{k:L}(L_{ik}Xf_{k})--->v
+    for (const Entity *li = L_lower_[_e_].begin ();li !=L_lower_[_e_].end ();++li )
+      t +=L_SGSScalarSolve_forwardX_[L_cl_[*li]]* L_X_L_[*li];
+    v = -t ;
+    L_SGSScalarSolve_forwardX_[_e_]= L_SGSScalarDinvX_[_e_]* v ;
+  }    void compute(const Loci::sequence &seq) { 
+#line 488 "linearSolverSGS.loci"
+      do_loop(seq,this) ;
+#line 488 "linearSolverSGS.loci"
+    }
+#line 488 "linearSolverSGS.loci"
+} ;
+#line 488 "linearSolverSGS.loci"
+Loci::register_rule<file_linearSolverSGS013_2030m214> register_file_linearSolverSGS013_2030m214 ;
+#line 488 "linearSolverSGS.loci"
+}
+#line 488 "linearSolverSGS.loci"
+
+#endif
+
+  //advance rule in gauss seidel iteration
+  namespace {class file_linearSolverSGS014_2030m235 : public Loci::pointwise_rule {
+#line 494 "linearSolverSGS.loci"
+    Loci::store<real>  L_SGSScalarSolve_backwardX_igs__ ; 
+#line 494 "linearSolverSGS.loci"
+public:
+#line 494 "linearSolverSGS.loci"
+    file_linearSolverSGS014_2030m235() {
+#line 494 "linearSolverSGS.loci"
+       name_store("SGSScalarSolve_backward(X){igs}",L_SGSScalarSolve_backwardX_igs__) ;
+#line 494 "linearSolverSGS.loci"
+       store_info_id("SGSScalarSolve_backward(X){igs}",21) ;
+#line 494 "linearSolverSGS.loci"
+       input("SGSScalarSolve_backward(X){igs}") ;
+#line 494 "linearSolverSGS.loci"
+       output("SGSScalarSolve(X){igs+1}=SGSScalarSolve_backward(X){igs}") ;
+#line 494 "linearSolverSGS.loci"
+       store_info_id("geom_cells",4) ;
+#line 494 "linearSolverSGS.loci"
+       constraint("geom_cells") ;
+#line 494 "linearSolverSGS.loci"
+       setvardoc(docvar_linearSolverSGS_847) ;
+       set_file("linearSolverSGS.loci:494") ;
+#line 494 "linearSolverSGS.loci"
+    }
+#line 494 "linearSolverSGS.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 494 "linearSolverSGS.loci"
+}    void compute(const Loci::sequence &seq) { 
+#line 494 "linearSolverSGS.loci"
+      do_loop(seq,this) ;
+#line 494 "linearSolverSGS.loci"
+    }
+#line 494 "linearSolverSGS.loci"
+} ;
+#line 494 "linearSolverSGS.loci"
+Loci::register_rule<file_linearSolverSGS014_2030m235> register_file_linearSolverSGS014_2030m235 ;
+#line 494 "linearSolverSGS.loci"
+}
+#line 494 "linearSolverSGS.loci"
+
+
+  //collapse rule for gauss seidel iteration
+  namespace {class file_linearSolverSGS015_2030m245 : public Loci::pointwise_rule {
+#line 500 "linearSolverSGS.loci"
+    Loci::store<real>  L_SGSScalarSolveX_igs__ ; 
+#line 500 "linearSolverSGS.loci"
+public:
+#line 500 "linearSolverSGS.loci"
+    file_linearSolverSGS015_2030m245() {
+#line 500 "linearSolverSGS.loci"
+       name_store("SGSScalarSolve(X){igs}",L_SGSScalarSolveX_igs__) ;
+#line 500 "linearSolverSGS.loci"
+       store_info_id("SGSScalarSolve(X){igs}",19) ;
+#line 500 "linearSolverSGS.loci"
+       input("SGSScalarSolve(X){igs}") ;
+#line 500 "linearSolverSGS.loci"
+       output("SGSScalarSolve(X)=SGSScalarSolve(X){igs}") ;
+#line 500 "linearSolverSGS.loci"
+       store_info_id("geom_cells{igs}",4) ;
+#line 500 "linearSolverSGS.loci"
+       constraint("geom_cells{igs}") ;
+#line 500 "linearSolverSGS.loci"
+       conditional("gseidel_finished(X){igs}") ;
+#line 500 "linearSolverSGS.loci"
+       setvardoc(docvar_linearSolverSGS_847) ;
+       set_file("linearSolverSGS.loci:500") ;
+#line 500 "linearSolverSGS.loci"
+    }
+#line 500 "linearSolverSGS.loci"
+    void calculate(Loci::Entity _e_) { 
+#line 500 "linearSolverSGS.loci"
+}    void compute(const Loci::sequence &seq) { 
+#line 500 "linearSolverSGS.loci"
+      do_loop(seq,this) ;
+#line 500 "linearSolverSGS.loci"
+    }
+#line 500 "linearSolverSGS.loci"
+} ;
+#line 500 "linearSolverSGS.loci"
+Loci::register_rule<file_linearSolverSGS015_2030m245> register_file_linearSolverSGS015_2030m245 ;
+#line 500 "linearSolverSGS.loci"
+}
+#line 500 "linearSolverSGS.loci"
+
+
+}
+
+const char *docvar_linearSolverSGS_847[] = {
+"flowPsi.lh:374\000gauss_seidel_iter\000param<int> \000",
+"linearSolverSGS.loci:29\000X_D\000storeMat<real_fj> \000",
+"linearSolverSGS.loci:36\000SGSDinv(X)\000storeMat<real_fj> \000",
+"linearSolverSGS.loci:37\000X_pivot\000storeVec<pivot_type> \000",
+"FVM.lh:23\000geom_cells\000Constraint\000Geometric Cells of the Mesh (not including ghost cells) ",
+"flowPsi.lh:309\000fluidLinearSolverSGS\000Constraint\000",
+"linearSolverSGS.loci:28\000X_B\000storeVec<real_fj> \000",
+"linearSolverSGS.loci:32\000SGSBlockedSSolve(X)\000storeVec<real> \000",
+"FVM.lh:29\000cl\000Map\000Map from faces to left cells ",
+"FVM.lh:32\000cr\000Map\000Map from faces to right cells ",
+"FVM.lh:41\000pmap\000Map\000Mapping from periodic boundary faces to periodic face pair ",
+"FVM.lh:254\000periodicFaces\000Constraint\000All boundary faces that are participating in periodic boundary conditions ",
+"linearSolverSGS.loci:33\000SGSBlockedSSolve_forward(X)\000storeVec<real> \000",
+"linearSolverSGS.loci:34\000SGSBlockedSSolve_backward(X)\000storeVec<real> \000",
+"linearSolverSGS.loci:35\000gseidel_finished(X)\000param<bool> \000",
+"linearSolverSGS.loci:312\000$igs\000param<int> \000",
+"linearSolverSGS.loci:335\000X_D\000store<real> \000",
+"linearSolverSGS.loci:338\000SGSScalarDinv(X)\000store<real> \000",
+"linearSolverSGS.loci:334\000X_B\000store<real> \000",
+"linearSolverSGS.loci:339\000SGSScalarSolve(X)\000store<real> \000",
+"linearSolverSGS.loci:340\000SGSScalarSolve_forward(X)\000store<real> \000",
+"linearSolverSGS.loci:341\000SGSScalarSolve_backward(X)\000store<real> \000",
+"FVM.lh:50\000upper\000multiMap\000Mapping from cell to faces that form upper matrix entries ",
+"FVM.lh:53\000lower\000multiMap\000Mapping from cell to faces that form lower matrix entries ",
+"linearSolverSGS.loci:336\000X_L\000store<real> \000",
+"linearSolverSGS.loci:337\000X_U\000store<real> \000",
+"\000\000\000" } ;
+
+//DEPEND: ./include/flowPsi.lh /home/merdemli/local/loci/include/FVM.lh

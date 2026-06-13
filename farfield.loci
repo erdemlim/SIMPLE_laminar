@@ -1,0 +1,142 @@
+#include <Loci.h>
+#include <math.h>  
+#include <iostream>
+
+$include "FVM.lh"
+$include "lid.lh"
+
+
+
+
+// Find the distanceVector from facecenter to cellcenter for wall boundary cells
+$rule pointwise(distanceVec<-ci->cellcenter, facecenter),constraint(farfield_BC) {
+  $distanceVec = $facecenter-$ci->$cellcenter ;
+  //std::cout << "printing distanceVec for wallBC" << std::endl;
+  //std::cout << $distanceVec << std::endl;
+}
+
+$rule pointwise(boundaryNormalDistanceMag<-area, distanceVec),constraint(farfield_BC) {
+  //const vect3d boundaryNormalDistanceVec = dot($distanceVec,$area.n)*$area.n ;
+  $boundaryNormalDistanceMag = dot($distanceVec,$area.n) ;
+  //std::cout << "printing boundaryNormalDistanceMag for symmetryBC" << std::endl;
+  //std::cout << $boundaryNormalDistanceMag << std::endl;
+  // page 605 eqn 15.120
+}
+
+$rule pointwise(Ef<-area, distanceVec,boundaryNormalDistanceMag), constraint(farfield_BC) {
+  // Surface vector along CF direction
+  const vect3d boundary_distunitvec = $distanceVec/norm($distanceVec) ;
+  $Ef = boundary_distunitvec*(norm($area.sada*$area.n)/dot(boundary_distunitvec,$area.sada*$area.n)) ;
+  //std::cout << $area.n << std::endl;
+  //std::cout << $Ef << std::endl;
+  // page 244 eqn 8.70, over-relaxed approach
+}
+
+$rule pointwise(p_f<-ref->pOut),constraint(farfield_BC) {
+  $p_f = $ref->$pOut ;
+  //std::cout << "printing Velocity_f" << std::endl;
+  //std::cout << $Velocity_f << std::endl;
+}
+
+// Find its magnitude
+$rule pointwise(EfMag<-Ef), constraint(farfield_BC) {
+  $EfMag = norm($Ef);
+  // std::cout << "Efmag" << std::endl;
+  // std::cout << $EfMag << std::endl;
+}
+
+// Extract Uwall from boundary condition options
+
+$rule pointwise(Velocity_f<-ref->Uin),constraint(farfield_BC) {
+  $Velocity_f = $ref->$Uin ;
+  //std::cout << "printing Velocity_f" << std::endl;
+  //std::cout << $Velocity_f << std::endl;
+}
+
+$rule pointwise(uVel_f<-Velocity_f),constraint(farfield_BC) {
+  $uVel_f = $Velocity_f[0] ;
+  //std::cout << "printing uVel_f" << std::endl;
+  //std::cout << $uVel_f << std::endl;
+}
+$rule pointwise(vVel_f<-Velocity_f),constraint(farfield_BC) {
+  $vVel_f = $Velocity_f[1] ;
+  //std::cout << "printing vVel_f" << std::endl;
+  //std::cout << $vVel_f << std::endl;
+}
+$rule pointwise(wVel_f<-Velocity_f),constraint(farfield_BC) {
+  $wVel_f = $Velocity_f[2] ;
+  //std::cout << "printing wVel_f" << std::endl;
+  //std::cout << $wVel_f << std::endl;
+}
+
+
+
+// Farfield treated as a specified-velocity boundary for momentum (like velInlet):
+// implicit diffusion contribution to the diagonal
+$rule pointwise(farfield::fluxCfVisc<-mu,EfMag,boundaryNormalDistanceMag), constraint(farfield_BC) {
+  $fluxCfVisc = vect3d($mu*$EfMag/$boundaryNormalDistanceMag, $mu*$EfMag/$boundaryNormalDistanceMag, $mu*$EfMag/$boundaryNormalDistanceMag) ;
+}
+
+// Boundary "neighbor" coefficient (Darwish FluxFf, Eqn 15.72): a_b = -max(-mdot,0) - mu*Ef/dperp.
+// Its value is moved to the RHS via fluxVf = -a_b*v_b (Eqn 15.136).
+$rule pointwise(fluxFf_vel<-mdotf,mu,EfMag,boundaryNormalDistanceMag), constraint(farfield_BC) {
+  $fluxFf_vel = -std::max(-$mdotf, 0.0) - $mu*$EfMag/$boundaryNormalDistanceMag;
+}
+
+// convection contribution to the diagonal (outflow part), FluxCf = max(mdot,0)
+$rule apply(ci->sumFluxCfFlux<-mdotf)[Loci::Summation],
+  constraint(farfield_BC) {
+  const vect3d pos_fluxCf = vect3d (std::max($mdotf, 0.0), std::max($mdotf, 0.0), std::max($mdotf, 0.0));
+   join($ci->$sumFluxCfFlux, pos_fluxCf) ;
+}
+
+
+
+ 
+// Specified velocity => mass flow correction is zero, so p' has a zero
+// normal gradient at this boundary (consistent with mdotfPrime = 0 below).
+  $rule pointwise(pPrime_f<-ci->pPrime),constraint(farfield_BC) {
+    $pPrime_f= $ci->$pPrime;
+ }
+
+
+
+ $rule pointwise(fluxVf<-fluxFf_vel, Velocity_f), constraint(farfield_BC) {
+  $fluxVf = -$fluxFf_vel*$Velocity_f;
+  
+     // std::cout << "printing fluxVf" << std::endl;
+   // std::cout << $fluxVf << std::endl;
+}
+$rule pointwise(farfield::shear2ndPart), constraint(farfield_BC) {
+  $shear2ndPart = vect3d(0.,0.,0.) ;
+}
+
+
+// *** for rhiechow ***
+$rule pointwise(mdotfStar<-Velocity_f, area,density), constraint(farfield_BC) {
+  $mdotfStar = $density*dot($Velocity_f,$area.n)*$area.sada;
+}
+
+
+// *** for pressure correction equation ***
+// Set a_F_p to "0" for boundary faces
+// $rule pointwise(farfield::a_F_p), constraint(farfield_BC) {
+  // $a_F_p = 0.0 ;
+// }
+
+
+
+// *** for correction ***
+// Since all boundaries are wall no correction is needed there for mdot, which is zero at the walls
+$rule pointwise(farfield::mdotfPrime), constraint(farfield_BC) {
+  $mdotfPrime = 0.0;
+}
+
+
+// Specified velocity boundary: mdot is known, its correction is zero, so the
+// boundary face contributes NO coefficient to the pressure correction equation.
+// (The previous a_F_p_out contribution was inconsistent with mdotfPrime = 0.)
+
+$rule pointwise(farfield::DfGradPprimef), constraint(farfield_BC) {
+  $DfGradPprimef = vect3d(0.,0.,0.);
+}

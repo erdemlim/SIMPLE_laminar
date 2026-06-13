@@ -1,0 +1,141 @@
+#include <Loci.h>
+#include <math.h>  
+#include <iostream>
+
+$include "FVM.lh"
+$include "lid.lh"
+
+
+
+
+// Find the distanceVector from facecenter to cellcenter for wall boundary cells
+$rule pointwise(distanceVec<-ci->cellcenter, facecenter),constraint(velInlet_BC) {
+  $distanceVec = $facecenter-$ci->$cellcenter ;
+  //std::cout << "printing distanceVec for wallBC" << std::endl;
+  //std::cout << $distanceVec << std::endl;
+}
+
+$rule pointwise(boundaryNormalDistanceMag<-area, distanceVec),constraint(velInlet_BC) {
+  //const vect3d boundaryNormalDistanceVec = dot($distanceVec,$area.n)*$area.n ;
+  $boundaryNormalDistanceMag = dot($distanceVec,$area.n) ;
+  //std::cout << "printing boundaryNormalDistanceMag for symmetryBC" << std::endl;
+  //std::cout << $boundaryNormalDistanceMag << std::endl;
+  // page 605 eqn 15.120
+}
+
+$rule pointwise(Ef<-area, distanceVec,boundaryNormalDistanceMag), constraint(velInlet_BC) {
+  // Surface vector along CF direction
+  const vect3d boundary_distunitvec = $distanceVec/norm($distanceVec) ;
+  $Ef = boundary_distunitvec*(norm($area.sada*$area.n)/dot(boundary_distunitvec,$area.sada*$area.n)) ;
+  //std::cout << $area.n << std::endl;
+  //std::cout << $Ef << std::endl;
+  // page 244 eqn 8.70, over-relaxed approach
+}
+$rule pointwise(p_f{n+1}<-ci->p{n+1}, ci->grads(p){n}, ci->cellcenter, facecenter), constraint(velInlet_BC) {
+  const vect3d distVector = $facecenter - $ci->$cellcenter ;
+  $p_f{n+1} = $ci->$p{n+1} + dot($ci->$grads(p){n},distVector) ;  // Eqn 15.127 page 607
+}
+
+// Find its magnitude
+$rule pointwise(EfMag<-Ef), constraint(velInlet_BC) {
+  $EfMag = norm($Ef);
+  // std::cout << "Efmag" << std::endl;
+  // std::cout << $EfMag << std::endl;
+}
+
+// Extract Uwall from boundary condition options
+$rule pointwise(Uin<-BC_options),constraint(Uin_BCoption) {
+  $BC_options.getOptionUnits("Uin","m/s",$Uin) ;
+  //std::cout << "printing Uwall" << std::endl;
+  //std::cout << $Uwall << std::endl;
+}
+
+$rule pointwise(Velocity_f<-ref->Uin),constraint(velInlet_BC) {
+  $Velocity_f = $ref->$Uin ;
+  //std::cout << "printing Velocity_f" << std::endl;
+  //std::cout << $Velocity_f << std::endl;
+}
+
+$rule pointwise(uVel_f<-Velocity_f),constraint(velInlet_BC) {
+  $uVel_f = $Velocity_f[0] ;
+  //std::cout << "printing uVel_f" << std::endl;
+  //std::cout << $uVel_f << std::endl;
+}
+$rule pointwise(vVel_f<-Velocity_f),constraint(velInlet_BC) {
+  $vVel_f = $Velocity_f[1] ;
+  //std::cout << "printing vVel_f" << std::endl;
+  //std::cout << $vVel_f << std::endl;
+}
+$rule pointwise(wVel_f<-Velocity_f),constraint(velInlet_BC) {
+  $wVel_f = $Velocity_f[2] ;
+  //std::cout << "printing wVel_f" << std::endl;
+  //std::cout << $wVel_f << std::endl;
+}
+
+
+
+$rule pointwise(fluxCfVisc<-mu,EfMag,boundaryNormalDistanceMag), constraint(velInlet_BC) {
+  $fluxCfVisc = vect3d($mu*$EfMag/$boundaryNormalDistanceMag, $mu*$EfMag/$boundaryNormalDistanceMag, $mu*$EfMag/$boundaryNormalDistanceMag) ;
+    
+}
+
+
+// For wall boundary faces FluxFf is zero (Page 606). So set it zero for the boundary faces 
+// and prioritize them by priority specification
+$rule pointwise(fluxFf_vel<-mdotf,mu,EfMag,boundaryNormalDistanceMag), constraint(velInlet_BC) {
+  $fluxFf_vel = -std::max(-$mdotf, 0.0) - $mu*$EfMag/$boundaryNormalDistanceMag;
+  // std::cout << "printing fluxFfLeft" << std::endl;
+  // std::cout << $fluxFfLeft << std::endl;
+}
+
+$rule apply(ci->sumFluxCfFlux<-mdotf)[Loci::Summation],
+  constraint(velInlet_BC) {
+  const vect3d pos_fluxCf = vect3d (std::max($mdotf, 0.0), std::max($mdotf, 0.0), std::max($mdotf, 0.0));
+   join($ci->$sumFluxCfFlux, pos_fluxCf) ;
+
+}
+
+
+ 
+  $rule pointwise(pPrime_f<-ci->pPrime, ci->Velocity, density, ci->cellcenter, facecenter),constraint(velInlet_BC) {
+   const vect3d distVector = $facecenter - $ci->$cellcenter ;
+     $pPrime_f= $ci->$pPrime + 0*0.5*$density*dot($ci->$Velocity,distVector)*dot($ci->$Velocity,distVector);
+    //$pPrime_f= 0.0;
+ }
+// Extrapolate the unknown boundary pressure p_f and calculate the contribution of the boundary
+// (Darwish - Page 606-607, last term of 15.124, 15.125, 15.126 for bc)
+// boundary pressure is calculated using eqn 15.127 at page 607 (truncated Taylor Series)
+
+
+
+ $rule pointwise(fluxVf<-fluxFf_vel, Velocity_f), constraint(velInlet_BC) {
+  $fluxVf = -$fluxFf_vel*$Velocity_f;
+  
+     // std::cout << "printing fluxVf" << std::endl;
+   // std::cout << $fluxVf << std::endl;
+}
+$rule pointwise(shear2ndPart), constraint(velInlet_BC) {
+  $shear2ndPart = vect3d(0.,0.,0.) ;
+}
+
+
+// *** for rhiechow ***
+$rule pointwise(mdotfStar<-Velocity_f, area,density), constraint(velInlet_BC) {
+  $mdotfStar = $density*dot($Velocity_f,$area.n)*$area.sada;
+}
+
+
+// *** for pressure correction equation ***
+// Specified velocity inlet: the mass flow rate is known, so its correction is zero
+// (mdotfPrime = 0) and the boundary face contributes NO coefficient to the
+// pressure correction equation (p' has a zero normal gradient here).
+// (The previous a_F_p_out contribution was inconsistent with mdotfPrime = 0.)
+
+// *** for correction ***
+$rule pointwise(mdotfPrime), constraint(velInlet_BC) {
+  $mdotfPrime = 0.0;
+}
+
+$rule pointwise(DfGradPprimef), constraint(velInlet_BC) {
+  $DfGradPprimef = vect3d(0.,0.,0.);
+}

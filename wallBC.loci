@@ -1,0 +1,130 @@
+#include <Loci.h>
+#include <math.h>  
+#include <iostream>
+
+$include "FVM.lh"
+$include "lid.lh"
+
+
+
+
+// Find the distanceVector from facecenter to cellcenter for wall boundary cells
+$rule pointwise(distanceVec<-ci->cellcenter, facecenter),constraint(viscousWall_BC) {
+  $distanceVec = $facecenter-$ci->$cellcenter ;
+}
+
+$rule pointwise(boundaryNormalDistanceMag<-area, distanceVec),constraint(viscousWall_BC) {
+  $boundaryNormalDistanceMag = dot($distanceVec,$area.n) ;
+}
+
+
+// Extract Uwall from boundary condition options
+$rule pointwise(Uwall<-BC_options),constraint(Uwall_BCoption) {
+  $BC_options.getOptionUnits("Uwall","m/s",$Uwall) ;
+}
+
+$rule pointwise(Velocity_f<-ref->Uwall),constraint(viscousWall_BC) {
+  $Velocity_f = $ref->$Uwall ;
+}
+
+$rule pointwise(uVel_f<-Velocity_f),constraint(viscousWall_BC) {
+  $uVel_f = $Velocity_f[0] ;
+}
+$rule pointwise(vVel_f<-Velocity_f),constraint(viscousWall_BC) {
+  $vVel_f = $Velocity_f[1] ;
+}
+$rule pointwise(wVel_f<-Velocity_f),constraint(viscousWall_BC) {
+  $wVel_f = $Velocity_f[2] ;
+}
+
+
+// *** For Momentum Eqn ***
+$rule pointwise(fluxCfVisc<-area, boundaryNormalDistanceMag, mu), constraint(viscousWall_BC) {
+		 real coef = $mu*$area.sada/$boundaryNormalDistanceMag ;
+		vect3d visc_flux1;
+		visc_flux1[0] = coef*(1.0-($area.n[0])*($area.n[0]));
+	visc_flux1[1] = coef*(1.0-($area.n[1])*($area.n[1])) ;
+	visc_flux1[2] = coef*(1.0-($area.n[2])*($area.n[2]));
+	vect3d visc_flux2;
+  visc_flux2 [0] = coef*(($area.n[0])*($area.n[1])) ;
+  visc_flux2 [1] = coef*(($area.n[0])*($area.n[2])) ;
+  visc_flux2 [2] = coef*(($area.n[1])*($area.n[2])) ;    
+/*
+  $fluxCfVisc[0] = 2*$mu;
+  $fluxCfVisc[1] = 2*$mu;
+  $fluxCfVisc[2] = 2*$mu;
+*/
+	$fluxCfVisc=visc_flux1-0*visc_flux2;
+    
+}
+
+
+
+$rule pointwise(fluxCf), constraint(viscousWall_BC) {
+  $fluxCf = vect3d(0.0, 0.0, 0.0) ;
+    
+}
+
+// No-slip wall boundary source term (Darwish Eqns 15.124-15.126):
+// b_C^u += mu*Sb/dperp * [ u_b*(1-nx^2) + (v_C-v_b)*nx*ny + (w_C-w_b)*nx*nz ]   (and cyclic for v,w)
+// The pressure force -p_b*Sb is NOT added here: it enters b through rhsMomP = vol*grads(p),
+// since the boundary face value p_f (Eqn 15.127) participates in the cell pressure gradient.
+$rule pointwise(fluxVf<-area, boundaryNormalDistanceMag, mu, Velocity_f, ci->Velocity), constraint(viscousWall_BC) {
+  const real coef = $mu*$area.sada/$boundaryNormalDistanceMag ;
+  const real nx = $area.n[0], ny = $area.n[1], nz = $area.n[2] ;
+  const real u_dir = coef*( $Velocity_f[0]*(1.0-nx*nx)
+                          + ($ci->$Velocity[1]-$Velocity_f[1])*nx*ny
+                          + ($ci->$Velocity[2]-$Velocity_f[2])*nx*nz ) ;
+  const real v_dir = coef*( ($ci->$Velocity[0]-$Velocity_f[0])*nx*ny
+                          + $Velocity_f[1]*(1.0-ny*ny)
+                          + ($ci->$Velocity[2]-$Velocity_f[2])*ny*nz ) ;
+  const real w_dir = coef*( ($ci->$Velocity[0]-$Velocity_f[0])*nx*nz
+                          + ($ci->$Velocity[1]-$Velocity_f[1])*ny*nz
+                          + $Velocity_f[2]*(1.0-nz*nz) ) ;
+  $fluxVf = vect3d(u_dir,v_dir,w_dir) ;
+}
+
+
+
+// $rule pointwise(p_f<-ci->p, ci->grads(p){n-1}, ci->cellcenter, facecenter), constraint(viscousWall_BC), conditional($nGreaterThanZero) {
+//   const vect3d distVector = $facecenter - $ci->$cellcenter ;
+//   $p_f = $ci->$p + dot($ci->$grads(p){n-1},distVector) ;  // Eqn 15.127 page 607
+// }
+
+ $rule singleton(nGreaterThanZero<-$n) {
+   $nGreaterThanZero = ($$n > 0) ;
+ }
+
+ 
+ // Boundary pressure extrapolated by truncated Taylor series (Eqn 15.127 page 607)
+ $rule pointwise(p_f{n+1}<-ci->p{n+1}, ci->grads(p){n}, ci->cellcenter, facecenter), constraint(viscousWall_BC) {
+  const vect3d distVector = $facecenter - $ci->$cellcenter ;
+   $p_f{n+1} = $ci->$p{n+1} + dot($ci->$grads(p){n},distVector) ;
+}
+
+ 
+
+ $rule pointwise(pPrime_f<-ci->pPrime, ci->Velocity, density, ci->cellcenter, facecenter),constraint(viscousWall_BC) {
+     $pPrime_f= $ci->$pPrime;
+ }
+
+
+
+// *** for rhiechow ***
+$rule pointwise(mdotfStar), constraint(viscousWall_BC) {
+  $mdotfStar = 0.0;
+}
+
+$rule pointwise(shear2ndPart), constraint(viscousWall_BC) {
+  $shear2ndPart = vect3d(0.,0.,0.) ;
+}
+
+// *** for correction ***
+// Since all boundaries are wall no correction is needed there for mdot, which is zero at the walls
+$rule pointwise(mdotfPrime), constraint(viscousWall_BC) {
+  $mdotfPrime = 0.0;
+}
+
+$rule pointwise(DfGradPprimef), constraint(viscousWall_BC) {
+  $DfGradPprimef = vect3d(0.,0.,0.);
+}

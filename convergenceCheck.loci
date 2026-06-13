@@ -1,0 +1,203 @@
+#include <Loci.h>
+#include "flowTypes.h"
+#include <cmath>
+#include <iostream>
+$include "FVM.lh"
+$include "lid.lh"
+
+$rule unit(count),constraint(UNIVERSE) {
+  $count = 0. ;
+}
+
+
+$rule apply(count<-vol)[Loci::Summation] {
+  join($count, $vol) ;
+}
+
+$rule unit(sumResMom),constraint(UNIVERSE) {
+  $sumResMom[0] = 0. ;
+  $sumResMom[1] = 0. ;
+  $sumResMom[2] = 0. ;
+}
+
+
+
+  $type dfluid storeVec<real> ;
+$rule apply(sumResMom<-vol,VelocityPrime,p)[Loci::Summation] {
+	real sumResUNom = std::abs($VelocityPrime[0])*$vol;
+	
+	real sumResVNom = std::abs($VelocityPrime[1])*$vol;
+	
+	real sumResWNom = std::abs($VelocityPrime[2])*$vol;
+	
+	
+  join($sumResMom, vect3d(sumResUNom,sumResVNom,sumResWNom)) ;
+}
+
+//--------------------------------------------------------------------
+// True momentum equation imbalance: r_C = b_C - a_C*u_C - sum_F a_F*u_F
+// computed with the UNrelaxed coefficients and the current Velocity.
+// The pseudo-time terms rho*vol/dt in a_C and b cancel exactly, so this
+// measures the steady-state imbalance independent of dt and uRelax.
+// (The old VelocityPrime-based residual measured "iteration slowed down",
+// not "equations satisfied" -- on fine meshes it stops too early.)
+$type momImbalance store<vect3d> ;
+$type momImbOffDiag store<vect3d> ;
+
+// PARALLEL-CORRECTNESS: same pitfall as sumFluxCf (see momentum.loci).  The
+// per-cell diagonal part (b - a_C*u) must NOT go in the unit of this Summation
+// reduction: at a partition-boundary cell the value is reduced on owner AND
+// clone and summed, double-counting the per-cell baseline -> a spurious seam in
+// the residual ONLY (the solution fields uVel/vVel/bCp are correct).  So the
+// reduction accumulates ONLY the off-diagonal neighbour terms (unit=0); the
+// per-cell diagonal part is added pointwise afterwards (once per owned cell).
+$rule unit(momImbOffDiag),constraint(geom_cells) {
+  $momImbOffDiag = vect3d(0.,0.,0.) ;
+}
+// Interior-face neighbour contributions: in row cl the coefficient of u_cr
+// is fluxFfRight, in row cr the coefficient of u_cl is fluxFfLeft.
+$rule apply(cl->momImbOffDiag<-fluxFfRight,cr->Velocity)[Loci::Summation],
+  constraint((cl,cr)->geom_cells) {
+  join($cl->$momImbOffDiag, -1.*$fluxFfRight*($cr->$Velocity)) ;
+}
+$rule apply(cr->momImbOffDiag<-fluxFfLeft,cl->Velocity)[Loci::Summation],
+  constraint((cl,cr)->geom_cells) {
+  join($cr->$momImbOffDiag, -1.*$fluxFfLeft*($cl->$Velocity)) ;
+}
+// Per-cell diagonal part (b - a_C*u) added pointwise -> computed once per owned
+// cell, communicated as a value, never doubled.  (rho*V/dt cancels b vs a_C*u.)
+$rule pointwise(momImbalance<-momImbOffDiag,b,sumFluxCf,Velocity),constraint(geom_cells) {
+  $momImbalance = vect3d($b[0] - $sumFluxCf[0]*$Velocity[0],
+                         $b[1] - $sumFluxCf[1]*$Velocity[1],
+                         $b[2] - $sumFluxCf[2]*$Velocity[2]) + $momImbOffDiag ;
+}
+
+// L1 norm of the imbalance over all cells
+$type sumImbMom param<vect3d> ;
+$rule unit(sumImbMom),constraint(UNIVERSE) {
+  $sumImbMom = vect3d(0.,0.,0.) ;
+}
+$rule apply(sumImbMom<-momImbalance)[Loci::Summation] {
+  join($sumImbMom, vect3d(std::abs($momImbalance[0]),
+                          std::abs($momImbalance[1]),
+                          std::abs($momImbalance[2]))) ;
+}
+
+// Normalization: momentum flux of all PRESCRIBED driving velocities,
+// rho*|U_bc|^2*A, summed over moving walls, velocity inlets and farfield.
+// Prescribed values come from the case setup, not the solution, so the
+// reference is constant during the run.  (Static walls/symmetry contribute
+// zero; outlets are excluded since their Velocity_f is solution-dependent.)
+$type momRefFlux param<real> ;
+$rule unit(momRefFlux),constraint(UNIVERSE) {
+  $momRefFlux = 0. ;
+}
+$rule apply(momRefFlux<-area,ref->Uwall,density)[Loci::Summation],
+  constraint(viscousWall_BC) {
+  join($momRefFlux, $density*dot($ref->$Uwall,$ref->$Uwall)*$area.sada) ;
+}
+$rule apply(momRefFlux<-area,ref->Uin,density)[Loci::Summation],
+  constraint(velInlet_BC) {
+  join($momRefFlux, $density*dot($ref->$Uin,$ref->$Uin)*$area.sada) ;
+}
+$rule apply(momRefFlux<-area,ref->Uin,density)[Loci::Summation],
+  constraint(farfield_BC) {
+  join($momRefFlux, $density*dot($ref->$Uin,$ref->$Uin)*$area.sada) ;
+}
+
+$rule singleton(uRes,vRes,wRes<-sumImbMom,momRefFlux) {
+  real refFlux = $momRefFlux ;
+  if(refFlux < 1e-30) refFlux = 1e-30 ;
+  $uRes = $sumImbMom[0]/refFlux ;
+  $vRes = $sumImbMom[1]/refFlux ;
+  $wRes = $sumImbMom[2]/refFlux ;
+}
+
+$rule unit(sumRes_p),constraint(UNIVERSE) {
+  $sumRes_p = 0. ;
+
+}
+
+$rule apply(sumRes_p<-pPrime,vol)[Loci::Summation] {
+	real rms_p = std::abs($pPrime)*$vol;
+	
+	
+  join($sumRes_p, rms_p) ;
+}
+
+
+$rule singleton(pRes<-sumRes_p, count) {
+  $pRes = $sumRes_p / $count ;
+}
+
+
+
+
+// Check if the conditions for termination are satisfied
+$rule singleton(finishMaxIter<-$n,stop_iter) {
+  $finishMaxIter = ($$n > $stop_iter) ;
+}
+
+// Converged when all correction-based residuals drop below epsilon
+// (skip the first iterations so initial zero fields don't trigger a false stop)
+$type convergedNow param<bool> ;
+$rule singleton(convergedNow<-finishMaxIter,uRes,vRes,wRes,pRes,epsilon,$n) {
+  const bool converged = ($$n > 1) && ($uRes < $epsilon) && ($vRes < $epsilon)
+                         && ($wRes < $epsilon) && ($pRes < $epsilon) ;
+  $convergedNow = $finishMaxIter || converged ;
+}
+
+// Collapse flag = convergedNow delayed by one iteration.  Plot rules keyed
+// to convergedNow{n} still run in the body of iteration n (writing the final
+// solution), then the loop collapses at n+1.  Tying doPlot directly to the
+// collapse condition does not work: Loci exits the loop at the collapse
+// iteration before the OUTPUT rules of that iteration execute.
+$type finishSolution param<bool> ;
+$rule singleton(finishSolution{n=0}),constraint(UNIVERSE) {
+  $finishSolution{n=0} = false ;
+}
+$rule singleton(finishSolution{n+1}<-convergedNow{n}) {
+  $finishSolution{n+1} = $convergedNow{n} ;
+}
+
+// Collapse to solution when we are finished iterating
+$rule pointwise(solution<-Velocity{n}),conditional(finishSolution{n}),
+constraint(geom_cells) {
+  $solution = $Velocity{n} ;
+}
+
+//--------------------------------------------------------------------
+//                              residuals
+//--------------------------------------------------------------------
+$type printFreq param<bool> ;
+
+$rule singleton(printFreq<-$n,print_freq) {
+  $printFreq = (($$n % $print_freq) == 0);
+}
+
+$type printFreq2 param<bool> ;
+
+$rule singleton(printFreq2<-$n,print_freq) {
+  $printFreq2 = (($$n % 10*$print_freq) == 0);
+}
+
+$type printFreq3 param<bool> ;
+
+$rule singleton(printFreq3<-$n) {
+  $printFreq3 = ($$n == 0) ;
+}
+
+$rule singleton(OUTPUT<-uRes,epsilon,$n),conditional(printFreq3),
+  option(disable_threading) {
+  $[Once] {
+    std::cout << "Convergence criterion (epsilon): " << $epsilon << std::endl ;
+    std::cout << "Iteration"<< '\t'<<"uRes"<< '\t'<<"vRes"<< '\t'<<"wRes"<<'\t'<<"pRes"<< std::endl ;
+  };
+};
+
+$rule singleton(OUTPUT<-uRes,vRes,wRes,pRes,$n),conditional(printFreq),
+  option(disable_threading) {
+  $[Once] {
+	std::cout << $$n<< '\t'<<$uRes<< '\t'<<$vRes<< '\t'<<$wRes<<'\t'<<$pRes<< std::endl ;
+  };
+};
